@@ -1,7 +1,7 @@
 # Nexus Roteador Webhook — Design Spec
 
 **Data:** 2026-04-03
-**Status:** Aprovado (v3 — correções finais de consistência e confiabilidade)
+**Status:** Aprovado (v4 — refinamentos de precisão, NFRs e contratos operacionais)
 **Domínio:** roteadorwebhook.nexusai360.com
 
 ---
@@ -68,7 +68,7 @@ Internet (Meta Webhook)
 ```
 
 **Separação de responsabilidades:**
-- **Container 1 (app):** Frontend SSR, APIs administrativas, webhook receiver (ingest) e Socket.io. Responsável por receber, validar, persistir e enfileirar. Não processa entregas.
+- **Container 1 (app):** Frontend SSR, APIs administrativas, webhook receiver (ingest) e Socket.io. **Caminho crítico do ingest (síncrono):** receber, validar, persistir e materializar RouteDeliveries no banco. **Pós-commit (assíncrono, best-effort):** enfileirar jobs no BullMQ. Não processa entregas.
 - **Container 2 (worker):** Processo independente BullMQ. Consome filas, entrega webhooks, processa retries, envia notificações, faz health checks e cleanup. Pode escalar horizontalmente sem impactar o app.
 - **Container 3 (db):** PostgreSQL 16.
 - **Container 4 (redis):** Redis 7 (filas BullMQ + cache de dados frequentes). **Não armazena sessões** — autenticação usa JWT stateless via NextAuth.
@@ -78,7 +78,22 @@ Internet (Meta Webhook)
 1. Meta envia POST para `roteadorwebhook.nexusai360.com/api/webhook/{webhook_key}`
 2. App busca empresa pelo `webhook_key` (identificador opaco, não o UUID interno)
 3. Valida assinatura X-Hub-Signature-256 com App Secret da empresa
-4. Calcula `dedupe_key`: usa `entry[].id` + `changes[].value.messaging_product` + `changes[].value.metadata.phone_number_id` do payload da Meta quando disponíveis. Fallback: SHA-256 do raw body. Isso garante que eventos semanticamente iguais (mesmo que com timestamps diferentes) sejam deduplicados, enquanto eventos distintos com bodies idênticos (raro, mas possível) não colidam falsamente
+4. Calcula `dedupe_key` com algoritmo determinístico:
+   ```
+   Passo 1: Extrair do payload JSON:
+     a = entry[0].id                                    (WABA ID)
+     b = entry[0].changes[0].value.metadata.phone_number_id  (phone)
+     c = entry[0].changes[0].value.messages[0].id        (message ID, se existir)
+         OU entry[0].changes[0].value.statuses[0].id     (status ID, se existir)
+         OU entry[0].changes[0].field                    (field name, para eventos sem ID)
+   
+   Passo 2: Se a + b + c estão presentes:
+     dedupe_key = SHA-256("v1:" + a + "|" + b + "|" + c)
+   
+   Passo 3: Se algum campo está ausente (payload atípico):
+     dedupe_key = SHA-256("v1:raw:" + raw_body)
+   ```
+   O prefixo `v1:` permite evoluir o algoritmo sem colidir com chaves antigas. O separador `|` evita ambiguidade entre valores concatenados.
 5. Verifica deduplicação: busca `dedupe_key` no `InboundWebhook` com `created_at > NOW() - 24h`. Implementado via índice parcial (não constraint UNIQUE simples, pois a janela é temporal). Se duplicado, retorna 200 sem reprocessar
 6. **Fase 1 — Transação no banco (PostgreSQL):**
    - Persiste `InboundWebhook` com `processing_status = received`
@@ -101,7 +116,7 @@ Internet (Meta Webhook)
 
 ### Job de Recuperação (orphan-recovery) — Core de Confiabilidade
 Este job é o **mecanismo compensatório** que garante consistência eventual entre PostgreSQL e Redis. Como banco e fila não compartilham transação ACID, o orphan-recovery é o que fecha o contrato de at-least-once delivery.
-- Roda a cada 5 minutos
+- Roda a cada 5 minutos (**valor inicial**, não definitivo — validar em produção conforme volume real. Se a carga exigir entrega mais rápida de órfãos, reduzir para 1-2 minutos. Trade-off: intervalos menores = mais queries no banco)
 - Busca `RouteDelivery` com status `pending` ou `delivering` há mais de 2 minutos
 - Verifica se existe job correspondente na fila BullMQ
 - Se não existe, reenfileira
@@ -231,9 +246,12 @@ Este job é o **mecanismo compensatório** que garante consistência eventual en
 - `received`: persistido no banco, RouteDeliveries criadas, enqueue ainda não confirmado
 - `queued`: todos os enqueues do BullMQ confirmados (atualizado pós-commit, best-effort)
 - `processed`: **derivado** — significa que TODAS as RouteDeliveries associadas atingiram estado terminal (`delivered` ou `failed`). Atualizado pelo worker ao finalizar a última entrega
-- `failed`: webhook recebido mas nenhuma rota ativa aceitava o evento (0 RouteDeliveries criadas), ou assinatura inválida
+- `no_routes`: webhook válido recebido, mas nenhuma rota ativa aceitava o evento (0 RouteDeliveries criadas). Estado terminal, não é erro
+- `failed`: erro inesperado durante processamento (ex: falha ao materializar RouteDeliveries)
 
-**Importante:** A fonte de verdade para saber se um InboundWebhook foi totalmente processado é a agregação dos status das suas RouteDeliveries, não o `processing_status`. Este campo existe para otimizar queries de dashboard e evitar JOINs pesados, mas em caso de dúvida, o estado real é derivado das RouteDeliveries.
+**Assinaturas inválidas NÃO geram InboundWebhook.** Webhooks com assinatura inválida são rejeitados com HTTP 401 antes da persistência e registrados apenas no `AuditLog` (action: `webhook.signature_invalid`, com IP, timestamp e company_id). Isso mantém o InboundWebhook limpo como tabela de eventos válidos aceitos pelo sistema.
+
+**Fonte de verdade:** o estado real de processamento de um InboundWebhook é a agregação dos status das suas RouteDeliveries, não o `processing_status`. Este campo existe para otimizar queries de dashboard e evitar JOINs pesados. Em caso de divergência, o estado derivado das RouteDeliveries prevalece.
 
 ### RouteDelivery
 | Campo | Tipo | Notas |
@@ -536,9 +554,9 @@ O job `log-cleanup`:
 
 ### 7.3 Validação de Webhooks (entrada)
 - Todo webhook recebido validado por X-Hub-Signature-256 com App Secret da empresa
-- Assinatura inválida = HTTP 401 + log em AuditLog como tentativa suspeita
+- **Assinatura inválida = HTTP 401 + registro no AuditLog** (action: `webhook.signature_invalid`, com IP, headers e company_id). Não persiste InboundWebhook — o evento é rejeitado antes de entrar no domínio
 - Verify Token único por empresa (endpoint GET para challenge/response)
-- Deduplicação por chave semântica do payload (fallback: SHA-256 do body), janela 24h via índice parcial
+- Deduplicação por chave semântica do payload (fallback: SHA-256 do body), janela 24h via índice parcial (ver seção 2, passo 4 para algoritmo completo)
 
 ### 7.4 Segurança de Saída (proteção SSRF)
 
@@ -548,6 +566,7 @@ O job `log-cleanup`:
 - Revalidar DNS no momento do envio (prevenir DNS rebinding)
 - Apenas esquema `https://` permitido
 - Timeout por rota (default 30s, configurável por rota)
+- **Redirects HTTP: não seguir.** Configurar axios com `maxRedirects: 0`. Se o destino retornar 301/302/307/308, tratar como erro não-retriable e registrar no log. Motivo: seguir redirects abre vetor de SSRF onde o destino inicial é válido mas redireciona para IP interno. O destino cadastrado deve ser o destino final
 
 **Assinatura outbound padronizada:**
 - Toda entrega inclui header `X-Nexus-Signature-256`: HMAC-SHA256 do raw payload usando `secret_key` da rota (quando configurada)
@@ -622,9 +641,8 @@ O job `log-cleanup`:
 - **Consistência eventual compensada**: o enqueue no BullMQ acontece pós-commit (fora da transação). Se falhar, o `orphan-recovery` detecta e reenfileira. Não existe transação ACID entre banco e fila — a compensação é feita via recovery
 
 ### Deduplicação
-- **Chave primária**: construída a partir de campos do payload da Meta (`entry[].id` + identificadores do evento) quando disponíveis. Garante dedup semântica mesmo com bodies ligeiramente diferentes
-- **Fallback**: SHA-256 do raw body quando o payload não contém identificadores utilizáveis
-- **Janela**: 24 horas (coerente com a política de retry da Meta, que reenvia por até 7 dias mas com payloads idênticos)
+- **Algoritmo**: determinístico e versionado (ver seção 2, passo 4). Extrai identificadores semânticos do payload (WABA ID + phone + message/status ID) na ordem definida. Fallback para SHA-256 do raw body quando campos não estão presentes
+- **Janela**: 24 horas. **Decisão operacional explícita** — não derivada da política de retry da Meta (que pode reenviar por até 7 dias). Justificativa: 24h cobre a imensa maioria dos reenvios da Meta (que concentra retries nas primeiras horas); janelas maiores aumentam custo de storage do índice e risco de colisão falsa entre eventos legítimos separados por dias. Se necessário, o valor pode ser ajustado
 - **Implementação**: query com índice parcial (`WHERE dedupe_key = ? AND created_at > NOW() - INTERVAL '24h'`), não constraint UNIQUE simples. Isso permite que a mesma dedupe_key exista em partições/meses diferentes sem conflito
 - **Comportamento**: se duplicado dentro da janela, retorna 200 (ACK) sem reprocessar nem criar RouteDeliveries
 
@@ -696,6 +714,11 @@ A plataforma armazena payloads de webhooks do WhatsApp que podem conter:
 - Na UI, payloads são exibidos em modo colapsado (não abrem automaticamente)
 - Acesso a payloads registrado no AuditLog
 
+**Exportação CSV:**
+- CSV exporta apenas metadados operacionais: timestamp, event_type, rota destino (URL mascarada), status, http_status, duration_ms, error_message
+- **Payload bruto e response body NÃO são incluídos** na exportação CSV — contêm dados pessoais (telefones, nomes, conteúdo de mensagens)
+- Se o usuário precisar do payload completo, deve acessar individualmente na UI (ação registrada no AuditLog)
+
 **Exclusão:**
 - Job automático de cleanup garante exclusão no prazo configurado
 - Super admin pode forçar exclusão manual de dados de uma empresa
@@ -732,7 +755,26 @@ A plataforma armazena payloads de webhooks do WhatsApp que podem conter:
 
 ---
 
-## 12. Deploy
+## 12. Requisitos Não-Funcionais (NFRs)
+
+| Métrica | Alvo | Notas |
+|---------|------|-------|
+| Tempo de ACK para Meta | < 500ms (p95) | Apenas persist + commit. Enqueue é pós-commit e não impacta ACK |
+| Latência de entrega assíncrona | < 5s (p95) em condições normais | Da persistência ao envio para a URL de destino |
+| Volume inicial esperado | ~100 webhooks/min total, ~20/min por empresa | Valores iniciais para dimensionamento. Ajustar conforme carga real |
+| Concorrência do worker | 10 jobs simultâneos (inicial) | Configurável via BullMQ `concurrency`. Aumentar conforme volume |
+| Comportamento sob burst | Rate limit 1000 req/min por empresa. Acima disso, HTTP 429 | Meta retenta automaticamente. Protege o sistema sem perder eventos |
+| Disponibilidade do ingest | 99.5% (alvo) | Prioridade máxima. Downtime = perda de webhooks até Meta reenviar |
+| Tempo máximo de retry | Definido por `retry_max_attempts × retry_intervals`. Default: ~2min10s | Após exaustão, vai para DLQ. Reenvio manual disponível |
+
+**Observabilidade:**
+- `/api/health` retorna status de app, PostgreSQL e Redis com latência de cada um
+- Logs estruturados (JSON) para facilitar parsing por ferramentas externas
+- Métricas de filas BullMQ (jobs ativos, aguardando, falhos) expostas via API admin
+
+---
+
+## 13. Deploy
 
 ### Docker Swarm Stack (Portainer)
 - **Container 1 (app):** Next.js (frontend + API + ingest + Socket.io)
@@ -829,13 +871,14 @@ networks:
 
 ---
 
-## 13. Faseamento de Implementação
+## 14. Faseamento de Implementação
 
 ### Fase 1 — Core (prioridade máxima)
 O sistema precisa funcionar de ponta a ponta antes de polir UX.
 - Setup do projeto (Next.js, Prisma, Docker, CI/CD)
-- Modelo de dados completo (migrations + particionamento)
+- Modelo de dados completo (migrations + particionamento), incluindo `UserCompanyMembership`
 - Autenticação (login, logout, sessões, seeding super_admin)
+- **Tenant scoping mínimo**: middleware de autorização que filtra dados por membership. Não precisa da UI completa de gestão de usuários/roles, mas toda query já nasce com isolamento por empresa. Super_admin bypassa; demais usuários só veem empresas com membership ativa
 - CRUD de empresas e credenciais
 - Webhook receiver (ingest + validação + deduplicação + persistência)
 - Worker de entrega (fan-out + retry + DLQ)
@@ -853,8 +896,7 @@ O sistema precisa funcionar de ponta a ponta antes de polir UX.
 - Health check por rota
 
 ### Fase 3 — Completude
-- RBAC completo com UserCompanyMembership
-- Gestão de usuários (convite, roles por empresa)
+- Gestão completa de usuários (convite por e-mail, atribuição de roles por empresa, UI de gerenciamento)
 - Perfil do usuário (foto, tema, senha)
 - Audit log
 - Notificações por WhatsApp (Cloud API + custom)
