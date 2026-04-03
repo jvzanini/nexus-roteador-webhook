@@ -1,7 +1,7 @@
 # Nexus Roteador Webhook — Design Spec
 
 **Data:** 2026-04-03
-**Status:** Aprovado (v6 — versão final, contratos fechados e inconsistências limpas)
+**Status:** Aprovado (v7 — versão final)
 **Domínio:** roteadorwebhook.nexusai360.com
 
 ---
@@ -120,7 +120,7 @@ Internet (Meta Webhook)
 11. Worker processa cada job:
     - Atualiza `RouteDelivery.status` para `delivering`
     - Valida URL de destino (proteção SSRF)
-    - Envia payload com headers padronizados + assinatura outbound (usando `raw_body` original para cálculo de assinatura, garantindo integridade byte-a-byte)
+    - **Monta o payload de entrega:** cada RouteDelivery envia o **evento normalizado individual** (não o callback original inteiro). O corpo enviado é o JSON do evento isolado, serializado de forma canônica pelo sistema. A assinatura `X-Nexus-Signature-256` é calculada sobre esse corpo serializado (não sobre o `raw_body` original do callback). Isso garante que: (a) cada destino recebe exatamente o evento que lhe interessa; (b) a assinatura corresponde ao corpo efetivamente entregue
     - Cria `DeliveryAttempt` com resultado
     - Atualiza `RouteDelivery.status` para `delivered` ou `retrying`/`failed`
 12. Se falhou com status retriable, agenda retry conforme configuração global
@@ -238,12 +238,12 @@ Este job é o **mecanismo compensatório** que garante consistência eventual en
 | User | Soft delete (`is_active = false`) | ON DELETE RESTRICT | Possui AuditLogs, Notifications, pode ser `invited_by` de outros |
 | WebhookRoute | Soft delete (`is_active = false`) | ON DELETE RESTRICT | Possui RouteDeliveries históricas |
 | UserCompanyMembership | Soft delete (`is_active = false`) | ON DELETE RESTRICT | Histórico de acesso |
-| CompanyCredential | Hard delete permitido (via cascade da Company) | ON DELETE CASCADE da Company | Mudanças normais de credenciais são **UPDATE no mesmo registro** (auditado). Hard delete só ocorre via cascade ao desativar/remover a Company. Não há recriação avulsa |
+| CompanyCredential | Permanece com a empresa desativada | ON DELETE RESTRICT | Mudanças de credenciais são **UPDATE no mesmo registro** (auditado). Quando a Company é desativada (`is_active = false`), a credencial permanece no banco — não há hard delete automático. Dados sensíveis podem ser zerados manualmente pelo super_admin se necessário |
 | InboundWebhook | Hard delete pelo job de retenção | N/A | Controlado pela política de retenção |
 | RouteDelivery | Hard delete pelo job de retenção | N/A | Controlado pela política de retenção |
 | DeliveryAttempt | Hard delete pelo job de retenção | N/A | Controlado pela política de retenção |
 | AuditLog | Hard delete pelo job de retenção (365 dias) | N/A | Não configurável |
-| Notification | Hard delete após leitura + 30 dias | N/A | Dados transientes |
+| Notification | Hard delete: lidas há mais de 30 dias, não-lidas há mais de 90 dias | N/A | Executado pelo job `notification-cleanup` |
 
 **Na UI:** "remover" empresa/usuário/rota significa `is_active = false`. O registro permanece no banco para preservar integridade de logs e audit trail. A UI filtra por `is_active = true` por padrão, com opção de "mostrar inativos".
 
@@ -269,7 +269,7 @@ Este job é o **mecanismo compensatório** que garante consistência eventual en
 | id | UUID (PK) | |
 | company_id | UUID (FK → Company) | |
 | received_at | DateTime | timestamp de recebimento |
-| raw_body | TEXT (**nullable**) | corpo bruto original recebido, preservado sem reserialização. Usado para: fallback de dedupe, assinatura outbound. Setado null pelo job de retenção após `log_full_retention_days` |
+| raw_body | TEXT (**nullable**) | corpo bruto original do callback recebido, preservado sem reserialização. Usado para: fallback de dedupe, verificação de assinatura inbound (X-Hub-Signature-256), debug/auditoria. **Não usado para assinatura outbound** (outbound assina o evento normalizado). Setado null pelo job de retenção após `log_full_retention_days` |
 | raw_payload | JSONB (**nullable**) | payload parseado para queries. Pode ser reserializado diferente do original — **não usar para cálculo de assinaturas**. Setado null junto com raw_body pelo job de retenção |
 | event_type | String | tipo normalizado do evento (ex: messages.text, statuses.delivered) |
 | dedupe_key | String | Chave de deduplicação (ver seção 2, passo 6). Não é UNIQUE constraint — dedup via índice composto regular + filtro temporal na query |
@@ -501,7 +501,7 @@ O job `log-cleanup`:
 - Logo Nexus no topo
 - Menu: Dashboard, Empresas, Usuários, Configurações Globais
 - Toggle de tema (dark/light/system) como atalho
-- Rodapé: avatar do usuário, nome, role, botão logout
+- Rodapé: avatar do usuário, nome, papel na empresa atual (via membership) ou "Super Admin", botão logout
 
 ### Telas
 
@@ -610,7 +610,7 @@ O job `log-cleanup`:
 - **Redirects HTTP: não seguir.** Configurar axios com `maxRedirects: 0`. Se o destino retornar 301/302/307/308, tratar como erro não-retriable e registrar no log. Motivo: seguir redirects abre vetor de SSRF onde o destino inicial é válido mas redireciona para IP interno. O destino cadastrado deve ser o destino final
 
 **Assinatura outbound padronizada:**
-- Toda entrega inclui header `X-Nexus-Signature-256`: HMAC-SHA256 do **`raw_body`** original usando `secret_key` da rota (quando configurada). Usa `raw_body` (não `raw_payload` JSONB) para garantir fidelidade do conteúdo assinado
+- Toda entrega inclui header `X-Nexus-Signature-256`: HMAC-SHA256 do **corpo serializado do evento normalizado** (o mesmo JSON que é enviado ao destino) usando `secret_key` da rota (quando configurada). A assinatura corresponde exatamente ao body entregue, não ao callback original da Meta
 - Headers adicionais incluídos em toda entrega:
   - `X-Nexus-Delivery-Id`: UUID da RouteDelivery
   - `X-Nexus-Attempt`: número da tentativa
@@ -682,7 +682,7 @@ O job `log-cleanup`:
 - **Consistência eventual compensada**: o enqueue no BullMQ acontece pós-commit (fora da transação). Se falhar, o `orphan-recovery` detecta e reenfileira. Não existe transação ACID entre banco e fila — a compensação é feita via recovery
 
 ### Deduplicação
-- **Algoritmo**: determinístico e versionado (ver seção 2, passo 4). Extrai identificadores semânticos do payload (WABA ID + phone + message/status ID) na ordem definida. Fallback para SHA-256 do raw body quando campos não estão presentes
+- **Algoritmo**: determinístico e versionado (ver seção 2, passo 6). Extrai identificadores semânticos do payload (WABA ID + phone + message/status ID) na ordem definida. Fallback para SHA-256 do raw body quando campos não estão presentes
 - **Janela**: 24 horas. **Decisão operacional explícita** — não derivada da política de retry da Meta (que pode reenviar por até 7 dias). Justificativa: 24h cobre a imensa maioria dos reenvios da Meta (que concentra retries nas primeiras horas); janelas maiores aumentam custo de storage do índice e risco de colisão falsa entre eventos legítimos separados por dias. Se necessário, o valor pode ser ajustado
 - **Implementação**: query com índice composto regular `(dedupe_key, created_at DESC)` e filtro temporal na query (`WHERE dedupe_key = ? AND created_at > NOW() - INTERVAL '24h' LIMIT 1`). Não é constraint UNIQUE — permite mesma dedupe_key em partições/meses diferentes
 - **Comportamento**: se duplicado dentro da janela, retorna 200 (ACK) sem reprocessar nem criar RouteDeliveries. Eventos deduplicados **não aparecem nos logs da UI** mas são contabilizados em métrica interna (counter `webhooks_deduplicated_total` por empresa) para visibilidade operacional no dashboard
