@@ -1,7 +1,7 @@
 # Nexus Roteador Webhook — Design Spec
 
 **Data:** 2026-04-03
-**Status:** Aprovado (v4 — refinamentos de precisão, NFRs e contratos operacionais)
+**Status:** Aprovado (v5 — versão final com contratos fechados)
 **Domínio:** roteadorwebhook.nexusai360.com
 
 ---
@@ -78,49 +78,64 @@ Internet (Meta Webhook)
 1. Meta envia POST para `roteadorwebhook.nexusai360.com/api/webhook/{webhook_key}`
 2. App busca empresa pelo `webhook_key` (identificador opaco, não o UUID interno)
 3. Valida assinatura X-Hub-Signature-256 com App Secret da empresa
-4. Calcula `dedupe_key` com algoritmo determinístico:
+4. **Armazena o raw body original como TEXT** (ver `InboundWebhook.raw_body`) para preservar o byte stream exato recebido. O payload também é parseado e armazenado como JSONB (`raw_payload`) para queries
+5. **Normalização multi-evento:** um callback da Meta pode conter múltiplos itens lógicos (ex: 3 mensagens no mesmo POST, ou 2 statuses). O ingest **itera e divide** o callback em N eventos normalizados internos:
    ```
-   Passo 1: Extrair do payload JSON:
-     a = entry[0].id                                    (WABA ID)
-     b = entry[0].changes[0].value.metadata.phone_number_id  (phone)
-     c = entry[0].changes[0].value.messages[0].id        (message ID, se existir)
-         OU entry[0].changes[0].value.statuses[0].id     (status ID, se existir)
-         OU entry[0].changes[0].field                    (field name, para eventos sem ID)
-   
-   Passo 2: Se a + b + c estão presentes:
-     dedupe_key = SHA-256("v1:" + a + "|" + b + "|" + c)
-   
-   Passo 3: Se algum campo está ausente (payload atípico):
-     dedupe_key = SHA-256("v1:raw:" + raw_body)
+   Para cada entry em payload.entry:
+     Para cada change em entry.changes:
+       Se change.field == "messages":
+         Para cada message em change.value.messages (se existir):
+           → 1 InboundWebhook com event_type normalizado
+         Para cada status em change.value.statuses (se existir):
+           → 1 InboundWebhook com event_type normalizado
+       Senão (account_update, flows, etc.):
+         → 1 InboundWebhook com event_type = change.field
    ```
-   O prefixo `v1:` permite evoluir o algoritmo sem colidir com chaves antigas. O separador `|` evita ambiguidade entre valores concatenados.
-5. Verifica deduplicação: busca `dedupe_key` no `InboundWebhook` com `created_at > NOW() - 24h`. Implementado via índice parcial (não constraint UNIQUE simples, pois a janela é temporal). Se duplicado, retorna 200 sem reprocessar
-6. **Fase 1 — Transação no banco (PostgreSQL):**
+   Cada InboundWebhook gerado tem sua própria `dedupe_key`, `event_type` e RouteDeliveries. Isso garante que cada evento lógico é roteado, deduplicado e rastreado independentemente
+6. Calcula `dedupe_key` para cada evento normalizado, com algoritmo determinístico:
+   ```
+   Passo 1: Extrair campos do evento:
+     a = entry.id                         (WABA ID)
+     b = event_type normalizado           (ex: "statuses.delivered")
+     c = identifiers específicos por tipo:
+         messages: message.id             (wamid único)
+         statuses: status.id + ":" + status.status  (wamid + sent/delivered/read/failed)
+         calls:    call.id
+         outros:   SHA-256 do JSON do trecho change.value (hash do conteúdo relevante)
+   
+   Passo 2: dedupe_key = SHA-256("v1:" + a + "|" + b + "|" + c)
+   ```
+   **Colisão resolvida para statuses:** `status.id + ":" + status.status` distingue sent/delivered/read do mesmo wamid. Para eventos sem ID (account_update, etc.), o hash do trecho relevante evita falsos duplicados entre eventos legítimos diferentes
+7. Verifica deduplicação: busca `dedupe_key` no `InboundWebhook` com `created_at > NOW() - 24h`. Implementado via índice composto `(dedupe_key, created_at DESC)` com query filtrada por janela temporal (não partial index — é índice composto regular com WHERE na query). Se duplicado, pula este evento (os demais do mesmo callback continuam sendo processados)
+8. **Transação no banco (PostgreSQL) — por evento normalizado:**
    - Persiste `InboundWebhook` com `processing_status = received`
-   - Materializa um `RouteDelivery` com `status = pending` para cada rota ativa que aceita o evento
+   - Materializa um `RouteDelivery` com `status = pending` para cada rota ativa que aceita o `event_type`
    - COMMIT da transação
-7. **Fase 2 — Enfileiramento pós-commit (Redis/BullMQ):**
+   - **Invariante:** `RouteDelivery.company_id` deve ser igual ao `company_id` da rota referenciada. Validado na materialização para prevenir mismatch entre rota e empresa
+9. **Enfileiramento pós-commit (Redis/BullMQ):**
    - Para cada `RouteDelivery` criada, enfileira job no BullMQ
    - Se todos os enqueues tiverem sucesso, atualiza `InboundWebhook.processing_status` para `queued` (UPDATE separado, fora da transação original)
    - **Se o enqueue falhar** (Redis down, crash, deploy): as RouteDeliveries já estão persistidas no banco com `status = pending`. O job `orphan-recovery` detecta e reenfileira automaticamente (consistência eventual compensada)
-8. Retorna HTTP 200 para a Meta (ACK) — **após o COMMIT do passo 6**, não após o enqueue. Isso garante persist-before-ACK mesmo que o Redis falhe
-9. Worker processa cada job:
-   - Atualiza `RouteDelivery.status` para `delivering`
-   - Valida URL de destino (proteção SSRF)
-   - Envia payload com headers padronizados + assinatura outbound
-   - Cria `DeliveryAttempt` com resultado
-   - Atualiza `RouteDelivery.status` para `delivered` ou `retrying`/`failed`
-10. Se falhou com status retriable, agenda retry conforme configuração global
-11. Se atingiu limite de retries ou falhou com status não-retriable, marca como `failed` e dispara notificação
-12. Dashboard atualiza em tempo real via Socket.io
+10. Retorna HTTP 200 para a Meta (ACK) — **após todos os COMMITs do passo 8**, não após o enqueue. Isso garante persist-before-ACK mesmo que o Redis falhe
+11. Worker processa cada job:
+    - Atualiza `RouteDelivery.status` para `delivering`
+    - Valida URL de destino (proteção SSRF)
+    - Envia payload com headers padronizados + assinatura outbound (usando `raw_body` original para cálculo de assinatura, garantindo integridade byte-a-byte)
+    - Cria `DeliveryAttempt` com resultado
+    - Atualiza `RouteDelivery.status` para `delivered` ou `retrying`/`failed`
+12. Se falhou com status retriable, agenda retry conforme configuração global
+13. Se atingiu limite de retries ou falhou com status não-retriable, marca como `failed` e dispara notificação
+14. Dashboard atualiza em tempo real via Socket.io
 
 ### Job de Recuperação (orphan-recovery) — Core de Confiabilidade
 Este job é o **mecanismo compensatório** que garante consistência eventual entre PostgreSQL e Redis. Como banco e fila não compartilham transação ACID, o orphan-recovery é o que fecha o contrato de at-least-once delivery.
 - Roda a cada 5 minutos (**valor inicial**, não definitivo — validar em produção conforme volume real. Se a carga exigir entrega mais rápida de órfãos, reduzir para 1-2 minutos. Trade-off: intervalos menores = mais queries no banco)
-- Busca `RouteDelivery` com status `pending` ou `delivering` há mais de 2 minutos
+- Busca `RouteDelivery` com:
+  - status `pending` ou `delivering` há mais de 2 minutos, OU
+  - status `retrying` com `next_retry_at <= NOW()` há mais de 2 minutos (retry agendado mas job perdido)
 - Verifica se existe job correspondente na fila BullMQ
 - Se não existe, reenfileira
-- Cobre os cenários: crash do worker, falha no enqueue pós-commit, restart/deploy, Redis restart
+- Cobre os cenários: crash do worker, falha no enqueue pós-commit, restart/deploy, Redis restart, **retry agendado mas job perdido no BullMQ**
 - **Classificação: Fase 1 (core)** — nasce junto com o ingest e o worker, não é funcionalidade operacional opcional
 
 ---
@@ -213,6 +228,25 @@ Este job é o **mecanismo compensatório** que garante consistência eventual en
 
 **Cardinalidade:** 1 empresa = 1 credential (1:1). Se o cliente tem múltiplos apps Meta, cadastra empresas separadas. Constraint UNIQUE em `company_id`.
 
+### Política de Exclusão (todas as entidades)
+
+**Regra geral: soft delete via `is_active = false` para entidades com histórico. Hard delete proibido.**
+
+| Entidade | Estratégia | FK constraint | Motivo |
+|----------|-----------|--------------|--------|
+| Company | Soft delete (`is_active = false`) | ON DELETE RESTRICT | Possui InboundWebhooks, RouteDeliveries, AuditLogs |
+| User | Soft delete (`is_active = false`) | ON DELETE RESTRICT | Possui AuditLogs, Notifications, pode ser `invited_by` de outros |
+| WebhookRoute | Soft delete (`is_active = false`) | ON DELETE RESTRICT | Possui RouteDeliveries históricas |
+| UserCompanyMembership | Soft delete (`is_active = false`) | ON DELETE RESTRICT | Histórico de acesso |
+| CompanyCredential | Hard delete permitido (via cascade) | ON DELETE CASCADE da Company | Credenciais não têm histórico próprio. Na prática, só se exclui ao recriar |
+| InboundWebhook | Hard delete pelo job de retenção | N/A | Controlado pela política de retenção |
+| RouteDelivery | Hard delete pelo job de retenção | N/A | Controlado pela política de retenção |
+| DeliveryAttempt | Hard delete pelo job de retenção | N/A | Controlado pela política de retenção |
+| AuditLog | Hard delete pelo job de retenção (365 dias) | N/A | Não configurável |
+| Notification | Hard delete após leitura + 30 dias | N/A | Dados transientes |
+
+**Na UI:** "remover" empresa/usuário/rota significa `is_active = false`. O registro permanece no banco para preservar integridade de logs e audit trail. A UI filtra por `is_active = true` por padrão, com opção de "mostrar inativos".
+
 ### WebhookRoute
 | Campo | Tipo | Notas |
 |-------|------|-------|
@@ -235,11 +269,11 @@ Este job é o **mecanismo compensatório** que garante consistência eventual en
 | id | UUID (PK) | |
 | company_id | UUID (FK → Company) | |
 | received_at | DateTime | timestamp de recebimento |
-| raw_payload | JSONB | payload original da Meta |
-| signature_valid | Boolean | resultado da verificação X-Hub-Signature-256 |
+| raw_body | TEXT | byte stream exato recebido da Meta. Usado para: fallback de dedupe, assinatura outbound, preservação de fidelidade. Limpo pelo job de retenção junto com raw_payload |
+| raw_payload | JSONB | payload parseado para queries. Pode ser reserializado diferente do original — **não usar para cálculo de assinaturas** |
 | event_type | String | tipo normalizado do evento (ex: messages.text, statuses.delivered) |
 | dedupe_key | String | Chave de deduplicação (ver seção 2, passo 4). Não é UNIQUE constraint — dedup via índice parcial com janela temporal |
-| processing_status | Enum | received, queued, processed, failed. **Campo auxiliar, não fonte de verdade.** Ver nota abaixo |
+| processing_status | Enum | received, queued, processed, no_routes. **Campo auxiliar, não fonte de verdade.** Ver nota abaixo |
 | created_at | DateTime | particionamento |
 
 **`processing_status` — regras de atualização:**
@@ -247,7 +281,6 @@ Este job é o **mecanismo compensatório** que garante consistência eventual en
 - `queued`: todos os enqueues do BullMQ confirmados (atualizado pós-commit, best-effort)
 - `processed`: **derivado** — significa que TODAS as RouteDeliveries associadas atingiram estado terminal (`delivered` ou `failed`). Atualizado pelo worker ao finalizar a última entrega
 - `no_routes`: webhook válido recebido, mas nenhuma rota ativa aceitava o evento (0 RouteDeliveries criadas). Estado terminal, não é erro
-- `failed`: erro inesperado durante processamento (ex: falha ao materializar RouteDeliveries)
 
 **Assinaturas inválidas NÃO geram InboundWebhook.** Webhooks com assinatura inválida são rejeitados com HTTP 401 antes da persistência e registrados apenas no `AuditLog` (action: `webhook.signature_invalid`, com IP, timestamp e company_id). Isso mantém o InboundWebhook limpo como tabela de eventos válidos aceitos pelo sistema.
 
@@ -293,8 +326,8 @@ Este job é o **mecanismo compensatório** que garante consistência eventual en
 | updated_at | DateTime | |
 
 Chaves previstas:
-- `retry_max_attempts` (default: 3)
-- `retry_intervals_seconds` (default: [10, 30, 90])
+- `retry_max_retries` (default: 3) — **número de retries ALÉM da tentativa inicial.** Total de tentativas = 1 (inicial) + retry_max_retries. Com default 3, são 4 tentativas no total
+- `retry_intervals_seconds` (default: [10, 30, 90]) — intervalo antes de cada retry (deve ter exatamente `retry_max_retries` elementos)
 - `retry_strategy` (exponential | fixed)
 - `retry_jitter_enabled` (default: true)
 - `log_full_retention_days` (default: 90)
@@ -302,7 +335,10 @@ Chaves previstas:
 - `notify_platform_enabled` (default: true)
 - `notify_email_enabled` (default: true)
 - `notify_whatsapp_enabled` (default: true)
-- `notify_failure_threshold` (default: 5)
+- `notify_failure_threshold` (default: 5) — falhas consecutivas na mesma rota antes de disparar alerta
+- `notify_recipients` (default: "admins") — quem recebe notificações de falha. Valores: `"all"` (todos com acesso à empresa), `"admins"` (super_admin + company_admins da empresa afetada), `"super_admin_only"`
+- `notify_whatsapp_number` — número de telefone destino para notificações WhatsApp (formato internacional, ex: "5511999999999")
+- `notify_email_recipients` (default: []) — lista de e-mails adicionais além dos destinatários por role. Se vazio, usa apenas os e-mails dos usuários conforme `notify_recipients`
 - `whatsapp_provider` (cloud_api | custom)
 - `whatsapp_cloud_api_config` (JSON)
 - `whatsapp_custom_config` (JSON: url, token)
@@ -325,14 +361,16 @@ Chaves previstas:
 | Campo | Tipo | Notas |
 |-------|------|-------|
 | id | UUID (PK) | |
-| user_id | UUID (FK → User) | |
+| actor_type | Enum | `user` ou `system` |
+| actor_id | UUID (FK → User, **nullable**) | preenchido quando `actor_type = user`. Null para ações de sistema |
+| actor_label | String | nome do ator para exibição. Para `user`: nome do usuário. Para `system`: nome do job/processo (ex: "orphan-recovery", "log-cleanup", "webhook-receiver") |
 | company_id | UUID (FK → Company, nullable) | sempre preenchido quando ação é no contexto de empresa |
-| action | String | ex: user.login, credential.update |
-| resource_type | String | ex: company, user, route |
+| action | String | ex: user.login, credential.update, webhook.signature_invalid, system.log_cleanup |
+| resource_type | String | ex: company, user, route, inbound_webhook |
 | resource_id | UUID (nullable) | |
 | details | JSONB | dados da ação |
-| ip_address | String | |
-| user_agent | String | |
+| ip_address | String (nullable) | preenchido para ações de usuário e webhooks. Null para jobs internos |
+| user_agent | String (nullable) | |
 | created_at | DateTime | |
 
 ### Índices Obrigatórios
@@ -341,16 +379,19 @@ Chaves previstas:
 -- InboundWebhook
 CREATE INDEX idx_inbound_company_created ON inbound_webhook (company_id, created_at DESC);
 CREATE INDEX idx_inbound_dedupe ON inbound_webhook (dedupe_key, created_at DESC);
--- ^ usado para deduplicação com janela temporal: WHERE dedupe_key = ? AND created_at > NOW() - INTERVAL '24 hours'
--- Não é UNIQUE constraint porque a janela é temporal (mesma dedupe_key pode existir em meses diferentes)
+-- ^ índice composto regular (NÃO partial index). A deduplicação é feita na query:
+-- SELECT 1 FROM inbound_webhook WHERE dedupe_key = ? AND created_at > NOW() - INTERVAL '24h' LIMIT 1
+-- Permite mesma dedupe_key em partições/meses diferentes sem conflito
 CREATE INDEX idx_inbound_event_type ON inbound_webhook (event_type, created_at DESC);
 CREATE INDEX idx_inbound_processing ON inbound_webhook (processing_status) WHERE processing_status != 'processed';
 
 -- RouteDelivery
 CREATE INDEX idx_delivery_company_created ON route_delivery (company_id, created_at DESC);
 CREATE INDEX idx_delivery_route_created ON route_delivery (route_id, created_at DESC);
-CREATE INDEX idx_delivery_status ON route_delivery (status, next_retry_at) WHERE status IN ('pending', 'delivering', 'retrying');
--- ^ inclui 'delivering' para cobrir queries do orphan-recovery (pending/delivering há mais de 2min)
+CREATE INDEX idx_delivery_status ON route_delivery (status, next_retry_at, created_at) WHERE status IN ('pending', 'delivering', 'retrying');
+-- ^ cobre TODAS as queries do orphan-recovery:
+--   pending/delivering há mais de 2min (por created_at)
+--   retrying com next_retry_at <= NOW() há mais de 2min (por next_retry_at)
 CREATE INDEX idx_delivery_inbound ON route_delivery (inbound_webhook_id);
 
 -- DeliveryAttempt
@@ -382,7 +423,7 @@ CREATE INDEX idx_notification_user_read ON notification (user_id, is_read, creat
 | AuditLog | 365 dias | Não |
 
 O job `log-cleanup`:
-1. Remove `raw_payload` (seta null) de InboundWebhooks mais antigos que `log_full_retention_days`
+1. Remove `raw_payload` e `raw_body` (seta null) de InboundWebhooks mais antigos que `log_full_retention_days`
 2. Remove registros completos mais antigos que `log_summary_retention_days`
 3. Remove DeliveryAttempts mais antigos que `log_full_retention_days`
 4. Dropa partições mensais expiradas
@@ -586,7 +627,7 @@ O job `log-cleanup`:
 |-----------|-------|
 | Sessão expira após inatividade | 30 minutos |
 | Token de reset de senha expira em | 15 minutos |
-| Bloqueio de conta após tentativas falhas | 5 tentativas em 1 minuto → bloqueio 15 minutos |
+| Bloqueio de conta após tentativas falhas | 5 tentativas em 1 minuto → bloqueio 15 minutos. **Chave de bloqueio: e-mail + IP combinados.** Bloqueio por e-mail sozinho permitiria DoS contra contas alheias; por IP sozinho perde eficácia atrás de NAT. A combinação protege contra brute force sem permitir lock-out externo |
 | IP e user agent registrados | Em todo login (sucesso e falha) |
 | JWT | Criptografado (JWE) via NextAuth.js. Stateless — **não usa Redis para sessões** |
 
@@ -628,7 +669,7 @@ O job `log-cleanup`:
 - Sanitização de inputs com Zod (validação de tipos + constraints)
 - Credenciais nunca retornam em texto puro na API — sempre mascaradas (ex: `sk_****...abc3`)
 - Rate limiting global: 100 req/min por IP nas APIs administrativas
-- Rate limiting webhook: 1000 req/min por empresa (proteção contra flood)
+- Rate limiting webhook: 1000 req/min por `webhook_key` (proteção contra flood). Acima disso, retorna HTTP 429 — a Meta retenta automaticamente, o que reduz overload mas **não garante zero perda** em burst extremo. Defesa complementar: requests com assinatura inválida consomem cota dobrada (penalização de abuso)
 
 ---
 
@@ -671,7 +712,7 @@ O job `log-cleanup`:
 **Estratégia:**
 - Backoff exponencial com jitter (configurável para fixo)
 - Intervalos default: [10s, 30s, 90s]
-- Max attempts default: 3
+- Max retries default: 3 (+ 1 tentativa inicial = **4 tentativas total**)
 - Jitter: ±20% do intervalo para evitar rajada sincronizada
 - Tudo configurável na tela de Configurações Globais
 
@@ -683,11 +724,14 @@ O job `log-cleanup`:
 
 ### Recovery (orphan-recovery job) — Mecanismo Compensatório Core
 Este job é o que fecha o contrato de confiabilidade. Sem ele, a separação entre transação no banco e enqueue no Redis deixaria entregas vulneráveis a perda.
-- Roda a cada 5 minutos
-- Busca RouteDeliveries com status `pending` ou `delivering` há mais de 2 minutos (cobertos pelo índice `idx_delivery_status`)
+- Roda a cada 5 minutos (valor inicial configurável)
+- Busca RouteDeliveries com:
+  - status `pending` ou `delivering` há mais de 2 minutos, OU
+  - status `retrying` com `next_retry_at <= NOW()` há mais de 2 minutos
+- Todos cobertos pelo índice `idx_delivery_status`
 - Verifica se existe job correspondente na fila BullMQ
 - Se não existe, reenfileira o job
-- **Cenários cobertos:** falha no enqueue pós-commit, crash do worker durante `delivering`, restart/deploy do worker, Redis restart com perda de fila (AOF recovery parcial)
+- **Cenários cobertos:** falha no enqueue pós-commit, crash do worker durante `delivering`, restart/deploy do worker, Redis restart, **retry agendado mas job perdido**
 - **Classificação:** Fase 1 — nasce junto com ingest e worker
 
 ---
@@ -737,7 +781,7 @@ A plataforma armazena payloads de webhooks do WhatsApp que podem conter:
 | webhook-retry | Reprocessa falhas retriable conforme config | Contínuo (evento) |
 | log-cleanup | Remove payloads antigos e resumos expirados, dropa partições | Diário (meia-noite) |
 | notification-dispatcher | Envia alertas (plataforma, e-mail, WhatsApp) no threshold | Contínuo (evento) |
-| health-check | Ping nas URLs das rotas ativas para verificar disponibilidade | A cada 5 minutos |
+| health-check | Ping (HEAD request) nas URLs das rotas ativas. **Aplica mesmas regras do outbound real:** SSRF check, HTTPS obrigatório, TLS válido, maxRedirects: 0, timeout da rota | A cada 5 minutos |
 | orphan-recovery | Reenfileira RouteDeliveries pendentes sem job na fila | A cada 5 minutos |
 
 ---
@@ -748,10 +792,11 @@ A plataforma armazena payloads de webhooks do WhatsApp que podem conter:
 2. **Endpoint de Status** — `/api/health` retorna status app, banco e Redis
 3. **Exportação de Logs** — CSV com filtros aplicados
 4. **Modo de Teste por Rota** — Botão "Enviar teste" com payload de exemplo
-5. **Busca Global** — `Ctrl+K` para busca rápida em toda plataforma
-6. **Seeding Super Admin** — Criação automática via variáveis de ambiente na primeira execução
-7. **Audit Log** — Registro de ações sensíveis, acessível pelo super_admin (global) e company_admin (empresa)
-8. **Verificação Meta** — Endpoint GET `/api/webhook/:webhook_key` para challenge/response
+5. **Reenvio manual** — Cria uma **nova RouteDelivery** derivada (não reutiliza a original). A nova RouteDelivery referencia o mesmo `inbound_webhook_id` e `route_id`, mas tem `id`, timestamps e attempts próprios. A RouteDelivery original mantém seu status `failed` inalterado. Isso preserva histórico completo e separa métricas de entrega automática vs manual
+7. **Busca Global** — `Ctrl+K` para busca rápida em toda plataforma
+8. **Seeding Super Admin** — Criação automática via variáveis de ambiente na primeira execução
+9. **Audit Log** — Registro de ações sensíveis e de sistema, acessível pelo super_admin (global) e company_admin (empresa)
+10. **Verificação Meta** — Endpoint GET `/api/webhook/:webhook_key` para challenge/response
 
 ---
 
@@ -760,12 +805,12 @@ A plataforma armazena payloads de webhooks do WhatsApp que podem conter:
 | Métrica | Alvo | Notas |
 |---------|------|-------|
 | Tempo de ACK para Meta | < 500ms (p95) | Apenas persist + commit. Enqueue é pós-commit e não impacta ACK |
-| Latência de entrega assíncrona | < 5s (p95) em condições normais | Da persistência ao envio para a URL de destino |
+| Latência de entrega assíncrona | < 5s (p95) **em operação nominal** | Da persistência ao envio para a URL de destino. **Não se aplica** quando o fluxo depende do orphan-recovery (falha no enqueue), onde a latência pode chegar ao intervalo do recovery (5min default) |
 | Volume inicial esperado | ~100 webhooks/min total, ~20/min por empresa | Valores iniciais para dimensionamento. Ajustar conforme carga real |
 | Concorrência do worker | 10 jobs simultâneos (inicial) | Configurável via BullMQ `concurrency`. Aumentar conforme volume |
 | Comportamento sob burst | Rate limit 1000 req/min por empresa. Acima disso, HTTP 429 | Meta retenta automaticamente. Protege o sistema sem perder eventos |
 | Disponibilidade do ingest | 99.5% (alvo) | Prioridade máxima. Downtime = perda de webhooks até Meta reenviar |
-| Tempo máximo de retry | Definido por `retry_max_attempts × retry_intervals`. Default: ~2min10s | Após exaustão, vai para DLQ. Reenvio manual disponível |
+| Tempo máximo de retry | Soma dos `retry_intervals_seconds`. Default: 10+30+90 = 130s (~2min10s) após 3 retries + 1 tentativa inicial = 4 tentativas total | Após exaustão, vai para DLQ. Reenvio manual disponível |
 
 **Observabilidade:**
 - `/api/health` retorna status de app, PostgreSQL e Redis com latência de cada um
@@ -886,6 +931,7 @@ O sistema precisa funcionar de ponta a ponta antes de polir UX.
 - **Log cleanup job** (retenção de dados é requisito de LGPD desde o dia 1)
 - CRUD de rotas com checklist de eventos
 - Logs básicos (tabela com filtros)
+- **Audit log mínimo operacional** — tabela + registro automático de: login/logout, assinatura inválida, CRUD de credenciais, ações de sistema (cleanup, recovery). UI de consulta completa fica para Fase 3
 
 ### Fase 2 — Operação
 - Dashboard com métricas e gráficos
@@ -898,7 +944,7 @@ O sistema precisa funcionar de ponta a ponta antes de polir UX.
 ### Fase 3 — Completude
 - Gestão completa de usuários (convite por e-mail, atribuição de roles por empresa, UI de gerenciamento)
 - Perfil do usuário (foto, tema, senha)
-- Audit log
+- UI completa de audit log (filtros, busca, visualização por empresa)
 - Notificações por WhatsApp (Cloud API + custom)
 - Busca global (Ctrl+K)
 - Exportação CSV
