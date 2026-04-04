@@ -68,14 +68,18 @@ export function RouteList({ companyId }: RouteListProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-lg font-semibold text-white">
             Rotas de Webhook
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-zinc-500">
             Configure para onde os eventos WhatsApp serao encaminhados
           </p>
         </div>
-        <Button onClick={handleCreate} size="sm">
+        <Button
+          onClick={handleCreate}
+          size="sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200 hover:shadow-[0_0_16px_rgba(37,99,235,0.3)]"
+        >
           <Plus className="mr-1.5 h-4 w-4" />
           Nova Rota
         </Button>
@@ -84,7 +88,7 @@ export function RouteList({ companyId }: RouteListProps) {
       {/* Loading */}
       {isLoading && routes.length === 0 && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
         </div>
       )}
 
@@ -95,17 +99,21 @@ export function RouteList({ companyId }: RouteListProps) {
           animate={{ opacity: 1 }}
           className="flex flex-col items-center justify-center py-12 text-center"
         >
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
-            <Route className="h-8 w-8 text-muted-foreground" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 border border-zinc-700 mb-4">
+            <Route className="h-8 w-8 text-zinc-500" />
           </div>
-          <h3 className="text-sm font-medium text-foreground mb-1">
+          <h3 className="text-sm font-medium text-zinc-200 mb-1">
             Nenhuma rota configurada
           </h3>
-          <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+          <p className="text-sm text-zinc-500 mb-4 max-w-sm">
             Crie sua primeira rota para comecar a receber eventos WhatsApp em
             seus sistemas.
           </p>
-          <Button onClick={handleCreate} size="sm">
+          <Button
+            onClick={handleCreate}
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+          >
             <Plus className="mr-1.5 h-4 w-4" />
             Criar primeira rota
           </Button>

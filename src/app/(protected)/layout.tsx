@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
+import { Sidebar } from '@/components/layout/sidebar';
 
 export default async function ProtectedLayout({
   children,
@@ -12,5 +13,20 @@ export default async function ProtectedLayout({
     redirect('/login');
   }
 
-  return <>{children}</>;
+  const user = {
+    name: session.user.name || session.user.email || 'Usuario',
+    email: session.user.email || '',
+    role: (session.user as any)?.isSuperAdmin ? 'Super Admin' : 'Usuario',
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#09090b]">
+      <Sidebar user={user} />
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
 }

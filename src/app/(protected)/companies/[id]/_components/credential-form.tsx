@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Save } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +41,8 @@ export function CredentialForm({ companyId, onSuccess }: CredentialFormProps) {
     });
   }
 
+  const inputClasses = "bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200";
+
   return (
     <form action={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -53,7 +55,7 @@ export function CredentialForm({ companyId, onSuccess }: CredentialFormProps) {
             name="metaAppId"
             placeholder="123456789"
             required
-            className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+            className={inputClasses}
           />
         </div>
 
@@ -67,7 +69,7 @@ export function CredentialForm({ companyId, onSuccess }: CredentialFormProps) {
             type="password"
             placeholder="Seu app secret"
             required
-            className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+            className={inputClasses}
           />
         </div>
 
@@ -81,7 +83,7 @@ export function CredentialForm({ companyId, onSuccess }: CredentialFormProps) {
             type="password"
             placeholder="Token de verificacao"
             required
-            className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+            className={inputClasses}
           />
         </div>
 
@@ -95,7 +97,7 @@ export function CredentialForm({ companyId, onSuccess }: CredentialFormProps) {
             type="password"
             placeholder="EAAxxxxxxxx"
             required
-            className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+            className={inputClasses}
           />
         </div>
 
@@ -107,7 +109,7 @@ export function CredentialForm({ companyId, onSuccess }: CredentialFormProps) {
             id="phoneNumberId"
             name="phoneNumberId"
             placeholder="109876543"
-            className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+            className={inputClasses}
           />
         </div>
 
@@ -119,7 +121,7 @@ export function CredentialForm({ companyId, onSuccess }: CredentialFormProps) {
             id="wabaId"
             name="wabaId"
             placeholder="112233445566"
-            className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+            className={inputClasses}
           />
         </div>
       </div>
@@ -131,9 +133,22 @@ export function CredentialForm({ companyId, onSuccess }: CredentialFormProps) {
         </p>
       )}
 
-      <Button type="submit" disabled={isPending} className="gap-2">
-        <Save className="h-4 w-4" />
-        {isPending ? "Salvando..." : "Salvar Credenciais"}
+      <Button
+        type="submit"
+        disabled={isPending}
+        className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+      >
+        {isPending ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Salvando...
+          </>
+        ) : (
+          <>
+            <Save className="h-4 w-4" />
+            Salvar Credenciais
+          </>
+        )}
       </Button>
     </form>
   );

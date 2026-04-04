@@ -16,10 +16,10 @@ interface RouteCardProps {
     name: string;
     icon: string;
     url: string;
-    events: unknown; // JSON
+    events: unknown;
     isActive: boolean;
     timeoutMs: number;
-    headers: unknown; // JSON
+    headers: unknown;
   };
   onEdit: () => void;
   onDelete: () => void;
@@ -30,7 +30,6 @@ function maskUrl(url: string): string {
     const parsed = new URL(url);
     const host = parsed.hostname;
     const path = parsed.pathname;
-    // Exibir host completo + path truncado
     const truncatedPath =
       path.length > 20 ? path.substring(0, 20) + "..." : path;
     return `${host}${truncatedPath}`;
@@ -58,54 +57,58 @@ export function RouteCard({ route, onEdit, onDelete }: RouteCardProps) {
       exit={{ opacity: 0, y: -10 }}
       layout
     >
-      <Card className="group border-border/50 hover:border-border transition-colors">
+      <Card className="group bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all duration-200 rounded-xl">
         <CardContent className="flex items-center gap-4 p-4">
           {/* Icone */}
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
             <Icon className="h-5 w-5" />
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium text-foreground truncate">
+              <h3 className="text-sm font-medium text-zinc-100 truncate">
                 {route.name}
               </h3>
               <Badge
                 variant={route.isActive ? "default" : "secondary"}
-                className="text-xs shrink-0"
+                className={`text-xs shrink-0 ${
+                  route.isActive
+                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                    : "bg-zinc-500/15 text-zinc-400 border border-zinc-500/30"
+                }`}
               >
                 {route.isActive ? "Ativa" : "Inativa"}
               </Badge>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-xs text-zinc-500">
               <ExternalLink className="h-3 w-3 shrink-0" />
-              <span className="truncate">{maskUrl(route.url)}</span>
+              <span className="truncate font-mono">{maskUrl(route.url)}</span>
             </div>
           </div>
 
           {/* Badges */}
           <div className="hidden sm:flex items-center gap-2 shrink-0">
-            <Badge variant="outline" className="text-xs tabular-nums">
+            <Badge variant="outline" className="text-xs tabular-nums border-zinc-700 text-zinc-400">
               {eventCount}/{TOTAL_EVENTS} eventos
             </Badge>
             {headerCount > 0 && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-zinc-700 text-zinc-400">
                 {headerCount} headers
               </Badge>
             )}
-            <Badge variant="outline" className="text-xs tabular-nums">
+            <Badge variant="outline" className="text-xs tabular-nums border-zinc-700 text-zinc-400">
               {route.timeoutMs / 1000}s timeout
             </Badge>
           </div>
 
           {/* Acoes */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={onEdit}
-              className="h-8 w-8"
+              className="h-8 w-8 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 cursor-pointer transition-all duration-200"
               title="Editar rota"
             >
               <Pencil className="h-4 w-4" />
@@ -114,7 +117,7 @@ export function RouteCard({ route, onEdit, onDelete }: RouteCardProps) {
               variant="ghost"
               size="icon"
               onClick={onDelete}
-              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
               title="Desativar rota"
             >
               <Trash2 className="h-4 w-4" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Eye, EyeOff, Copy, Check } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { revealCredentialField } from "@/lib/actions/credential";
 
@@ -51,7 +51,7 @@ export function SensitiveField({
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-medium text-zinc-400">{label}</label>
-      <div className="flex items-center gap-2 p-2.5 rounded-md bg-zinc-800/50 border border-zinc-700/50">
+      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
         <code className="text-sm text-zinc-300 truncate flex-1 font-mono">
           {displayValue}
         </code>
@@ -59,11 +59,13 @@ export function SensitiveField({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-7 w-7 cursor-pointer transition-all duration-200 hover:bg-zinc-700"
             onClick={handleToggle}
             disabled={isPending}
           >
-            {revealed ? (
+            {isPending ? (
+              <Loader2 className="h-3.5 w-3.5 text-zinc-400 animate-spin" />
+            ) : revealed ? (
               <EyeOff className="h-3.5 w-3.5 text-zinc-400" />
             ) : (
               <Eye className="h-3.5 w-3.5 text-zinc-400" />
@@ -73,7 +75,7 @@ export function SensitiveField({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-7 w-7 cursor-pointer transition-all duration-200 hover:bg-zinc-700"
               onClick={handleCopy}
             >
               {copied ? (

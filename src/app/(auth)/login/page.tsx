@@ -9,13 +9,13 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen bg-zinc-950">
-      {/* Lado esquerdo — Branding (hidden no mobile) */}
+    <div className="flex min-h-screen bg-[#09090b]">
+      {/* Lado esquerdo -- Branding (hidden no mobile) */}
       <div className="hidden w-1/2 lg:block">
         <LoginBranding />
       </div>
 
-      {/* Lado direito — Formulario */}
+      {/* Lado direito -- Formulario */}
       <div className="flex w-full items-center justify-center p-6 lg:w-1/2">
         <Suspense>
           <LoginForm />

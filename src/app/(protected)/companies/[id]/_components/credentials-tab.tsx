@@ -28,7 +28,7 @@ export async function CredentialsTab({ companyId }: CredentialsTabProps) {
   return (
     <div className="space-y-6">
       {/* Aviso de seguranca */}
-      <Card className="bg-amber-500/5 border-amber-500/20">
+      <Card className="bg-amber-500/5 border border-amber-500/20 rounded-xl">
         <CardContent className="flex items-start gap-3 pt-4">
           <ShieldCheck className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
           <div>
@@ -45,11 +45,11 @@ export async function CredentialsTab({ companyId }: CredentialsTabProps) {
 
       {credential ? (
         <>
-          {/* Credenciais existentes — exibir mascaradas */}
-          <Card className="bg-zinc-900 border-zinc-800">
+          {/* Credenciais existentes */}
+          <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
             <CardHeader>
               <CardTitle className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-                <Key className="h-4 w-4" />
+                <Key className="h-4 w-4 text-blue-400" />
                 Credenciais Meta Configuradas
               </CardTitle>
             </CardHeader>
@@ -59,7 +59,7 @@ export async function CredentialsTab({ companyId }: CredentialsTabProps) {
                 <label className="text-xs font-medium text-zinc-400">
                   Meta App ID
                 </label>
-                <div className="p-2.5 rounded-md bg-zinc-800/50 border border-zinc-700/50">
+                <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
                   <code className="text-sm text-zinc-300 font-mono">
                     {credential.metaAppId}
                   </code>
@@ -94,7 +94,7 @@ export async function CredentialsTab({ companyId }: CredentialsTabProps) {
                   <label className="text-xs font-medium text-zinc-400">
                     Phone Number ID
                   </label>
-                  <div className="p-2.5 rounded-md bg-zinc-800/50 border border-zinc-700/50">
+                  <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
                     <code className="text-sm text-zinc-300 font-mono">
                       {credential.phoneNumberId}
                     </code>
@@ -107,7 +107,7 @@ export async function CredentialsTab({ companyId }: CredentialsTabProps) {
                   <label className="text-xs font-medium text-zinc-400">
                     WABA ID
                   </label>
-                  <div className="p-2.5 rounded-md bg-zinc-800/50 border border-zinc-700/50">
+                  <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
                     <code className="text-sm text-zinc-300 font-mono">
                       {credential.wabaId}
                     </code>
@@ -118,7 +118,7 @@ export async function CredentialsTab({ companyId }: CredentialsTabProps) {
           </Card>
 
           {/* Formulario para atualizar */}
-          <Card className="bg-zinc-900 border-zinc-800">
+          <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
             <CardHeader>
               <CardTitle className="text-sm font-medium text-zinc-300">
                 Atualizar Credenciais
@@ -134,8 +134,8 @@ export async function CredentialsTab({ companyId }: CredentialsTabProps) {
           </Card>
         </>
       ) : (
-        /* Sem credenciais — exibir formulario de criacao */
-        <Card className="bg-zinc-900 border-zinc-800">
+        /* Sem credenciais */
+        <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-zinc-300 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-400" />

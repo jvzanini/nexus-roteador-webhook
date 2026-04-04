@@ -66,7 +66,6 @@ export function LogTable({ companyId, page }: LogTableProps) {
     });
   }
 
-  // Derivar o status "principal" de cada entrada (pior status entre deliveries)
   function getPrimaryStatus(entry: LogEntry): DeliveryStatus {
     if (entry.deliveries.length === 0) return "pending";
     const statuses = entry.deliveries.map((d) => d.status);
@@ -79,24 +78,24 @@ export function LogTable({ companyId, page }: LogTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-zinc-500">
         {page.totalCount} registro{page.totalCount !== 1 ? "s" : ""} encontrado
         {page.totalCount !== 1 ? "s" : ""}
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-xl border border-zinc-800 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-8" />
-              <TableHead className="w-[180px]">Timestamp</TableHead>
-              <TableHead>Evento</TableHead>
-              <TableHead>Rota(s)</TableHead>
-              <TableHead className="w-[120px]">Status</TableHead>
-              <TableHead className="w-[100px] text-right">
+            <TableRow className="border-zinc-800 hover:bg-transparent">
+              <TableHead className="w-8 text-zinc-500 text-xs" />
+              <TableHead className="w-[180px] text-zinc-500 text-xs">Timestamp</TableHead>
+              <TableHead className="text-zinc-500 text-xs">Evento</TableHead>
+              <TableHead className="text-zinc-500 text-xs">Rota(s)</TableHead>
+              <TableHead className="w-[120px] text-zinc-500 text-xs">Status</TableHead>
+              <TableHead className="w-[100px] text-right text-zinc-500 text-xs">
                 Duracao
               </TableHead>
-              <TableHead className="w-[80px] text-right">
+              <TableHead className="w-[80px] text-right text-zinc-500 text-xs">
                 Tentativas
               </TableHead>
             </TableRow>
@@ -106,7 +105,7 @@ export function LogTable({ companyId, page }: LogTableProps) {
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className="text-center text-muted-foreground py-8"
+                  className="text-center text-zinc-500 py-8"
                 >
                   Nenhum log encontrado para os filtros selecionados.
                 </TableCell>
@@ -130,23 +129,23 @@ export function LogTable({ companyId, page }: LogTableProps) {
               return (
                 <Fragment key={entry.id}>
                   <TableRow
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer hover:bg-zinc-800/30 transition-colors duration-200 border-zinc-800/50"
                     onClick={() => toggleRow(entry.id)}
                   >
                     <TableCell>
                       {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        <ChevronDown className="h-4 w-4 text-zinc-500" />
                       ) : (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        <ChevronRight className="h-4 w-4 text-zinc-500" />
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs text-zinc-400">
                       {format(new Date(entry.receivedAt), "dd/MM/yy HH:mm:ss", {
                         locale: ptBR,
                       })}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="font-mono text-xs">
+                      <Badge variant="outline" className="font-mono text-xs border-zinc-700 text-zinc-300">
                         {entry.eventType}
                       </Badge>
                     </TableCell>
@@ -155,13 +154,13 @@ export function LogTable({ companyId, page }: LogTableProps) {
                         {entry.deliveries.map((d) => (
                           <span
                             key={d.id}
-                            className="text-xs text-muted-foreground"
+                            className="text-xs text-zinc-400"
                           >
                             {d.routeName}
                           </span>
                         ))}
                         {entry.deliveries.length === 0 && (
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-zinc-500">
                             -
                           </span>
                         )}
@@ -170,10 +169,10 @@ export function LogTable({ companyId, page }: LogTableProps) {
                     <TableCell>
                       <LogStatusBadge status={primaryStatus} />
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs">
+                    <TableCell className="text-right font-mono text-xs text-zinc-500">
                       {maxDuration > 0 ? `${maxDuration}ms` : "-"}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs">
+                    <TableCell className="text-right font-mono text-xs text-zinc-500">
                       {totalAttempts}
                     </TableCell>
                   </TableRow>
@@ -201,7 +200,7 @@ export function LogTable({ companyId, page }: LogTableProps) {
           size="sm"
           onClick={loadFirstPage}
           disabled={!searchParams.get("cursor") || isPending}
-          className="gap-1"
+          className="gap-1 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
         >
           <ChevronLeft className="h-4 w-4" />
           Inicio
@@ -211,7 +210,7 @@ export function LogTable({ companyId, page }: LogTableProps) {
           size="sm"
           onClick={loadNextPage}
           disabled={!page.nextCursor || isPending}
-          className="gap-1"
+          className="gap-1 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
         >
           Proxima
           <ChevronsRight className="h-4 w-4" />

@@ -40,7 +40,7 @@ interface RouteFormDialogProps {
   companyId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  route?: RouteData | null; // null = criacao, preenchido = edicao
+  route?: RouteData | null;
   onSuccess?: () => void;
 }
 
@@ -54,7 +54,6 @@ export function RouteFormDialog({
   const isEditing = !!route;
   const [isPending, startTransition] = useTransition();
 
-  // Form state
   const [name, setName] = useState(route?.name ?? "");
   const [icon, setIcon] = useState(route?.icon ?? "Webhook");
   const [url, setUrl] = useState(route?.url ?? "");
@@ -133,6 +132,8 @@ export function RouteFormDialog({
     ]
   );
 
+  const inputClasses = "bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200";
+
   return (
     <Dialog
       open={open}
@@ -141,9 +142,9 @@ export function RouteFormDialog({
         onOpenChange(value);
       }}
     >
-      <DialogContent className="sm:max-w-2xl max-h-[90vh]">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] bg-zinc-900 border border-zinc-800 rounded-2xl">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-zinc-100">
             {isEditing ? "Editar Rota" : "Nova Rota de Webhook"}
           </DialogTitle>
         </DialogHeader>
@@ -159,7 +160,7 @@ export function RouteFormDialog({
               {/* Nome e icone */}
               <div className="grid grid-cols-[auto_1fr] gap-3 items-end">
                 <div className="space-y-2">
-                  <Label>Icone</Label>
+                  <Label className="text-zinc-300">Icone</Label>
                   <IconPicker
                     value={icon}
                     onChange={setIcon}
@@ -167,7 +168,7 @@ export function RouteFormDialog({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="route-name">Nome *</Label>
+                  <Label htmlFor="route-name" className="text-zinc-300">Nome *</Label>
                   <Input
                     id="route-name"
                     placeholder="Ex: N8N Producao, Chatwoot, etc."
@@ -175,9 +176,10 @@ export function RouteFormDialog({
                     onChange={(e) => setName(e.target.value)}
                     disabled={isPending}
                     maxLength={100}
+                    className={inputClasses}
                   />
                   {fieldErrors.name && (
-                    <p className="text-xs text-destructive">
+                    <p className="text-xs text-red-400">
                       {fieldErrors.name[0]}
                     </p>
                   )}
@@ -186,7 +188,7 @@ export function RouteFormDialog({
 
               {/* URL */}
               <div className="space-y-2">
-                <Label htmlFor="route-url">URL do Webhook *</Label>
+                <Label htmlFor="route-url" className="text-zinc-300">URL do Webhook *</Label>
                 <Input
                   id="route-url"
                   placeholder="https://api.exemplo.com/webhook"
@@ -194,12 +196,13 @@ export function RouteFormDialog({
                   onChange={(e) => setUrl(e.target.value)}
                   disabled={isPending}
                   type="url"
+                  className={inputClasses}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-zinc-500">
                   Somente URLs com HTTPS sao aceitas
                 </p>
                 {fieldErrors.url && (
-                  <p className="text-xs text-destructive">
+                  <p className="text-xs text-red-400">
                     {fieldErrors.url[0]}
                   </p>
                 )}
@@ -207,7 +210,7 @@ export function RouteFormDialog({
 
               {/* Secret Key */}
               <div className="space-y-2">
-                <Label htmlFor="route-secret">Secret Key (opcional)</Label>
+                <Label htmlFor="route-secret" className="text-zinc-300">Secret Key (opcional)</Label>
                 <div className="relative">
                   <Input
                     id="route-secret"
@@ -220,12 +223,12 @@ export function RouteFormDialog({
                     onChange={(e) => setSecretKey(e.target.value)}
                     disabled={isPending}
                     type={showSecretKey ? "text" : "password"}
-                    className="pr-10"
+                    className={`pr-10 ${inputClasses}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowSecretKey(!showSecretKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 cursor-pointer transition-colors duration-200"
                   >
                     {showSecretKey ? (
                       <EyeOff className="h-4 w-4" />
@@ -234,14 +237,14 @@ export function RouteFormDialog({
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-zinc-500">
                   Sera criptografada com AES-256-GCM antes de salvar
                 </p>
               </div>
 
               {/* Timeout */}
               <div className="space-y-2">
-                <Label htmlFor="route-timeout">Timeout (ms)</Label>
+                <Label htmlFor="route-timeout" className="text-zinc-300">Timeout (ms)</Label>
                 <Input
                   id="route-timeout"
                   type="number"
@@ -251,12 +254,13 @@ export function RouteFormDialog({
                   value={timeoutMs}
                   onChange={(e) => setTimeoutMs(Number(e.target.value))}
                   disabled={isPending}
+                  className={inputClasses}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-zinc-500">
                   Entre 1.000ms e 60.000ms. Padrao: 30.000ms
                 </p>
                 {fieldErrors.timeoutMs && (
-                  <p className="text-xs text-destructive">
+                  <p className="text-xs text-red-400">
                     {fieldErrors.timeoutMs[0]}
                   </p>
                 )}
@@ -271,14 +275,14 @@ export function RouteFormDialog({
 
               {/* Eventos */}
               <div className="space-y-2">
-                <Label>Eventos WhatsApp *</Label>
+                <Label className="text-zinc-300">Eventos WhatsApp *</Label>
                 <EventChecklist
                   selectedEvents={events}
                   onChange={setEvents}
                   disabled={isPending}
                 />
                 {fieldErrors.events && (
-                  <p className="text-xs text-destructive">
+                  <p className="text-xs text-red-400">
                     {fieldErrors.events[0]}
                   </p>
                 )}
@@ -286,16 +290,21 @@ export function RouteFormDialog({
             </motion.div>
           </ScrollArea>
 
-          <DialogFooter className="pt-4 border-t border-border/50">
+          <DialogFooter className="pt-4 border-t border-zinc-800">
             <Button
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
+              className="text-zinc-400 hover:text-zinc-200 cursor-pointer transition-all duration-200"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+            >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEditing ? "Salvar alteracoes" : "Criar rota"}
             </Button>

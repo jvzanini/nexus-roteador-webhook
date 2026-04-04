@@ -22,22 +22,22 @@ interface CompanyTabsProps {
 export function CompanyTabs({ company }: CompanyTabsProps) {
   return (
     <Tabs defaultValue="overview" className="space-y-6">
-      <TabsList className="bg-zinc-800/50 border border-zinc-700/50">
+      <TabsList className="bg-zinc-900 border border-zinc-800 rounded-lg p-1">
         <TabsTrigger
           value="overview"
-          className="data-[state=active]:bg-zinc-700 data-[state=active]:text-zinc-100"
+          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
         >
           Visao Geral
         </TabsTrigger>
         <TabsTrigger
           value="credentials"
-          className="data-[state=active]:bg-zinc-700 data-[state=active]:text-zinc-100"
+          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
         >
           Credenciais
         </TabsTrigger>
         <TabsTrigger
           value="routes"
-          className="data-[state=active]:bg-zinc-700 data-[state=active]:text-zinc-100"
+          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
         >
           Rotas
         </TabsTrigger>

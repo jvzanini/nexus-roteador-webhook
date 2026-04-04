@@ -50,25 +50,30 @@ export function RouteDeleteDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="bg-zinc-900 border border-zinc-800 rounded-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
+          <AlertDialogTitle className="flex items-center gap-2 text-zinc-100">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
             Desativar rota
           </AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogDescription className="text-zinc-400">
             Tem certeza que deseja desativar a rota{" "}
-            <strong>&quot;{routeName}&quot;</strong>? Ela deixara de receber
+            <strong className="text-zinc-200">&quot;{routeName}&quot;</strong>? Ela deixara de receber
             webhooks, mas podera ser reativada futuramente. Entregas pendentes
             nao serao afetadas.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel
+            disabled={isPending}
+            className="border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+          >
+            Cancelar
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-red-600 text-white hover:bg-red-700 cursor-pointer transition-all duration-200"
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Desativar

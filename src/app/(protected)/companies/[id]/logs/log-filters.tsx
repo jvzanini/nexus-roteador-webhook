@@ -131,26 +131,26 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
         {/* Status multi-select */}
         <Popover>
           <PopoverTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
+            render={<Button variant="outline" size="sm" className="gap-2 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200" />}
           >
             <Filter className="h-4 w-4" />
             Status
             {selectedStatuses.length > 0 && (
-              <Badge variant="secondary" className="ml-1">
+              <Badge variant="secondary" className="ml-1 bg-blue-500/15 text-blue-400 border-blue-500/30">
                 {selectedStatuses.length}
               </Badge>
             )}
           </PopoverTrigger>
-          <PopoverContent className="w-48 p-2" align="start">
+          <PopoverContent className="w-48 p-2 bg-zinc-900 border-zinc-800" align="start">
             <div className="space-y-1">
               {ALL_STATUSES.map((s) => (
                 <button
                   key={s.value}
                   onClick={() => toggleStatus(s.value)}
-                  className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${
+                  className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer ${
                     selectedStatuses.includes(s.value)
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-muted"
+                      ? "bg-blue-500/10 text-blue-400"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
                   }`}
                 >
                   {s.label}
@@ -163,33 +163,33 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
         {/* Event type multi-select */}
         <Popover>
           <PopoverTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
+            render={<Button variant="outline" size="sm" className="gap-2 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200" />}
           >
             <Filter className="h-4 w-4" />
             Evento
             {selectedEventTypes.length > 0 && (
-              <Badge variant="secondary" className="ml-1">
+              <Badge variant="secondary" className="ml-1 bg-blue-500/15 text-blue-400 border-blue-500/30">
                 {selectedEventTypes.length}
               </Badge>
             )}
           </PopoverTrigger>
-          <PopoverContent className="w-56 p-2" align="start">
+          <PopoverContent className="w-56 p-2 bg-zinc-900 border-zinc-800" align="start">
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {eventTypes.map((et) => (
                 <button
                   key={et}
                   onClick={() => toggleEventType(et)}
-                  className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${
+                  className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer ${
                     selectedEventTypes.includes(et)
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-muted"
+                      ? "bg-blue-500/10 text-blue-400"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
                   }`}
                 >
                   {et}
                 </button>
               ))}
               {eventTypes.length === 0 && (
-                <p className="text-sm text-muted-foreground px-3 py-1.5">
+                <p className="text-sm text-zinc-500 px-3 py-1.5">
                   Nenhum evento encontrado
                 </p>
               )}
@@ -199,10 +199,10 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
 
         {/* Route select */}
         <Select value={selectedRouteId} onValueChange={(v) => setSelectedRouteId(v ?? "")}>
-          <SelectTrigger className="w-[180px] h-9">
+          <SelectTrigger className="w-[180px] h-9 border-zinc-800 bg-zinc-900 text-zinc-400">
             <SelectValue placeholder="Rota" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-zinc-900 border-zinc-800">
             <SelectItem value="">Todas as rotas</SelectItem>
             {routes.map((r) => (
               <SelectItem key={r.id} value={r.id}>
@@ -215,14 +215,14 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
         {/* Date range */}
         <Popover>
           <PopoverTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
+            render={<Button variant="outline" size="sm" className="gap-2 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200" />}
           >
             <CalendarIcon className="h-4 w-4" />
             {dateFrom
               ? format(dateFrom, "dd/MM/yy", { locale: ptBR })
               : "De"}
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-800" align="start">
             <Calendar
               mode="single"
               selected={dateFrom}
@@ -235,14 +235,14 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
 
         <Popover>
           <PopoverTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
+            render={<Button variant="outline" size="sm" className="gap-2 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200" />}
           >
             <CalendarIcon className="h-4 w-4" />
             {dateTo
               ? format(dateTo, "dd/MM/yy", { locale: ptBR })
               : "Ate"}
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-800" align="start">
             <Calendar
               mode="single"
               selected={dateTo}
@@ -254,7 +254,12 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
         </Popover>
 
         {/* Apply / Clear */}
-        <Button size="sm" onClick={applyFilters} disabled={isPending}>
+        <Button
+          size="sm"
+          onClick={applyFilters}
+          disabled={isPending}
+          className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+        >
           Filtrar
         </Button>
 
@@ -263,7 +268,7 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="gap-1"
+            className="gap-1 text-zinc-400 hover:text-zinc-200 cursor-pointer transition-all duration-200"
           >
             <X className="h-4 w-4" />
             Limpar

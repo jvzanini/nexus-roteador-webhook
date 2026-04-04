@@ -53,13 +53,13 @@ export default async function LogsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Logs de Webhooks</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl font-bold text-white tracking-tight">Logs de Webhooks</h2>
+        <p className="text-sm text-zinc-500 mt-1">
           Historico de recebimento e entrega de webhooks.
         </p>
       </div>
 
-      <Suspense fallback={<div className="animate-pulse">Carregando filtros...</div>}>
+      <Suspense fallback={<div className="animate-pulse text-zinc-500 text-sm">Carregando filtros...</div>}>
         <LogFilters eventTypes={eventTypes} routes={routes} />
       </Suspense>
 
