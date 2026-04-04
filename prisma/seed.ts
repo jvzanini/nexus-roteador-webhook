@@ -1,7 +1,9 @@
 import { PrismaClient } from "../src/generated/prisma/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
+});
 
 async function main() {
   // ─── Super Admin ────────────────────────────────────────────────
