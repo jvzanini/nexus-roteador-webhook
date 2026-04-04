@@ -11,7 +11,7 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 1:** CONCLUÍDA (em produção)
 - **Fase 2A:** CONCLUÍDA (em produção) — dashboard real, gráficos, reenvio, UI premium
 - **Pendentes pré-2B:** CONCLUÍDOS — Aba Logs integrada + Visão Geral mini dashboard
-- **Fase 2B:** Em progresso — config globais OK, health check já existia. Pendente: Socket.io, notificações
+- **Fase 2B:** Em progresso — config globais OK, health check OK, notificações OK. Pendente: Socket.io (real-time)
 - **Fase 3:** Pendente (gestão usuários, WhatsApp, busca global)
 
 ## Idioma
@@ -66,12 +66,12 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 - `webhook-routes.ts` — CRUD de rotas
 - `dashboard.ts` — métricas e dados do dashboard (action agregadora) + `getCompanyOverviewData`
 - `settings.ts` — CRUD de configurações globais (admin-only)
+- `notifications.ts` — feed de notificações (getNotifications, markAsRead, markAllAsRead)
 - `resend.ts` — reenvio de webhooks (delivery derivada)
 
 ## Próximo Passo
-Continuar Fase 2B:
-1. **Notificações** — service layer + feed in-app (model Prisma + cleanup worker já existem)
-2. **Socket.io** — real-time updates (depende de notificações para ter conteúdo útil)
+Finalizar Fase 2B:
+1. **Socket.io** — real-time updates no dashboard e notificações (único pendente)
 
 ## Documentação
 - **Spec geral:** `docs/superpowers/specs/2026-04-03-nexus-roteador-webhook-design.md` (v7)
