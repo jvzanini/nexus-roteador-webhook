@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -25,6 +24,22 @@ import type { DeliveryStatus } from "@/generated/prisma/client";
 interface LogFiltersProps {
   eventTypes: string[];
   routes: { id: string; name: string }[];
+  filters: {
+    statuses: DeliveryStatus[];
+    eventTypes: string[];
+    routeId: string;
+    dateFrom: Date | undefined;
+    dateTo: Date | undefined;
+  };
+  onApply: (filters: {
+    statuses: DeliveryStatus[];
+    eventTypes: string[];
+    routeId: string;
+    dateFrom: Date | undefined;
+    dateTo: Date | undefined;
+  }) => void;
+  onClear: () => void;
+  isPending: boolean;
 }
 
 const ALL_STATUSES: { value: DeliveryStatus; label: string }[] = [
@@ -35,58 +50,34 @@ const ALL_STATUSES: { value: DeliveryStatus; label: string }[] = [
   { value: "delivering", label: "Enviando" },
 ];
 
-export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-
+export function LogFilters({
+  eventTypes,
+  routes,
+  filters,
+  onApply,
+  onClear,
+  isPending,
+}: LogFiltersProps) {
+  // Estado local do formulario de filtros
   const [selectedStatuses, setSelectedStatuses] = useState<DeliveryStatus[]>(
-    () => {
-      const param = searchParams.get("statuses");
-      return param ? (param.split(",") as DeliveryStatus[]) : [];
-    }
+    filters.statuses
   );
-
-  const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>(() => {
-    const param = searchParams.get("eventTypes");
-    return param ? param.split(",") : [];
-  });
-
+  const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>(
+    filters.eventTypes
+  );
   const [selectedRouteId, setSelectedRouteId] = useState<string>(
-    () => searchParams.get("routeId") || ""
+    filters.routeId
   );
-
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(() => {
-    const param = searchParams.get("dateFrom");
-    return param ? new Date(param) : undefined;
-  });
-
-  const [dateTo, setDateTo] = useState<Date | undefined>(() => {
-    const param = searchParams.get("dateTo");
-    return param ? new Date(param) : undefined;
-  });
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(filters.dateFrom);
+  const [dateTo, setDateTo] = useState<Date | undefined>(filters.dateTo);
 
   function applyFilters() {
-    const params = new URLSearchParams();
-    if (selectedStatuses.length > 0) {
-      params.set("statuses", selectedStatuses.join(","));
-    }
-    if (selectedEventTypes.length > 0) {
-      params.set("eventTypes", selectedEventTypes.join(","));
-    }
-    if (selectedRouteId) {
-      params.set("routeId", selectedRouteId);
-    }
-    if (dateFrom) {
-      params.set("dateFrom", dateFrom.toISOString());
-    }
-    if (dateTo) {
-      params.set("dateTo", dateTo.toISOString());
-    }
-
-    startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
+    onApply({
+      statuses: selectedStatuses,
+      eventTypes: selectedEventTypes,
+      routeId: selectedRouteId,
+      dateFrom,
+      dateTo,
     });
   }
 
@@ -96,10 +87,7 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
     setSelectedRouteId("");
     setDateFrom(undefined);
     setDateTo(undefined);
-
-    startTransition(() => {
-      router.push(pathname);
-    });
+    onClear();
   }
 
   function toggleStatus(status: DeliveryStatus) {

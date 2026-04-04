@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition, Fragment } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useState, Fragment } from "react";
 import {
   Table,
   TableBody,
@@ -31,19 +30,26 @@ import type { DeliveryStatus } from "@/generated/prisma/client";
 interface LogTableProps {
   companyId: string;
   page: LogsPage;
+  onNextPage: (cursor: string) => void;
+  onFirstPage: () => void;
+  hasCursor: boolean;
+  isPending: boolean;
 }
 
-export function LogTable({ companyId, page }: LogTableProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+export function LogTable({
+  companyId,
+  page,
+  onNextPage,
+  onFirstPage,
+  hasCursor,
+  isPending,
+}: LogTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [isPending, startTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [batchResending, setBatchResending] = useState(false);
 
-  // Coletar todos os delivery IDs com status failed na página
+  // Coletar todos os delivery IDs com status failed na pagina
   const failedDeliveryIds = page.entries.flatMap((e) =>
     e.deliveries.filter((d) => d.status === "failed").map((d) => d.id)
   );
@@ -76,21 +82,13 @@ export function LogTable({ companyId, page }: LogTableProps) {
 
   function loadNextPage() {
     if (!page.nextCursor) return;
-    setSelectedIds(new Set()); // Limpar seleção ao navegar
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("cursor", page.nextCursor);
-    startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
-    });
+    setSelectedIds(new Set());
+    onNextPage(page.nextCursor);
   }
 
   function loadFirstPage() {
-    setSelectedIds(new Set()); // Limpar seleção ao navegar
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("cursor");
-    startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
-    });
+    setSelectedIds(new Set());
+    onFirstPage();
   }
 
   async function handleResendSingle(deliveryId: string) {
@@ -100,7 +98,7 @@ export function LogTable({ companyId, page }: LogTableProps) {
       if (result.created && result.enqueued) {
         toast.success("Reenvio criado e enfileirado");
       } else if (result.created && !result.enqueued) {
-        toast.success("Reenvio criado. Será processado automaticamente");
+        toast.success("Reenvio criado. Sera processado automaticamente");
       } else {
         toast.error(result.error || "Erro ao reenviar");
       }
@@ -114,12 +112,12 @@ export function LogTable({ companyId, page }: LogTableProps) {
   async function handleResendBatch() {
     if (selectedIds.size === 0) return;
     if (selectedIds.size > 50) {
-      toast.error("Máximo 50 por vez");
+      toast.error("Maximo 50 por vez");
       return;
     }
 
     const confirmed = window.confirm(
-      `Tem certeza que deseja reenviar ${selectedIds.size} entrega${selectedIds.size > 1 ? "s" : ""}? Novas entregas serão criadas e enfileiradas.`
+      `Tem certeza que deseja reenviar ${selectedIds.size} entrega${selectedIds.size > 1 ? "s" : ""}? Novas entregas serao criadas e enfileiradas.`
     );
     if (!confirmed) return;
 
@@ -131,14 +129,14 @@ export function LogTable({ companyId, page }: LogTableProps) {
       } else if (result.created > 0) {
         let msg = `${result.created} reenvio${result.created > 1 ? "s" : ""} criado${result.created > 1 ? "s" : ""}`;
         if (result.enqueueFailed > 0) {
-          msg += `. ${result.enqueueFailed} será${result.enqueueFailed > 1 ? "ão" : ""} processado${result.enqueueFailed > 1 ? "s" : ""} automaticamente`;
+          msg += `. ${result.enqueueFailed} sera${result.enqueueFailed > 1 ? "o" : ""} processado${result.enqueueFailed > 1 ? "s" : ""} automaticamente`;
         }
         if (result.skipped > 0) {
           msg += `. ${result.skipped} ignorado${result.skipped > 1 ? "s" : ""}`;
         }
         toast.success(msg);
       } else {
-        toast.error("Nenhuma entrega pôde ser reenviada");
+        toast.error("Nenhuma entrega pode ser reenviada");
       }
       setSelectedIds(new Set());
     } catch {
@@ -166,7 +164,7 @@ export function LogTable({ companyId, page }: LogTableProps) {
           {page.totalCount !== 1 ? "s" : ""}
         </div>
 
-        {/* Barra de ações de lote */}
+        {/* Barra de acoes de lote */}
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-3">
             <span className="text-sm text-zinc-400">
@@ -178,7 +176,7 @@ export function LogTable({ companyId, page }: LogTableProps) {
               onClick={handleResendBatch}
               disabled={batchResending || selectedIds.size > 50}
               className="gap-1.5 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-all duration-200"
-              title={selectedIds.size > 50 ? "Máximo 50 por vez" : undefined}
+              title={selectedIds.size > 50 ? "Maximo 50 por vez" : undefined}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${batchResending ? "animate-spin" : ""}`} />
               Reenviar selecionados
@@ -206,7 +204,7 @@ export function LogTable({ companyId, page }: LogTableProps) {
               <TableHead className="text-zinc-500 text-xs">Evento</TableHead>
               <TableHead className="text-zinc-500 text-xs">Rota(s)</TableHead>
               <TableHead className="w-[120px] text-zinc-500 text-xs">Status</TableHead>
-              <TableHead className="w-[100px] text-right text-zinc-500 text-xs">Duração</TableHead>
+              <TableHead className="w-[100px] text-right text-zinc-500 text-xs">Duracao</TableHead>
               <TableHead className="w-[80px] text-right text-zinc-500 text-xs">Tentativas</TableHead>
               <TableHead className="w-[50px] text-zinc-500 text-xs" />
             </TableRow>
@@ -228,7 +226,7 @@ export function LogTable({ companyId, page }: LogTableProps) {
                 0
               );
 
-              // Checkbox: mostra se alguma delivery é failed
+              // Checkbox: mostra se alguma delivery eh failed
               const failedInEntry = entry.deliveries.filter((d) => d.status === "failed");
               const hasFailedDelivery = failedInEntry.length > 0;
               const entryFailedIds = failedInEntry.map((d) => d.id);
@@ -316,17 +314,17 @@ export function LogTable({ companyId, page }: LogTableProps) {
         </Table>
       </div>
 
-      {/* Paginação */}
+      {/* Paginacao */}
       <div className="flex items-center justify-between">
         <Button
           variant="outline"
           size="sm"
           onClick={loadFirstPage}
-          disabled={!searchParams.get("cursor") || isPending}
+          disabled={!hasCursor || isPending}
           className="gap-1 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
         >
           <ChevronLeft className="h-4 w-4" />
-          Início
+          Inicio
         </Button>
         <Button
           variant="outline"
@@ -335,7 +333,7 @@ export function LogTable({ companyId, page }: LogTableProps) {
           disabled={!page.nextCursor || isPending}
           className="gap-1 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
         >
-          Próxima
+          Proxima
           <ChevronsRight className="h-4 w-4" />
         </Button>
       </div>

@@ -1,35 +1,138 @@
 "use client";
 
-import Link from "next/link";
-import { FileText, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, useEffect, useCallback, useTransition } from "react";
+import { getWebhookLogs, getAvailableEventTypes, getAvailableRoutes } from "@/lib/actions/logs";
+import type { LogsPage, LogFilters as LogFiltersType } from "@/lib/actions/logs";
+import type { DeliveryStatus } from "@/generated/prisma/client";
+import { LogFilters } from "./logs/log-filters";
+import { LogTable } from "./logs/log-table";
 
 interface LogsTabProps {
   companyId: string;
 }
 
 export function LogsTab({ companyId }: LogsTabProps) {
+  const [page, setPage] = useState<LogsPage | null>(null);
+  const [eventTypes, setEventTypes] = useState<string[]>([]);
+  const [routes, setRoutes] = useState<{ id: string; name: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+
+  // Estado dos filtros
+  const [filters, setFilters] = useState<{
+    statuses: DeliveryStatus[];
+    eventTypes: string[];
+    routeId: string;
+    dateFrom: Date | undefined;
+    dateTo: Date | undefined;
+    cursor: string | undefined;
+  }>({
+    statuses: [],
+    eventTypes: [],
+    routeId: "",
+    dateFrom: undefined,
+    dateTo: undefined,
+    cursor: undefined,
+  });
+
+  const fetchLogs = useCallback(async (currentFilters: typeof filters) => {
+    const filterPayload: LogFiltersType = {
+      companyId,
+      statuses: currentFilters.statuses.length > 0 ? currentFilters.statuses : undefined,
+      eventTypes: currentFilters.eventTypes.length > 0 ? currentFilters.eventTypes : undefined,
+      routeId: currentFilters.routeId || undefined,
+      dateFrom: currentFilters.dateFrom,
+      dateTo: currentFilters.dateTo,
+      cursor: currentFilters.cursor,
+      pageSize: 25,
+    };
+    const result = await getWebhookLogs(filterPayload);
+    setPage(result);
+  }, [companyId]);
+
+  // Carregamento inicial
+  useEffect(() => {
+    Promise.all([
+      fetchLogs(filters),
+      getAvailableEventTypes(companyId).then(setEventTypes),
+      getAvailableRoutes(companyId).then(setRoutes),
+    ]).finally(() => setLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleApplyFilters = useCallback((newFilters: {
+    statuses: DeliveryStatus[];
+    eventTypes: string[];
+    routeId: string;
+    dateFrom: Date | undefined;
+    dateTo: Date | undefined;
+  }) => {
+    const updated = { ...newFilters, cursor: undefined };
+    setFilters(updated);
+    startTransition(() => {
+      fetchLogs(updated);
+    });
+  }, [fetchLogs]);
+
+  const handleClearFilters = useCallback(() => {
+    const cleared = {
+      statuses: [] as DeliveryStatus[],
+      eventTypes: [] as string[],
+      routeId: "",
+      dateFrom: undefined,
+      dateTo: undefined,
+      cursor: undefined,
+    };
+    setFilters(cleared);
+    startTransition(() => {
+      fetchLogs(cleared);
+    });
+  }, [fetchLogs]);
+
+  const handleNextPage = useCallback((cursor: string) => {
+    const updated = { ...filters, cursor };
+    setFilters(updated);
+    startTransition(() => {
+      fetchLogs(updated);
+    });
+  }, [filters, fetchLogs]);
+
+  const handleFirstPage = useCallback(() => {
+    const updated = { ...filters, cursor: undefined };
+    setFilters(updated);
+    startTransition(() => {
+      fetchLogs(updated);
+    });
+  }, [filters, fetchLogs]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-10 bg-zinc-800/50 rounded-lg animate-pulse" />
+        <div className="h-64 bg-zinc-800/50 rounded-xl animate-pulse" />
+      </div>
+    );
+  }
+
   return (
-    <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
-      <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-        <div className="p-4 rounded-full bg-zinc-800">
-          <FileText className="h-8 w-8 text-zinc-400" />
-        </div>
-        <div className="text-center space-y-1">
-          <p className="text-zinc-200 font-medium">Logs de Webhook</p>
-          <p className="text-sm text-zinc-500">
-            Visualize todas as requisicoes recebidas e os resultados de roteamento.
-          </p>
-        </div>
-        <Button
-          render={<Link href={`/companies/${companyId}/logs`} />}
-          className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
-        >
-          Ver logs completos
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <LogFilters
+        eventTypes={eventTypes}
+        routes={routes}
+        filters={filters}
+        onApply={handleApplyFilters}
+        onClear={handleClearFilters}
+        isPending={isPending}
+      />
+      {page && (
+        <LogTable
+          companyId={companyId}
+          page={page}
+          onNextPage={handleNextPage}
+          onFirstPage={handleFirstPage}
+          hasCursor={!!filters.cursor}
+          isPending={isPending}
+        />
+      )}
+    </div>
   );
 }
