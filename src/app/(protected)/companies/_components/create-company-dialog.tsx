@@ -56,7 +56,7 @@ export function CreateCompanyDialog() {
           <DialogTitle className="text-zinc-100">Criar Empresa</DialogTitle>
           <DialogDescription className="text-zinc-400">
             Adicione uma nova empresa para configurar o roteamento de webhooks.
-            O slug e a webhook key serao gerados automaticamente.
+            O slug e a webhook key serao gerados automaticamente se nao informados.
           </DialogDescription>
         </DialogHeader>
 
