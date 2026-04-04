@@ -1,0 +1,307 @@
+"use client";
+
+import { useState, useCallback, useTransition } from "react";
+import { motion } from "framer-motion";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { IconPicker } from "@/components/icon-picker/icon-picker";
+import { EventChecklist } from "@/components/event-checklist/event-checklist";
+import {
+  RouteHeaderFields,
+  type HeaderEntry,
+} from "@/components/routes/route-header-fields";
+import {
+  createWebhookRoute,
+  updateWebhookRoute,
+} from "@/lib/actions/webhook-routes";
+import { toast } from "sonner";
+
+interface RouteData {
+  id: string;
+  name: string;
+  icon: string;
+  url: string;
+  events: string[];
+  headers: HeaderEntry[] | null;
+  timeoutMs: number;
+}
+
+interface RouteFormDialogProps {
+  companyId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  route?: RouteData | null; // null = criacao, preenchido = edicao
+  onSuccess?: () => void;
+}
+
+export function RouteFormDialog({
+  companyId,
+  open,
+  onOpenChange,
+  route,
+  onSuccess,
+}: RouteFormDialogProps) {
+  const isEditing = !!route;
+  const [isPending, startTransition] = useTransition();
+
+  // Form state
+  const [name, setName] = useState(route?.name ?? "");
+  const [icon, setIcon] = useState(route?.icon ?? "Webhook");
+  const [url, setUrl] = useState(route?.url ?? "");
+  const [secretKey, setSecretKey] = useState("");
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [events, setEvents] = useState<string[]>(
+    (route?.events as string[]) ?? []
+  );
+  const [headers, setHeaders] = useState<HeaderEntry[]>(
+    (route?.headers as HeaderEntry[]) ?? []
+  );
+  const [timeoutMs, setTimeoutMs] = useState(route?.timeoutMs ?? 30000);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  const resetForm = useCallback(() => {
+    setName(route?.name ?? "");
+    setIcon(route?.icon ?? "Webhook");
+    setUrl(route?.url ?? "");
+    setSecretKey("");
+    setShowSecretKey(false);
+    setEvents((route?.events as string[]) ?? []);
+    setHeaders((route?.headers as HeaderEntry[]) ?? []);
+    setTimeoutMs(route?.timeoutMs ?? 30000);
+    setFieldErrors({});
+  }, [route]);
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      setFieldErrors({});
+
+      const input = {
+        name,
+        icon,
+        url,
+        secretKey: secretKey || undefined,
+        events,
+        headers: headers.length > 0 ? headers : null,
+        timeoutMs,
+      };
+
+      startTransition(async () => {
+        const result = isEditing
+          ? await updateWebhookRoute(route!.id, companyId, input)
+          : await createWebhookRoute(companyId, input);
+
+        if (result.success) {
+          toast.success(
+            isEditing ? "Rota atualizada com sucesso" : "Rota criada com sucesso"
+          );
+          onOpenChange(false);
+          resetForm();
+          onSuccess?.();
+        } else {
+          if (result.fieldErrors) {
+            setFieldErrors(result.fieldErrors);
+          }
+          toast.error(result.error ?? "Erro ao salvar rota");
+        }
+      });
+    },
+    [
+      name,
+      icon,
+      url,
+      secretKey,
+      events,
+      headers,
+      timeoutMs,
+      isEditing,
+      route,
+      companyId,
+      onOpenChange,
+      resetForm,
+      onSuccess,
+    ]
+  );
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!value) resetForm();
+        onOpenChange(value);
+      }}
+    >
+      <DialogContent className="sm:max-w-2xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>
+            {isEditing ? "Editar Rota" : "Nova Rota de Webhook"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit}>
+          <ScrollArea className="h-[60vh] pr-4">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6 pb-4"
+            >
+              {/* Nome e icone */}
+              <div className="grid grid-cols-[auto_1fr] gap-3 items-end">
+                <div className="space-y-2">
+                  <Label>Icone</Label>
+                  <IconPicker
+                    value={icon}
+                    onChange={setIcon}
+                    disabled={isPending}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="route-name">Nome *</Label>
+                  <Input
+                    id="route-name"
+                    placeholder="Ex: N8N Producao, Chatwoot, etc."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isPending}
+                    maxLength={100}
+                  />
+                  {fieldErrors.name && (
+                    <p className="text-xs text-destructive">
+                      {fieldErrors.name[0]}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* URL */}
+              <div className="space-y-2">
+                <Label htmlFor="route-url">URL do Webhook *</Label>
+                <Input
+                  id="route-url"
+                  placeholder="https://api.exemplo.com/webhook"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  disabled={isPending}
+                  type="url"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Somente URLs com HTTPS sao aceitas
+                </p>
+                {fieldErrors.url && (
+                  <p className="text-xs text-destructive">
+                    {fieldErrors.url[0]}
+                  </p>
+                )}
+              </div>
+
+              {/* Secret Key */}
+              <div className="space-y-2">
+                <Label htmlFor="route-secret">Secret Key (opcional)</Label>
+                <div className="relative">
+                  <Input
+                    id="route-secret"
+                    placeholder={
+                      isEditing
+                        ? "Deixe vazio para manter a atual"
+                        : "Chave secreta para assinatura HMAC"
+                    }
+                    value={secretKey}
+                    onChange={(e) => setSecretKey(e.target.value)}
+                    disabled={isPending}
+                    type={showSecretKey ? "text" : "password"}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSecretKey(!showSecretKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showSecretKey ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Sera criptografada com AES-256-GCM antes de salvar
+                </p>
+              </div>
+
+              {/* Timeout */}
+              <div className="space-y-2">
+                <Label htmlFor="route-timeout">Timeout (ms)</Label>
+                <Input
+                  id="route-timeout"
+                  type="number"
+                  min={1000}
+                  max={60000}
+                  step={1000}
+                  value={timeoutMs}
+                  onChange={(e) => setTimeoutMs(Number(e.target.value))}
+                  disabled={isPending}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Entre 1.000ms e 60.000ms. Padrao: 30.000ms
+                </p>
+                {fieldErrors.timeoutMs && (
+                  <p className="text-xs text-destructive">
+                    {fieldErrors.timeoutMs[0]}
+                  </p>
+                )}
+              </div>
+
+              {/* Headers customizados */}
+              <RouteHeaderFields
+                headers={headers}
+                onChange={setHeaders}
+                disabled={isPending}
+              />
+
+              {/* Eventos */}
+              <div className="space-y-2">
+                <Label>Eventos WhatsApp *</Label>
+                <EventChecklist
+                  selectedEvents={events}
+                  onChange={setEvents}
+                  disabled={isPending}
+                />
+                {fieldErrors.events && (
+                  <p className="text-xs text-destructive">
+                    {fieldErrors.events[0]}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          </ScrollArea>
+
+          <DialogFooter className="pt-4 border-t border-border/50">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isEditing ? "Salvar alteracoes" : "Criar rota"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
