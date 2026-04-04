@@ -3,7 +3,7 @@ version: "3.8"
 services:
   app:
     image: ghcr.io/jvzanini/nexus-roteador-webhook:latest
-    command: ["node", "server.js"]
+    command: ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node server.js"]
     environment:
       - DATABASE_URL=postgresql://nexus:${DB_PASSWORD}@db:5432/nexus
       - REDIS_URL=redis://redis:6379
