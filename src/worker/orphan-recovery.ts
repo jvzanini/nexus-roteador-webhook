@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { webhookDeliveryQueue } from "../lib/queue";
+import { logAudit } from "../lib/audit";
 
 /**
  * Job de recuperação de entregas órfãs.
@@ -95,6 +96,20 @@ export async function recoverOrphanDeliveries(
         (err as Error).message
       );
     }
+  }
+
+  // Registrar no AuditLog se houve recuperacoes
+  if (recovered > 0) {
+    logAudit({
+      actorType: "system",
+      actorLabel: "orphan-recovery",
+      action: "delivery.orphan_recovery",
+      resourceType: "RouteDelivery",
+      details: {
+        recoveredCount: recovered,
+        checkedCount: orphanCandidates.length,
+      },
+    });
   }
 
   return { recovered, checked: orphanCandidates.length };

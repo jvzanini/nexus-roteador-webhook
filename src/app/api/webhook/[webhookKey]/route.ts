@@ -5,6 +5,7 @@ import { verifySignature } from "@/lib/webhook/signature";
 import { normalizeWebhookPayload } from "@/lib/webhook/normalizer";
 import { computeDedupeKey, extractDedupeParams } from "@/lib/webhook/deduplicator";
 import { webhookDeliveryQueue } from "@/lib/queue";
+import { logAudit } from "@/lib/audit";
 
 interface RouteParams {
   params: Promise<{ webhookKey: string }>;
@@ -106,20 +107,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   if (!verifySignature(rawBody, signatureHeader, appSecret)) {
     // Assinatura invalida -> HTTP 401 + registro no AuditLog
-    await prisma.auditLog.create({
-      data: {
-        actorType: "system",
-        actorLabel: "webhook-receiver",
-        companyId: company.id,
-        action: "webhook.signature_invalid",
-        resourceType: "inbound_webhook",
-        details: {
-          webhookKey,
-          reason: "Invalid X-Hub-Signature-256",
-        },
-        ipAddress: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? null,
-        userAgent: request.headers.get("user-agent") ?? null,
+    await logAudit({
+      actorType: "system",
+      actorLabel: "webhook-ingest",
+      companyId: company.id,
+      action: "auth.invalid_signature",
+      resourceType: "InboundWebhook",
+      details: {
+        webhookKey,
+        reason: "Assinatura X-Hub-Signature-256 invalida",
       },
+      ipAddress: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? undefined,
+      userAgent: request.headers.get("user-agent") ?? undefined,
     });
 
     return NextResponse.json(

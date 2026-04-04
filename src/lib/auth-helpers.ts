@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { checkLoginRateLimit } from '@/lib/rate-limit';
+import { logAudit } from '@/lib/audit';
 
 interface Credentials {
   email: string;
@@ -54,6 +55,18 @@ export async function authorizeCredentials(
   if (!isPasswordValid) {
     return null;
   }
+
+  // Registrar login no audit log (fire-and-forget)
+  logAudit({
+    actorType: "user",
+    actorId: user.id,
+    actorLabel: user.email,
+    action: "auth.login",
+    resourceType: "User",
+    resourceId: user.id,
+    details: {},
+    ipAddress: ipAddress,
+  });
 
   return {
     id: user.id,

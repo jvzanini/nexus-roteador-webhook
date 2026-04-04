@@ -8,6 +8,7 @@ import {
   upsertCredentialSchema,
   type UpsertCredentialInput,
 } from "@/lib/validations/credential";
+import { logAudit } from "@/lib/audit";
 
 type ActionResult<T = unknown> = {
   success: boolean;
@@ -181,6 +182,12 @@ export async function upsertCredential(
       wabaId: wabaId || null,
     };
 
+    // Verificar se ja existe para determinar action do audit
+    const existing = await prisma.companyCredential.findUnique({
+      where: { companyId },
+      select: { id: true },
+    });
+
     const credential = await prisma.companyCredential.upsert({
       where: { companyId },
       create: {
@@ -188,6 +195,18 @@ export async function upsertCredential(
         ...data,
       },
       update: data,
+    });
+
+    // Audit log (fire-and-forget)
+    logAudit({
+      actorType: "user",
+      actorId: user.id,
+      actorLabel: user.email ?? "unknown",
+      companyId,
+      action: existing ? "credential.update" : "credential.create",
+      resourceType: "CompanyCredential",
+      resourceId: credential.id,
+      details: { metaAppId: parsed.data.metaAppId },
     });
 
     revalidatePath(`/companies/${companyId}`);
