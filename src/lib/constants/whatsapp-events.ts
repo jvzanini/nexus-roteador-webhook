@@ -7,6 +7,8 @@ export interface WhatsAppEvent {
 export interface WhatsAppEventCategory {
   id: string;
   label: string;
+  description: string;
+  icon: string;
   events: WhatsAppEvent[];
 }
 
@@ -14,6 +16,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "messages",
     label: "Mensagens",
+    description: "Mensagens recebidas pelo WhatsApp (texto, midia, interacoes)",
+    icon: "MessageSquare",
     events: [
       { id: "messages.text", label: "Texto", description: "Mensagem de texto recebida" },
       { id: "messages.image", label: "Imagem", description: "Mensagem com imagem recebida" },
@@ -37,6 +41,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "statuses",
     label: "Status de Entrega",
+    description: "Confirmacoes de envio, entrega e leitura",
+    icon: "CheckCheck",
     events: [
       { id: "statuses.sent", label: "Enviado", description: "Mensagem enviada ao servidor WhatsApp" },
       { id: "statuses.delivered", label: "Entregue", description: "Mensagem entregue ao destinatario" },
@@ -47,6 +53,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "calls",
     label: "Chamadas",
+    description: "Chamadas de voz recebidas e realizadas",
+    icon: "Phone",
     events: [
       { id: "calls.inbound", label: "Recebida", description: "Chamada de voz recebida" },
       { id: "calls.outbound", label: "Realizada", description: "Chamada de voz realizada" },
@@ -55,6 +63,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "account",
     label: "Conta",
+    description: "Atualizacoes de status, revisao e qualidade da conta",
+    icon: "UserCog",
     events: [
       { id: "account_update", label: "Atualizacao de conta", description: "Conta WhatsApp Business atualizada" },
       { id: "account_alerts", label: "Alertas de conta", description: "Alertas sobre a conta (limites, restricoes)" },
@@ -67,6 +77,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "templates",
     label: "Templates",
+    description: "Status e qualidade dos templates de mensagem",
+    icon: "FileText",
     events: [
       { id: "message_template_status_update", label: "Status do template", description: "Status de aprovacao do template alterado" },
       { id: "message_template_quality_update", label: "Qualidade do template", description: "Qualidade do template atualizada" },
@@ -78,6 +90,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "business",
     label: "Negocio",
+    description: "Atualizacoes de capacidade e limites do negocio",
+    icon: "Briefcase",
     events: [
       { id: "business_capability_update", label: "Capacidades", description: "Capacidades do negocio atualizadas" },
       { id: "business_status_update", label: "Status do negocio", description: "Status da conta de negocio atualizado" },
@@ -86,6 +100,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "groups",
     label: "Grupos",
+    description: "Eventos de grupos do WhatsApp (lifecycle, participantes, config)",
+    icon: "Users",
     events: [
       { id: "group_lifecycle_update", label: "Ciclo de vida do grupo", description: "Grupo criado, arquivado ou excluido" },
       { id: "group_participants_update", label: "Participantes do grupo", description: "Participantes adicionados ou removidos do grupo" },
@@ -96,6 +112,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "payments",
     label: "Pagamentos",
+    description: "Configuracoes de pagamento",
+    icon: "CreditCard",
     events: [
       { id: "payment_configuration_update", label: "Configuracao de pagamento", description: "Configuracoes de pagamento atualizadas" },
     ],
@@ -103,6 +121,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "flows",
     label: "Flows",
+    description: "Eventos de WhatsApp Flows (formularios interativos)",
+    icon: "GitBranch",
     events: [
       { id: "flows", label: "Flows", description: "Eventos relacionados a WhatsApp Flows (status, erros, latencia, disponibilidade)" },
     ],
@@ -110,6 +130,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "messaging",
     label: "Mensageria",
+    description: "Handovers e ecos de mensagens entre apps",
+    icon: "MessageCircle",
     events: [
       { id: "message_echoes", label: "Echo de mensagens", description: "Eco de mensagens enviadas pelo proprio numero" },
       { id: "messaging_handovers", label: "Handover de mensageria", description: "Transferencia de controle de conversa entre apps" },
@@ -119,6 +141,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "history",
     label: "Historico",
+    description: "Eventos de historico de conversas",
+    icon: "History",
     events: [
       { id: "history", label: "Historico", description: "Dados historicos de mensagens e conversas" },
     ],
@@ -126,6 +150,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "tracking",
     label: "Rastreamento",
+    description: "Eventos de rastreamento e analytics",
+    icon: "BarChart3",
     events: [
       { id: "tracking_events", label: "Eventos de rastreamento", description: "Eventos de rastreamento de acoes e interacoes" },
       { id: "automatic_events", label: "Eventos automaticos", description: "Eventos gerados automaticamente pela plataforma" },
@@ -134,6 +160,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "preferences",
     label: "Preferencias",
+    description: "Preferencias do usuario",
+    icon: "Settings",
     events: [
       { id: "user_preferences", label: "Preferencias do usuario", description: "Preferencias de comunicacao do usuario atualizadas" },
     ],
@@ -141,6 +169,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "partner",
     label: "Parceiro",
+    description: "Solucoes de parceiros Meta",
+    icon: "Handshake",
     events: [
       { id: "partner_solutions", label: "Solucoes de parceiro", description: "Eventos relacionados a solucoes e integracoes de parceiros" },
     ],
@@ -148,6 +178,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "security",
     label: "Seguranca",
+    description: "Alertas de seguranca da conta",
+    icon: "ShieldAlert",
     events: [
       { id: "security", label: "Evento de seguranca", description: "Evento de seguranca (ex: codigo de verificacao)" },
     ],
@@ -155,6 +187,8 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
     id: "smb",
     label: "SMB",
+    description: "Mensagens enviadas pelo app nativo do WhatsApp Business",
+    icon: "Store",
     events: [
       { id: "smb_message_echoes", label: "Echo de mensagens SMB", description: "Eco de mensagens enviadas por SMB" },
       { id: "smb_app_state_sync", label: "Sincronizacao de estado SMB", description: "Sincronizacao de estado do app SMB" },

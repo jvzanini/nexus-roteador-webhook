@@ -2,7 +2,49 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, CheckSquare, Square } from "lucide-react";
+import {
+  ChevronDown,
+  CheckSquare,
+  Square,
+  MessageSquare,
+  CheckCheck,
+  Phone,
+  UserCog,
+  FileText,
+  Briefcase,
+  ShieldAlert,
+  GitBranch,
+  Store,
+  Users,
+  CreditCard,
+  MessageCircle,
+  History,
+  BarChart3,
+  Settings,
+  Handshake,
+  PauseCircle,
+} from "lucide-react";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const iconMap: Record<string, any> = {
+  MessageSquare,
+  CheckCheck,
+  Phone,
+  UserCog,
+  FileText,
+  Briefcase,
+  ShieldAlert,
+  GitBranch,
+  Store,
+  Users,
+  CreditCard,
+  MessageCircle,
+  History,
+  BarChart3,
+  Settings,
+  Handshake,
+  PauseCircle,
+};
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -162,8 +204,23 @@ export function EventChecklist({
                         />
                       }
                     >
-                      <span>{category.label}</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {(() => {
+                          const IconComp = iconMap[category.icon];
+                          return IconComp ? (
+                            <IconComp className="h-4 w-4 shrink-0 text-zinc-400" />
+                          ) : null;
+                        })()}
+                        <div className="flex flex-col items-start min-w-0">
+                          <span>{category.label}</span>
+                          {category.description && (
+                            <span className="text-xs text-zinc-500 font-normal truncate max-w-[200px]">
+                              {category.description}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
                         <Badge
                           variant={selectedCount > 0 ? "default" : "outline"}
                           className="text-xs tabular-nums"
