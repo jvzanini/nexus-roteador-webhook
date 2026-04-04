@@ -375,36 +375,41 @@ export async function getDashboardData(
   period: string = "today",
   page: number = 1,
 ): Promise<ActionResult<DashboardData>> {
-  const user = await getCurrentUser();
-  if (!user) return { success: false, error: "Não autenticado" };
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Não autenticado" };
 
-  const validPeriod = (["today", "7d", "30d"].includes(period) ? period : "today") as Period;
+    const validPeriod = (["today", "7d", "30d"].includes(period) ? period : "today") as Period;
 
-  // Tenant scoping
-  const accessibleCompanyIds = await getAccessibleCompanyIds(user);
-  const tenantFilter = buildTenantFilter(accessibleCompanyIds);
+    // Tenant scoping
+    const accessibleCompanyIds = await getAccessibleCompanyIds(user);
+    const tenantFilter = buildTenantFilter(accessibleCompanyIds);
 
-  // Se companyId fornecido, validar acesso
-  if (companyId) {
-    await assertCompanyAccess(user, companyId);
+    // Se companyId fornecido, validar acesso
+    if (companyId) {
+      await assertCompanyAccess(user, companyId);
+    }
+
+    // Buscar lista de empresas para dropdown
+    const companies = await prisma.company.findMany({
+      where: { isActive: true, ...tenantFilter },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+
+    const [stats, chart, topErrors, recentDeliveries] = await Promise.all([
+      getStats(validPeriod, tenantFilter, companyId),
+      getChart(validPeriod, tenantFilter, companyId),
+      getTopErrors(validPeriod, tenantFilter, companyId),
+      getRecentDeliveries(tenantFilter, companyId, page),
+    ]);
+
+    return {
+      success: true,
+      data: { stats, chart, topErrors, recentDeliveries, companies },
+    };
+  } catch (error) {
+    console.error("[dashboard] Erro ao buscar dados:", error);
+    return { success: false, error: "Erro ao carregar dados do dashboard" };
   }
-
-  // Buscar lista de empresas para dropdown
-  const companies = await prisma.company.findMany({
-    where: { isActive: true, ...tenantFilter },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
-
-  const [stats, chart, topErrors, recentDeliveries] = await Promise.all([
-    getStats(validPeriod, tenantFilter, companyId),
-    getChart(validPeriod, tenantFilter, companyId),
-    getTopErrors(validPeriod, tenantFilter, companyId),
-    getRecentDeliveries(tenantFilter, companyId, page),
-  ]);
-
-  return {
-    success: true,
-    data: { stats, chart, topErrors, recentDeliveries, companies },
-  };
 }

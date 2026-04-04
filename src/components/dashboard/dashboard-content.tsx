@@ -35,6 +35,7 @@ const POLL_INTERVAL = 60_000; // 60s
 
 export function DashboardContent({ userName }: DashboardContentProps) {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [companyId, setCompanyId] = useState<string | undefined>(undefined);
@@ -48,7 +49,12 @@ export function DashboardContent({ userName }: DashboardContentProps) {
       const result = await getDashboardData(companyId, period, page);
       if (result.success && result.data) {
         setData(result.data);
+        setError(null);
+      } else {
+        setError(result.error || "Erro ao carregar dados");
       }
+    } catch {
+      setError("Erro de conexão com o servidor");
     } finally {
       setIsLoading(false);
       setIsInitialLoad(false);
@@ -111,7 +117,19 @@ export function DashboardContent({ userName }: DashboardContentProps) {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <p className="text-zinc-400 text-sm">{error || "Erro ao carregar dashboard"}</p>
+        <button
+          onClick={() => fetchData(true)}
+          className="px-4 py-2 text-sm bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors cursor-pointer"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
 
   return (
     <motion.div
