@@ -69,7 +69,7 @@ export async function getAllSettings(): Promise<ActionResult<SettingsData>> {
     }
 
     // Merge: DB values override defaults
-    const merged = { ...DEFAULTS, ...dbValues } as SettingsData;
+    const merged = { ...DEFAULTS, ...dbValues } as unknown as SettingsData;
     return { success: true, data: merged };
   } catch (error) {
     console.error("[settings] Erro ao buscar:", error);
