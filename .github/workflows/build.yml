@@ -55,45 +55,62 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+      PORTAINER_TOKEN: ${{ secrets.PORTAINER_TOKEN }}
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
     steps:
-      - name: Pull new image on VPS
+      - name: Pull image and update services
         run: |
-          # Fazer pull da nova imagem no Portainer
-          AUTH=$(echo -n '{"username":"jvzanini","password":"${{ secrets.GHCR_TOKEN }}"}' | base64)
-          curl -sk -X POST \
-            -H "X-API-Key: ${{ secrets.PORTAINER_TOKEN }}" \
-            -H "X-Registry-Auth: $AUTH" \
-            "${{ secrets.PORTAINER_URL }}/api/endpoints/1/docker/images/create?fromImage=ghcr.io/jvzanini/nexus-roteador-webhook&tag=latest"
+          # Pull da nova imagem no Portainer
+          AUTH=$(echo -n "{\"username\":\"jvzanini\",\"password\":\"${GHCR_TOKEN}\"}" | base64 -w 0)
 
-      - name: Force update services
-        run: |
-          # Forçar update dos serviços app e worker para usar a nova imagem
-          for SERVICE in nexus-roteador-webhook_app nexus-roteador-webhook_worker; do
-            # Buscar service ID e versão
-            SERVICE_DATA=$(curl -sk \
-              -H "X-API-Key: ${{ secrets.PORTAINER_TOKEN }}" \
-              "${{ secrets.PORTAINER_URL }}/api/endpoints/1/docker/services" | \
-              python3 -c "import sys,json; svcs=json.load(sys.stdin); [print(json.dumps({'id':s['ID'],'version':s['Version']['Index'],'spec':s['Spec']})) for s in svcs if s['Spec']['Name']=='$SERVICE']")
+          curl --insecure -X POST \
+            -H "X-API-Key: ${PORTAINER_TOKEN}" \
+            -H "X-Registry-Auth: ${AUTH}" \
+            "${PORTAINER_URL}/api/endpoints/1/docker/images/create?fromImage=ghcr.io/jvzanini/nexus-roteador-webhook&tag=latest" \
+            -o /dev/null -w "Pull: HTTP %{http_code}\n"
 
-            if [ -n "$SERVICE_DATA" ]; then
-              SVC_ID=$(echo "$SERVICE_DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['id'])")
-              SVC_VERSION=$(echo "$SERVICE_DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['version'])")
-              SVC_SPEC=$(echo "$SERVICE_DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d['spec']))")
+          # Forçar update dos serviços
+          SERVICES=$(curl --insecure -s \
+            -H "X-API-Key: ${PORTAINER_TOKEN}" \
+            "${PORTAINER_URL}/api/endpoints/1/docker/services")
 
-              # Update com forceUpdate para recriar containers
-              UPDATED_SPEC=$(echo "$SVC_SPEC" | python3 -c "
+          for SERVICE_NAME in nexus-roteador-webhook_app nexus-roteador-webhook_worker; do
+            SVC_ID=$(echo "$SERVICES" | python3 -c "
           import sys,json
-          spec = json.load(sys.stdin)
-          spec['TaskTemplate']['ForceUpdate'] = spec['TaskTemplate'].get('ForceUpdate', 0) + 1
-          print(json.dumps(spec))
-          ")
+          for s in json.load(sys.stdin):
+              if s['Spec']['Name'] == '$SERVICE_NAME':
+                  print(s['ID']); break
+          " 2>/dev/null)
 
-              curl -sk -X POST \
-                -H "X-API-Key: ${{ secrets.PORTAINER_TOKEN }}" \
+            SVC_VERSION=$(echo "$SERVICES" | python3 -c "
+          import sys,json
+          for s in json.load(sys.stdin):
+              if s['Spec']['Name'] == '$SERVICE_NAME':
+                  print(s['Version']['Index']); break
+          " 2>/dev/null)
+
+            SVC_SPEC=$(echo "$SERVICES" | python3 -c "
+          import sys,json
+          for s in json.load(sys.stdin):
+              if s['Spec']['Name'] == '$SERVICE_NAME':
+                  spec = s['Spec']
+                  spec['TaskTemplate']['ForceUpdate'] = spec['TaskTemplate'].get('ForceUpdate', 0) + 1
+                  print(json.dumps(spec)); break
+          " 2>/dev/null)
+
+            if [ -n "$SVC_ID" ] && [ -n "$SVC_SPEC" ]; then
+              curl --insecure -s -X POST \
+                -H "X-API-Key: ${PORTAINER_TOKEN}" \
                 -H "Content-Type: application/json" \
-                -d "$UPDATED_SPEC" \
-                "${{ secrets.PORTAINER_URL }}/api/endpoints/1/docker/services/$SVC_ID/update?version=$SVC_VERSION"
-
-              echo "Updated $SERVICE"
+                -H "X-Registry-Auth: ${AUTH}" \
+                -d "$SVC_SPEC" \
+                "${PORTAINER_URL}/api/endpoints/1/docker/services/${SVC_ID}/update?version=${SVC_VERSION}" \
+                -o /dev/null -w "Update ${SERVICE_NAME}: HTTP %{http_code}\n"
+            else
+              echo "Service ${SERVICE_NAME} not found, skipping"
             fi
           done
+
+          echo "Deploy complete!"
