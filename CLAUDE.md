@@ -9,7 +9,8 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 
 ## Status
 - **Fase 1:** CONCLUÍDA (em produção)
-- **Fase 2A:** CONCLUÍDA (dashboard real, gráficos, reenvio) — aguardando deploy
+- **Fase 2A:** CONCLUÍDA (em produção) — dashboard real, gráficos, reenvio, UI premium
+- **Pendente imediato:** Aba Logs completa dentro da empresa + Visão Geral como mini dashboard
 - **Fase 2B:** Pendente (Socket.io, notificações, configurações globais, health check)
 - **Fase 3:** Pendente (gestão usuários, WhatsApp, busca global)
 
@@ -21,6 +22,7 @@ Sempre responder em português brasileiro.
 - Código e variáveis em inglês
 - Comentários em português quando necessário
 - Server Actions em `src/lib/actions/` (pasta única consolidada)
+- Tabs da empresa: "Visão Geral", "WhatsApp Cloud", "Rotas de Webhook", "Logs"
 
 ## Stack Técnica
 - Next.js 14+ (App Router, Server Components, Server Actions)
@@ -40,6 +42,7 @@ Sempre responder em português brasileiro.
 - **Registry:** ghcr.io/jvzanini/nexus-roteador-webhook
 - **Rede:** rede_nexusAI (externa)
 - **Stack Portainer ID:** 101
+- **Migrations:** Prisma v7 não suporta migrate deploy no runtime. Aplicar via psql direto no container db
 
 ## Skills Obrigatórias
 - **dotcontext MCP:** Gerenciamento de contexto e memória do projeto
@@ -52,15 +55,22 @@ Sempre responder em português brasileiro.
 - Usar docker-compose.yml compatível com Portainer stacks
 - Credenciais NUNCA no GitHub — apenas em `.env.production` (local)
 - Ir pelo caminho mais simples e direto, sem complicar
+- Phone Number ID e WABA ID são obrigatórios nas credenciais
+- Webhook key personalizável (opcional, auto-gera se vazio)
 
 ## Estrutura de Actions
 Todas as Server Actions ficam em `src/lib/actions/`:
 - `company.ts` — CRUD de empresas
-- `credential.ts` — CRUD de credenciais
-- `logs.ts` — consulta de logs
+- `credential.ts` — CRUD de credenciais (WhatsApp Cloud)
+- `logs.ts` — consulta de logs (cursor-based pagination)
 - `webhook-routes.ts` — CRUD de rotas
-- `dashboard.ts` — métricas e dados do dashboard
-- `resend.ts` — reenvio de webhooks
+- `dashboard.ts` — métricas e dados do dashboard (action agregadora)
+- `resend.ts` — reenvio de webhooks (delivery derivada)
+
+## Próximo Passo
+Completar pendentes antes da Fase 2B:
+1. **Aba Logs completa** — tabela com filtros (fonte, status, período), payload expandível com editor JSON collapsible, visualização tela cheia, botão replay
+2. **Visão Geral como mini dashboard** — métricas por empresa (requests entregues/falhas, rotas ativas)
 
 ## Documentação
 - **Spec geral:** `docs/superpowers/specs/2026-04-03-nexus-roteador-webhook-design.md` (v7)
