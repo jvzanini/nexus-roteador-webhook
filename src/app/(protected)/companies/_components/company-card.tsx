@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Building2, Copy, Check, ExternalLink, Users } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { Building2, Copy, Check, Users, Key, Route, ChevronRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { CompanyStatusBadge } from "./company-status-badge";
 
 interface CompanyCardProps {
@@ -17,92 +16,100 @@ interface CompanyCardProps {
     isActive: boolean;
     _count: {
       memberships: number;
+      routes?: number;
     };
     credential: { id: string } | null;
   };
 }
 
 export function CompanyCard({ company }: CompanyCardProps) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
 
-  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/webhook/${company.webhookKey}`;
+  const webhookPath = `/api/webhook/${company.webhookKey}`;
 
-  async function handleCopyWebhookUrl() {
-    await navigator.clipboard.writeText(webhookUrl);
+  async function handleCopy(e: React.MouseEvent) {
+    e.stopPropagation();
+    const fullUrl = `${window.location.origin}${webhookPath}`;
+    await navigator.clipboard.writeText(fullUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
   return (
-    <Card className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all duration-200 rounded-xl group">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-        <div className="flex items-center gap-3">
-          {company.logoUrl ? (
-            <img
-              src={company.logoUrl}
-              alt={`Logo ${company.name}`}
-              className="w-10 h-10 rounded-lg object-cover"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700/50 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-zinc-400" />
+    <Card
+      onClick={() => router.push(`/companies/${company.id}`)}
+      className="bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-all duration-300 rounded-xl cursor-pointer group relative overflow-hidden"
+    >
+      {/* Hover glow */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+        <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-blue-600/5 blur-2xl" />
+      </div>
+
+      <CardContent className="p-5 relative">
+        {/* Header: logo + nome + status */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            {company.logoUrl ? (
+              <img
+                src={company.logoUrl}
+                alt={`Logo ${company.name}`}
+                className="w-11 h-11 rounded-xl object-cover ring-1 ring-zinc-700/50"
+              />
+            ) : (
+              <div className="w-11 h-11 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-zinc-500" />
+              </div>
+            )}
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors">
+                {company.name}
+              </h3>
+              <p className="text-xs text-zinc-600 font-mono">/{company.slug}</p>
             </div>
-          )}
-          <div>
-            <Link
-              href={`/companies/${company.id}`}
-              className="text-sm font-semibold text-zinc-100 hover:text-white transition-colors duration-200 cursor-pointer"
-            >
-              {company.name}
-            </Link>
-            <p className="text-xs text-zinc-500 font-mono">/{company.slug}</p>
+          </div>
+          <CompanyStatusBadge isActive={company.isActive} />
+        </div>
+
+        {/* Webhook URL */}
+        <div
+          onClick={handleCopy}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/60 border border-zinc-700/40 hover:border-zinc-600 transition-all duration-200 mb-4"
+        >
+          <code className="text-[11px] text-zinc-500 truncate flex-1 font-mono">
+            {webhookPath}
+          </code>
+          <div className="shrink-0">
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-emerald-400" />
+            ) : (
+              <Copy className="h-3.5 w-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+            )}
           </div>
         </div>
-        <CompanyStatusBadge isActive={company.isActive} />
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Webhook URL */}
-        <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
-          <code className="text-xs text-zinc-400 truncate flex-1 font-mono">
-            {webhookUrl}
-          </code>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0 cursor-pointer transition-all duration-200 hover:bg-zinc-700"
-            onClick={handleCopyWebhookUrl}
-          >
-            {copied ? (
-              <Check className="h-3 w-3 text-emerald-400" />
-            ) : (
-              <Copy className="h-3 w-3 text-zinc-400" />
-            )}
-          </Button>
-        </div>
 
-        {/* Stats */}
-        <div className="flex items-center gap-4 text-xs text-zinc-500">
-          <span className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            {company._count.memberships} membros
-          </span>
-          <span className="flex items-center gap-1">
-            {company.credential ? (
-              <span className="text-emerald-400">Credenciais configuradas</span>
-            ) : (
-              <span className="text-amber-400">Sem credenciais</span>
-            )}
-          </span>
+        {/* Stats row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-xs">
+            <span className="flex items-center gap-1.5 text-zinc-500">
+              <Users className="h-3.5 w-3.5" />
+              {company._count.memberships}
+            </span>
+            <span className="flex items-center gap-1.5 text-zinc-500">
+              <Route className="h-3.5 w-3.5" />
+              {company._count.routes ?? 0}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Key className="h-3.5 w-3.5" />
+              {company.credential ? (
+                <span className="text-emerald-500">Ativa</span>
+              ) : (
+                <span className="text-amber-500">Pendente</span>
+              )}
+            </span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all duration-200" />
         </div>
-
-        {/* Link */}
-        <Link
-          href={`/companies/${company.id}`}
-          className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors duration-200 cursor-pointer"
-        >
-          <ExternalLink className="h-3 w-3" />
-          Gerenciar
-        </Link>
       </CardContent>
     </Card>
   );
