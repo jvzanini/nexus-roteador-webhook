@@ -59,7 +59,7 @@ export async function runLogCleanup(): Promise<void> {
     },
     data: {
       rawBody: null,
-      rawPayload: null,
+      rawPayload: null as any,
     },
   });
   console.log(

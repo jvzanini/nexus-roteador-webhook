@@ -154,34 +154,36 @@ export function EventChecklist({
                       disabled={disabled}
                       className="data-[state=checked]:bg-primary"
                     />
-                    <CollapsibleTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex flex-1 items-center justify-between text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
-                      >
-                        <span>{category.label}</span>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant={selectedCount > 0 ? "default" : "outline"}
-                            className="text-xs tabular-nums"
-                          >
-                            {selectedCount}/{totalCount}
-                          </Badge>
-                          <motion.div
-                            animate={{ rotate: isOpen ? 180 : 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          </motion.div>
-                        </div>
-                      </button>
+                    <CollapsibleTrigger
+                      render={
+                        <button
+                          type="button"
+                          className="flex flex-1 items-center justify-between text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+                        />
+                      }
+                    >
+                      <span>{category.label}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={selectedCount > 0 ? "default" : "outline"}
+                          className="text-xs tabular-nums"
+                        >
+                          {selectedCount}/{totalCount}
+                        </Badge>
+                        <motion.div
+                          animate={{ rotate: isOpen ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        </motion.div>
+                      </div>
                     </CollapsibleTrigger>
                   </div>
 
                   {/* Lista de eventos */}
                   <AnimatePresence>
                     {isOpen && (
-                      <CollapsibleContent forceMount>
+                      <CollapsibleContent>
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}

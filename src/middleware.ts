@@ -1,10 +1,12 @@
 import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 
-export const { auth: middleware } = NextAuth(authConfig);
+const { auth } = NextAuth(authConfig);
+
+export default auth;
 
 export const config = {
-  // Matcher: protege tudo exceto assets estáticos e _next
+  // Matcher: protege tudo exceto assets estaticos e _next
   matcher: [
     /*
      * Match all request paths except:

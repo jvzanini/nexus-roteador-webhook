@@ -100,17 +100,19 @@ export function IconPicker({ value, onChange, disabled = false }: IconPickerProp
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          disabled={disabled}
-          className="flex items-center gap-2 h-10"
-        >
-          <SelectedIcon className="h-5 w-5" />
-          <span className="text-sm text-muted-foreground">{value || "Escolher icone"}</span>
-        </Button>
+      <DialogTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={disabled}
+            className="flex items-center gap-2 h-10"
+          />
+        }
+      >
+        <SelectedIcon className="h-5 w-5" />
+        <span className="text-sm text-muted-foreground">{value || "Escolher icone"}</span>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>

@@ -129,15 +129,15 @@ export async function getWebhookLogs(filters: LogFilters): Promise<LogsPage> {
 
   // Cursor-based pagination
   const cursorClause = parsed.cursor
-    ? { cursor: { id: parsed.cursor }, skip: 1 }
-    : {};
+    ? { cursor: { id: parsed.cursor } as const, skip: 1 as const }
+    : undefined;
 
   const [entries, totalCount] = await Promise.all([
     prisma.inboundWebhook.findMany({
       where,
       orderBy: { receivedAt: "desc" },
       take: parsed.pageSize,
-      ...cursorClause,
+      ...(cursorClause ?? {}),
       select: {
         id: true,
         receivedAt: true,

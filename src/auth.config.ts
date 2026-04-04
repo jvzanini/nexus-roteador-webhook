@@ -19,7 +19,7 @@ export const authConfig = {
     },
     jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id!;
         token.isSuperAdmin = (user as any).isSuperAdmin;
         token.avatarUrl = (user as any).avatarUrl;
         token.theme = (user as any).theme;

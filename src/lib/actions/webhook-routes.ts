@@ -60,7 +60,7 @@ export async function createWebhookRoute(
         url: data.url,
         secretKey: encryptedSecretKey,
         events: data.events,
-        headers: data.headers ?? null,
+        headers: data.headers ?? undefined,
         timeoutMs: data.timeoutMs,
       },
     });

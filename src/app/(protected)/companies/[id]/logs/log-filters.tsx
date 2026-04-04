@@ -130,16 +130,16 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
       <div className="flex flex-wrap items-center gap-3">
         {/* Status multi-select */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Status
-              {selectedStatuses.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {selectedStatuses.length}
-                </Badge>
-              )}
-            </Button>
+          <PopoverTrigger
+            render={<Button variant="outline" size="sm" className="gap-2" />}
+          >
+            <Filter className="h-4 w-4" />
+            Status
+            {selectedStatuses.length > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {selectedStatuses.length}
+              </Badge>
+            )}
           </PopoverTrigger>
           <PopoverContent className="w-48 p-2" align="start">
             <div className="space-y-1">
@@ -162,16 +162,16 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
 
         {/* Event type multi-select */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Evento
-              {selectedEventTypes.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {selectedEventTypes.length}
-                </Badge>
-              )}
-            </Button>
+          <PopoverTrigger
+            render={<Button variant="outline" size="sm" className="gap-2" />}
+          >
+            <Filter className="h-4 w-4" />
+            Evento
+            {selectedEventTypes.length > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {selectedEventTypes.length}
+              </Badge>
+            )}
           </PopoverTrigger>
           <PopoverContent className="w-56 p-2" align="start">
             <div className="space-y-1 max-h-48 overflow-y-auto">
@@ -198,7 +198,7 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
         </Popover>
 
         {/* Route select */}
-        <Select value={selectedRouteId} onValueChange={setSelectedRouteId}>
+        <Select value={selectedRouteId} onValueChange={(v) => setSelectedRouteId(v ?? "")}>
           <SelectTrigger className="w-[180px] h-9">
             <SelectValue placeholder="Rota" />
           </SelectTrigger>
@@ -214,13 +214,13 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
 
         {/* Date range */}
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              {dateFrom
-                ? format(dateFrom, "dd/MM/yy", { locale: ptBR })
-                : "De"}
-            </Button>
+          <PopoverTrigger
+            render={<Button variant="outline" size="sm" className="gap-2" />}
+          >
+            <CalendarIcon className="h-4 w-4" />
+            {dateFrom
+              ? format(dateFrom, "dd/MM/yy", { locale: ptBR })
+              : "De"}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
@@ -234,13 +234,13 @@ export function LogFilters({ eventTypes, routes }: LogFiltersProps) {
         </Popover>
 
         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              {dateTo
-                ? format(dateTo, "dd/MM/yy", { locale: ptBR })
-                : "Ate"}
-            </Button>
+          <PopoverTrigger
+            render={<Button variant="outline" size="sm" className="gap-2" />}
+          >
+            <CalendarIcon className="h-4 w-4" />
+            {dateTo
+              ? format(dateTo, "dd/MM/yy", { locale: ptBR })
+              : "Ate"}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar

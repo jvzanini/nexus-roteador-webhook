@@ -194,7 +194,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           companyId: company.id,
           receivedAt: now,
           rawBody: rawBody,
-          rawPayload: payload,
+          rawPayload: payload as object,
           eventType: event.eventType,
           dedupeKey,
           processingStatus: matchingRoutes.length > 0 ? "received" : "no_routes",

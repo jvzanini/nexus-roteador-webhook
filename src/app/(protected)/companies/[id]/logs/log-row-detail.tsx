@@ -53,20 +53,20 @@ export function LogRowDetail({
     <div className="p-4 space-y-4 bg-muted/30 border-t">
       {/* Payload colapsavel */}
       <Collapsible open={payloadOpen} onOpenChange={setPayloadOpen}>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-2">
-            {payloadOpen ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-            Payload
-            {!detail.rawBody && !detail.rawPayload && (
-              <Badge variant="secondary" className="ml-2 text-xs">
-                Removido (LGPD)
-              </Badge>
-            )}
-          </Button>
+        <CollapsibleTrigger
+          render={<Button variant="ghost" size="sm" className="gap-2" />}
+        >
+          {payloadOpen ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+          Payload
+          {!detail.rawBody && !detail.rawPayload && (
+            <Badge variant="secondary" className="ml-2 text-xs">
+              Removido (LGPD)
+            </Badge>
+          )}
         </CollapsibleTrigger>
         <CollapsibleContent>
           <ScrollArea className="max-h-64 mt-2">
@@ -144,11 +144,11 @@ export function LogRowDetail({
           {/* Response body da ultima tentativa */}
           {delivery.attempts.length > 0 && (
             <Collapsible>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="ml-4 text-xs">
-                  <ChevronRight className="h-3 w-3 mr-1" />
-                  Response body
-                </Button>
+              <CollapsibleTrigger
+                render={<Button variant="ghost" size="sm" className="ml-4 text-xs" />}
+              >
+                <ChevronRight className="h-3 w-3 mr-1" />
+                Response body
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <ScrollArea className="max-h-32 ml-4 mt-1">

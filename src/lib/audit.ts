@@ -39,7 +39,7 @@ export async function logAudit(params: LogAuditParams): Promise<void> {
         action: params.action,
         resourceType: params.resourceType,
         resourceId: params.resourceId,
-        details: params.details,
+        details: params.details as object,
         ipAddress: params.ipAddress,
         userAgent: params.userAgent,
       },

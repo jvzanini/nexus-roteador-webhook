@@ -41,7 +41,7 @@ function maskUrl(url: string): string {
 
 export function RouteCard({ route, onEdit, onDelete }: RouteCardProps) {
   const Icon = useMemo(() => {
-    const icon = (LucideIcons as Record<string, LucideIcon>)[route.icon];
+    const icon = (LucideIcons as unknown as Record<string, LucideIcon>)[route.icon];
     return icon ?? LucideIcons.Webhook;
   }, [route.icon]);
 
