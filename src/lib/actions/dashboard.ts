@@ -368,6 +368,91 @@ async function getRecentDeliveries(
   };
 }
 
+// --- Tipos e action: Visão Geral da empresa ---
+
+export interface CompanyOverviewData {
+  stats: {
+    webhooksReceived: number;
+    deliveriesCompleted: number;
+    deliveriesFailed: number;
+    successRate: number | null;
+  };
+  chart: Array<{
+    date: string; // "Seg", "Ter", etc.
+    delivered: number;
+    failed: number;
+  }>;
+  routes: Array<{
+    id: string;
+    name: string;
+    isActive: boolean;
+  }>;
+  activeRoutes: number;
+  totalRoutes: number;
+}
+
+export async function getCompanyOverviewData(companyId: string): Promise<CompanyOverviewData> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Não autenticado");
+
+  await assertCompanyAccess(user, companyId);
+
+  const now = new Date();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const [webhooksReceived, deliveriesCompleted, deliveriesFailed, deliveries7d, routes] = await Promise.all([
+    prisma.inboundWebhook.count({
+      where: { companyId, receivedAt: { gte: twentyFourHoursAgo } },
+    }),
+    prisma.routeDelivery.count({
+      where: { companyId, createdAt: { gte: twentyFourHoursAgo }, status: "delivered" as DeliveryStatus },
+    }),
+    prisma.routeDelivery.count({
+      where: { companyId, createdAt: { gte: twentyFourHoursAgo }, status: "failed" as DeliveryStatus },
+    }),
+    prisma.routeDelivery.findMany({
+      where: { companyId, createdAt: { gte: sevenDaysAgo } },
+      select: { status: true, createdAt: true },
+    }),
+    prisma.webhookRoute.findMany({
+      where: { companyId },
+      select: { id: true, name: true, isActive: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const total = deliveriesCompleted + deliveriesFailed;
+  const successRate = total === 0 ? null : Math.round((deliveriesCompleted / total) * 1000) / 10;
+
+  // Montar gráfico dos últimos 7 dias com abreviações em português
+  const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+  const chartMap = new Map<string, { date: string; delivered: number; failed: number }>();
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    const key = d.toISOString().slice(0, 10);
+    chartMap.set(key, { date: dayNames[d.getDay()], delivered: 0, failed: 0 });
+  }
+
+  for (const row of deliveries7d) {
+    const key = new Date(row.createdAt).toISOString().slice(0, 10);
+    const bucket = chartMap.get(key);
+    if (bucket) {
+      if (row.status === "delivered") bucket.delivered++;
+      if (row.status === "failed") bucket.failed++;
+    }
+  }
+
+  return {
+    stats: { webhooksReceived, deliveriesCompleted, deliveriesFailed, successRate },
+    chart: Array.from(chartMap.values()),
+    routes,
+    activeRoutes: routes.filter((r: { isActive: boolean }) => r.isActive).length,
+    totalRoutes: routes.length,
+  };
+}
+
 // --- Action pública ---
 
 export async function getDashboardData(

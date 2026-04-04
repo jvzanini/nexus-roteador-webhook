@@ -1,0 +1,64 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Inbox, CheckCircle2, XCircle, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import type { CompanyOverviewData } from "@/lib/actions/dashboard";
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } },
+};
+
+interface OverviewStatsProps {
+  stats: CompanyOverviewData["stats"];
+}
+
+const cards = [
+  { key: "webhooksReceived", label: "Webhooks Recebidos", sublabel: "ultimas 24h", icon: Inbox, color: "blue" },
+  { key: "deliveriesCompleted", label: "Entregas Concluidas", sublabel: "ultimas 24h", icon: CheckCircle2, color: "emerald" },
+  { key: "deliveriesFailed", label: "Entregas com Falha", sublabel: "ultimas 24h", icon: XCircle, color: "red" },
+  { key: "successRate", label: "Taxa de Sucesso", sublabel: "ultimas 24h", icon: TrendingUp, color: "violet" },
+] as const;
+
+const colorMap: Record<string, { bg: string; text: string }> = {
+  blue: { bg: "bg-blue-500/10", text: "text-blue-400" },
+  emerald: { bg: "bg-emerald-500/10", text: "text-emerald-400" },
+  red: { bg: "bg-red-500/10", text: "text-red-400" },
+  violet: { bg: "bg-violet-500/10", text: "text-violet-400" },
+};
+
+export function OverviewStats({ stats }: OverviewStatsProps) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      {cards.map((card) => {
+        const colors = colorMap[card.color];
+        const Icon = card.icon;
+        const value =
+          card.key === "successRate"
+            ? stats.successRate !== null
+              ? `${stats.successRate}%`
+              : "-"
+            : stats[card.key];
+
+        return (
+          <motion.div key={card.key} variants={itemVariants}>
+            <Card className="bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-lg ${colors.bg}`}>
+                    <Icon className={`h-5 w-5 ${colors.text}`} />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-white tabular-nums">{value}</p>
+                    <p className="text-xs text-zinc-500">{card.label}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}

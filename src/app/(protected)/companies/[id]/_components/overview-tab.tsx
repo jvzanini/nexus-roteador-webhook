@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Copy, Check, Globe, Key, Route } from "lucide-react";
+import { Copy, Check, Globe, Key, Route, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { OverviewStats } from "./overview/overview-stats";
+import { OverviewChart } from "./overview/overview-chart";
+import { OverviewRoutes } from "./overview/overview-routes";
+import { getCompanyOverviewData } from "@/lib/actions/dashboard";
+import type { CompanyOverviewData } from "@/lib/actions/dashboard";
 
 interface OverviewTabProps {
   company: {
@@ -35,14 +40,27 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.3, ease: 'easeOut' as const },
+    transition: { duration: 0.3, ease: "easeOut" as const },
   },
 };
 
 export function OverviewTab({ company }: OverviewTabProps) {
   const [copied, setCopied] = useState(false);
+  const [overviewData, setOverviewData] = useState<CompanyOverviewData | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/webhook/${company.webhookKey}`;
+
+  useEffect(() => {
+    startTransition(async () => {
+      try {
+        const data = await getCompanyOverviewData(company.id);
+        setOverviewData(data);
+      } catch (error) {
+        console.error("[overview] Erro ao buscar dados:", error);
+      }
+    });
+  }, [company.id]);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(webhookUrl);
@@ -57,6 +75,32 @@ export function OverviewTab({ company }: OverviewTabProps) {
       animate="visible"
       className="space-y-6"
     >
+      {/* Mini Dashboard — Métricas e gráfico */}
+      {isPending && !overviewData ? (
+        <motion.div variants={itemVariants} className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 text-zinc-500 animate-spin" />
+        </motion.div>
+      ) : overviewData ? (
+        <>
+          {/* Bloco 1 — Cards de métricas 2x2 */}
+          <OverviewStats stats={overviewData.stats} />
+
+          {/* Bloco 2 — Gráfico + Rotas ativas */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <OverviewChart chart={overviewData.chart} />
+            </div>
+            <div className="lg:col-span-1">
+              <OverviewRoutes
+                routes={overviewData.routes}
+                activeRoutes={overviewData.activeRoutes}
+                totalRoutes={overviewData.totalRoutes}
+              />
+            </div>
+          </div>
+        </>
+      ) : null}
+
       {/* Webhook URL Card */}
       <motion.div variants={itemVariants}>
         <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
@@ -115,8 +159,12 @@ export function OverviewTab({ company }: OverviewTabProps) {
           <Card className="bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-200">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-lg ${company.credential ? "bg-emerald-500/10" : "bg-amber-500/10"}`}>
-                  <Key className={`h-5 w-5 ${company.credential ? "text-emerald-400" : "text-amber-400"}`} />
+                <div
+                  className={`p-2.5 rounded-lg ${company.credential ? "bg-emerald-500/10" : "bg-amber-500/10"}`}
+                >
+                  <Key
+                    className={`h-5 w-5 ${company.credential ? "text-emerald-400" : "text-amber-400"}`}
+                  />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">
@@ -134,9 +182,7 @@ export function OverviewTab({ company }: OverviewTabProps) {
       <motion.div variants={itemVariants}>
         <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-zinc-300">
-              Informacoes
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-300">Informacoes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between text-sm">
