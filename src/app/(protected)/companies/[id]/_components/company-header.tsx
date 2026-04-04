@@ -22,7 +22,7 @@ export function CompanyHeader({ company }: CompanyHeaderProps) {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ duration: 0.3, ease: 'easeOut' as const }}
       className="space-y-4"
     >
       {/* Breadcrumb */}
