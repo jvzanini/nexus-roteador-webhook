@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+const webhookKeySchema = z
+  .string()
+  .min(4, "Webhook key deve ter no minimo 4 caracteres")
+  .max(50, "Webhook key deve ter no maximo 50 caracteres")
+  .regex(
+    /^[a-zA-Z0-9_-]+$/,
+    "Webhook key deve conter apenas letras, numeros, hifens e underscores"
+  );
+
 export const createCompanySchema = z.object({
   name: z
     .string()
@@ -11,6 +20,7 @@ export const createCompanySchema = z.object({
     .url("URL do logo invalida")
     .optional()
     .or(z.literal("")),
+  webhookKey: webhookKeySchema.optional(),
 });
 
 export const updateCompanySchema = z.object({
@@ -26,6 +36,7 @@ export const updateCompanySchema = z.object({
     .optional()
     .or(z.literal("")),
   isActive: z.boolean().optional(),
+  webhookKey: webhookKeySchema.optional(),
 });
 
 export type CreateCompanyInput = z.infer<typeof createCompanySchema>;

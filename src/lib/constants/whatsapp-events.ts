@@ -59,6 +59,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
       { id: "account_update", label: "Atualizacao de conta", description: "Conta WhatsApp Business atualizada" },
       { id: "account_alerts", label: "Alertas de conta", description: "Alertas sobre a conta (limites, restricoes)" },
       { id: "account_review_update", label: "Revisao de conta", description: "Status de revisao da conta atualizado" },
+      { id: "account_settings_update", label: "Configuracoes de conta", description: "Configuracoes da conta WhatsApp Business atualizadas" },
       { id: "phone_number_name_update", label: "Nome do numero", description: "Nome de exibicao do numero atualizado" },
       { id: "phone_number_quality_update", label: "Qualidade do numero", description: "Classificacao de qualidade do numero atualizada" },
     ],
@@ -71,6 +72,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
       { id: "message_template_quality_update", label: "Qualidade do template", description: "Qualidade do template atualizada" },
       { id: "message_template_components_update", label: "Componentes do template", description: "Componentes do template atualizados" },
       { id: "template_category_update", label: "Categoria do template", description: "Categoria do template reclassificada" },
+      { id: "template_correct_category_detection", label: "Deteccao de categoria correta", description: "Deteccao automatica de categoria correta para o template" },
     ],
   },
   {
@@ -78,6 +80,69 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Negocio",
     events: [
       { id: "business_capability_update", label: "Capacidades", description: "Capacidades do negocio atualizadas" },
+      { id: "business_status_update", label: "Status do negocio", description: "Status da conta de negocio atualizado" },
+    ],
+  },
+  {
+    id: "groups",
+    label: "Grupos",
+    events: [
+      { id: "group_lifecycle_update", label: "Ciclo de vida do grupo", description: "Grupo criado, arquivado ou excluido" },
+      { id: "group_participants_update", label: "Participantes do grupo", description: "Participantes adicionados ou removidos do grupo" },
+      { id: "group_settings_update", label: "Configuracoes do grupo", description: "Configuracoes do grupo alteradas" },
+      { id: "group_status_update", label: "Status do grupo", description: "Status do grupo atualizado" },
+    ],
+  },
+  {
+    id: "payments",
+    label: "Pagamentos",
+    events: [
+      { id: "payment_configuration_update", label: "Configuracao de pagamento", description: "Configuracoes de pagamento atualizadas" },
+    ],
+  },
+  {
+    id: "flows",
+    label: "Flows",
+    events: [
+      { id: "flows", label: "Flows", description: "Eventos relacionados a WhatsApp Flows (status, erros, latencia, disponibilidade)" },
+    ],
+  },
+  {
+    id: "messaging",
+    label: "Mensageria",
+    events: [
+      { id: "message_echoes", label: "Echo de mensagens", description: "Eco de mensagens enviadas pelo proprio numero" },
+      { id: "messaging_handovers", label: "Handover de mensageria", description: "Transferencia de controle de conversa entre apps" },
+      { id: "standby", label: "Standby", description: "App em modo standby aguardando controle da conversa" },
+    ],
+  },
+  {
+    id: "history",
+    label: "Historico",
+    events: [
+      { id: "history", label: "Historico", description: "Dados historicos de mensagens e conversas" },
+    ],
+  },
+  {
+    id: "tracking",
+    label: "Rastreamento",
+    events: [
+      { id: "tracking_events", label: "Eventos de rastreamento", description: "Eventos de rastreamento de acoes e interacoes" },
+      { id: "automatic_events", label: "Eventos automaticos", description: "Eventos gerados automaticamente pela plataforma" },
+    ],
+  },
+  {
+    id: "preferences",
+    label: "Preferencias",
+    events: [
+      { id: "user_preferences", label: "Preferencias do usuario", description: "Preferencias de comunicacao do usuario atualizadas" },
+    ],
+  },
+  {
+    id: "partner",
+    label: "Parceiro",
+    events: [
+      { id: "partner_solutions", label: "Solucoes de parceiro", description: "Eventos relacionados a solucoes e integracoes de parceiros" },
     ],
   },
   {
@@ -88,22 +153,11 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     ],
   },
   {
-    id: "flows",
-    label: "Flows",
-    events: [
-      { id: "flows.flow_status_change", label: "Mudanca de status", description: "Status do Flow alterado" },
-      { id: "flows.client_error_rate", label: "Taxa de erro cliente", description: "Taxa de erro do lado do cliente elevada" },
-      { id: "flows.endpoint_error_rate", label: "Taxa de erro endpoint", description: "Taxa de erro do endpoint elevada" },
-      { id: "flows.endpoint_latency", label: "Latencia endpoint", description: "Latencia do endpoint elevada" },
-      { id: "flows.endpoint_availability", label: "Disponibilidade endpoint", description: "Disponibilidade do endpoint alterada" },
-      { id: "flows.flow_version_freeze_warning", label: "Aviso de congelamento", description: "Versao do Flow sera congelada em breve" },
-    ],
-  },
-  {
     id: "smb",
     label: "SMB",
     events: [
-      { id: "smb_message_echoes", label: "Echo de mensagens", description: "Eco de mensagens enviadas por SMB" },
+      { id: "smb_message_echoes", label: "Echo de mensagens SMB", description: "Eco de mensagens enviadas por SMB" },
+      { id: "smb_app_state_sync", label: "Sincronizacao de estado SMB", description: "Sincronizacao de estado do app SMB" },
     ],
   },
 ];
@@ -114,4 +168,4 @@ export const ALL_EVENT_IDS = WHATSAPP_EVENT_CATEGORIES.flatMap((cat) =>
 );
 
 /** Total de eventos disponiveis */
-export const TOTAL_EVENTS = ALL_EVENT_IDS.length; // 41
+export const TOTAL_EVENTS = ALL_EVENT_IDS.length; // 53

@@ -136,7 +136,7 @@ export async function createCompany(
       };
     }
 
-    const { name, logoUrl } = parsed.data;
+    const { name, logoUrl, webhookKey: customWebhookKey } = parsed.data;
 
     // Gerar slug unico
     let slug = slugify(name);
@@ -145,8 +145,19 @@ export async function createCompany(
       slug = `${slug}-${nanoid(6)}`;
     }
 
-    // Gerar webhook_key com nanoid(21)
-    const webhookKey = nanoid(21);
+    // Usar webhook_key customizada ou gerar com nanoid(21)
+    let webhookKey: string;
+    if (customWebhookKey) {
+      const existingKey = await prisma.company.findUnique({
+        where: { webhookKey: customWebhookKey },
+      });
+      if (existingKey) {
+        return { success: false, error: "Webhook key ja esta em uso por outra empresa" };
+      }
+      webhookKey = customWebhookKey;
+    } else {
+      webhookKey = nanoid(21);
+    }
 
     const company = await prisma.company.create({
       data: {
@@ -226,6 +237,16 @@ export async function updateCompany(
 
     if (parsed.data.isActive !== undefined) {
       data.isActive = parsed.data.isActive;
+    }
+
+    if (parsed.data.webhookKey !== undefined) {
+      const existingKey = await prisma.company.findUnique({
+        where: { webhookKey: parsed.data.webhookKey },
+      });
+      if (existingKey && existingKey.id !== companyId) {
+        return { success: false, error: "Webhook key ja esta em uso por outra empresa" };
+      }
+      data.webhookKey = parsed.data.webhookKey;
     }
 
     const company = await prisma.company.update({
