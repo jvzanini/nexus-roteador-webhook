@@ -39,7 +39,7 @@ export const authConfig = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 60, // 30 minutos de inatividade
+    maxAge: 7 * 24 * 60 * 60, // 7 dias
   },
   providers: [], // Adicionados no auth.ts (não edge-compatible)
 } satisfies NextAuthConfig;
