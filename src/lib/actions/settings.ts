@@ -99,8 +99,8 @@ export async function updateSettings(
       entries.map(([key, value]) =>
         prisma.globalSettings.upsert({
           where: { key },
-          update: { value: value as any, updatedBy: user.id },
-          create: { key, value: value as any, updatedBy: user.id },
+          update: { value: value as object, updatedBy: user.id },
+          create: { key, value: value as object, updatedBy: user.id },
         })
       )
     );

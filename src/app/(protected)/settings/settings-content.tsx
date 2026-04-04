@@ -18,7 +18,6 @@ import { toast } from "sonner";
 import {
   getAllSettings,
   updateSettings,
-  type SettingsData,
 } from "@/lib/actions/settings";
 
 const containerVariants = {
@@ -64,7 +63,6 @@ function FieldHint({ children }: { children: React.ReactNode }) {
 }
 
 export function SettingsContent() {
-  const [settings, setSettings] = useState<SettingsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Retry section state
@@ -94,7 +92,6 @@ export function SettingsContent() {
       const result = await getAllSettings();
       if (result.success && result.data) {
         const d = result.data;
-        setSettings(d);
         setRetryMaxRetries(d.retry_max_retries);
         setRetryIntervals(d.retry_intervals_seconds.join(", "));
         setRetryStrategy(d.retry_strategy);
