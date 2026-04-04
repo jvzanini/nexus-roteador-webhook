@@ -187,11 +187,11 @@ async function getChart(
   const companyFilter = companyId ? { companyId } : tenantFilter;
   const isHourly = period === "today";
 
-  // Buscar deliveries agrupadas
-  const deliveries = await prisma.routeDelivery.groupBy({
-    by: ["status", "createdAt"],
+  // Buscar deliveries individuais — groupBy não agrega porque createdAt tem precisão de milissegundos
+  // (cada linha teria createdAt único, tornando-o equivalente a findMany sem ganho algum)
+  const deliveries = await prisma.routeDelivery.findMany({
     where: { ...companyFilter, createdAt: { gte: range.start, lt: range.end } },
-    _count: true,
+    select: { status: true, createdAt: true },
   });
 
   // Gerar série completa de buckets
@@ -229,9 +229,9 @@ async function getChart(
 
     const bucket = buckets.get(bucketKey.toISOString());
     if (bucket) {
-      bucket.total += row._count;
-      if (row.status === "delivered") bucket.delivered += row._count;
-      if (row.status === "failed") bucket.failed += row._count;
+      bucket.total += 1;
+      if (row.status === "delivered") bucket.delivered += 1;
+      if (row.status === "failed") bucket.failed += 1;
     }
   }
 
@@ -246,7 +246,8 @@ async function getTopErrors(
   const range = getPeriodRange(period);
   const companyFilter = companyId ? { companyId } : tenantFilter;
 
-  // Buscar delivery attempts com erro, incluindo rota e empresa
+  // Filtramos por DeliveryAttempt.createdAt (quando o erro ocorreu de fato),
+  // não por RouteDelivery.createdAt — o que importa é quando a tentativa aconteceu.
   const attempts = await prisma.deliveryAttempt.findMany({
     where: {
       errorMessage: { not: null },
