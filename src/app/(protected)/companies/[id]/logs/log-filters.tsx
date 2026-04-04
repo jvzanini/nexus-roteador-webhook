@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, Filter, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { DeliveryStatus } from "@/generated/prisma";
+import type { DeliveryStatus } from "@/generated/prisma/client";
 
 interface LogFiltersProps {
   eventTypes: string[];

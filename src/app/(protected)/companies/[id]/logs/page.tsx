@@ -6,7 +6,7 @@ import {
 } from "@/lib/actions/logs";
 import { LogTable } from "./log-table";
 import { LogFilters } from "./log-filters";
-import type { DeliveryStatus } from "@/generated/prisma";
+import type { DeliveryStatus } from "@/generated/prisma/client";
 
 interface LogsPageProps {
   params: Promise<{ id: string }>;

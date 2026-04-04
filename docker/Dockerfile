@@ -10,7 +10,7 @@ RUN npm ci
 COPY . .
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
-RUN npx next build --no-turbopack
+RUN npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app

@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import type { DeliveryStatus } from "@/generated/prisma";
+import type { DeliveryStatus } from "@/generated/prisma/client";
 import { z } from "zod";
 
 // --- Schemas de validação ---

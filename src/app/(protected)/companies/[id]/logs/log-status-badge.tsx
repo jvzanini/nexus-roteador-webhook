@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import type { DeliveryStatus } from "@/generated/prisma";
+import type { DeliveryStatus } from "@/generated/prisma/client";
 
 const statusConfig: Record<
   DeliveryStatus,

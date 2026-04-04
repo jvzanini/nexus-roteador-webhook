@@ -23,7 +23,7 @@ import { LogRowDetail } from "./log-row-detail";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { LogEntry, LogsPage } from "@/lib/actions/logs";
-import type { DeliveryStatus } from "@/generated/prisma";
+import type { DeliveryStatus } from "@/generated/prisma/client";
 
 interface LogTableProps {
   companyId: string;
