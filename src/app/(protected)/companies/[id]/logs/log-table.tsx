@@ -24,7 +24,7 @@ import { LogRowDetail } from "./log-row-detail";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { resendDelivery, resendDeliveries } from "@/actions/resend";
+import { resendDelivery, resendDeliveries } from "@/lib/actions/resend";
 import type { LogEntry, LogsPage } from "@/lib/actions/logs";
 import type { DeliveryStatus } from "@/generated/prisma/client";
 

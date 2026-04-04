@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Inbox, CheckCircle2, XCircle, TrendingUp, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { DashboardStats } from "@/actions/dashboard";
+import type { DashboardStats } from "@/lib/actions/dashboard";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 16 },

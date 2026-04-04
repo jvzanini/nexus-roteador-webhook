@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { TooltipContentProps } from "recharts/types/component/Tooltip";
-import type { ChartPoint } from "@/actions/dashboard";
+import type { ChartPoint } from "@/lib/actions/dashboard";
 
 interface WebhookChartProps {
   data: ChartPoint[];

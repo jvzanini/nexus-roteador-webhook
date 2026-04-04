@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { RecentDeliveryItem } from "@/actions/dashboard";
+import type { RecentDeliveryItem } from "@/lib/actions/dashboard";
 
 interface RecentDeliveriesProps {
   items: RecentDeliveryItem[];

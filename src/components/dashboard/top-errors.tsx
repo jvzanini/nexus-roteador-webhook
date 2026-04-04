@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { TopError } from "@/actions/dashboard";
+import type { TopError } from "@/lib/actions/dashboard";
 
 interface TopErrorsProps {
   errors: TopError[];

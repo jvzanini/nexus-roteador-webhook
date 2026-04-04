@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { getDashboardData, type DashboardData } from "@/actions/dashboard";
+import { getDashboardData, type DashboardData } from "@/lib/actions/dashboard";
 import { DashboardFilters } from "./dashboard-filters";
 import { StatsCards } from "./stats-cards";
 import { WebhookChart } from "./webhook-chart";
