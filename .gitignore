@@ -44,6 +44,7 @@ yarn-error.log*
 
 # Docker
 docker-compose.override.yml
+docker-compose.production.yml
 
 # Temp
 tmp/
