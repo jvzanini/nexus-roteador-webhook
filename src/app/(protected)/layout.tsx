@@ -13,10 +13,12 @@ export default async function ProtectedLayout({
     redirect('/login');
   }
 
+  const isSuperAdmin = (session.user as any)?.isSuperAdmin ?? false;
   const user = {
     name: session.user.name || session.user.email || 'Usuario',
     email: session.user.email || '',
-    role: (session.user as any)?.isSuperAdmin ? 'Super Admin' : 'Usuario',
+    role: isSuperAdmin ? 'Super Admin' : 'Usuario',
+    isSuperAdmin,
   };
 
   return (

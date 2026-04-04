@@ -8,6 +8,7 @@ import {
   Webhook,
   LayoutDashboard,
   Building2,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -20,6 +21,7 @@ interface SidebarProps {
     name: string;
     email: string;
     role: string;
+    isSuperAdmin: boolean;
   };
 }
 
@@ -31,6 +33,13 @@ const menuItems = [
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const allMenuItems = [
+    ...menuItems,
+    ...(user.isSuperAdmin
+      ? [{ label: 'Configuracoes', href: '/settings', icon: Settings }]
+      : []),
+  ];
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -52,7 +61,7 @@ export function Sidebar({ user }: SidebarProps) {
 
       {/* Menu */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {menuItems.map((item, index) => {
+        {allMenuItems.map((item, index) => {
           const active = isActive(item.href);
           return (
             <motion.div
