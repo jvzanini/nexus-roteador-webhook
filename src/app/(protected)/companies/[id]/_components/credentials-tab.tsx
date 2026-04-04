@@ -1,7 +1,6 @@
-import { Key, ShieldCheck, AlertTriangle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ShieldCheck } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { getCredential } from "@/lib/actions/credential";
-import { SensitiveField } from "./sensitive-field";
 import { CredentialForm } from "./credential-form";
 
 interface MaskedCredential {
@@ -19,9 +18,10 @@ interface MaskedCredential {
 
 interface CredentialsTabProps {
   companyId: string;
+  webhookKey: string;
 }
 
-export async function CredentialsTab({ companyId }: CredentialsTabProps) {
+export async function CredentialsTab({ companyId, webhookKey }: CredentialsTabProps) {
   const result = await getCredential(companyId);
   const credential = result.success ? (result.data as MaskedCredential | null) : null;
 
@@ -37,120 +37,24 @@ export async function CredentialsTab({ companyId }: CredentialsTabProps) {
             </p>
             <p className="text-xs text-amber-400/70 mt-0.5">
               Todos os campos sensiveis sao armazenados com criptografia AES-256-GCM.
-              Use o botao de olho para revelar valores temporariamente.
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {credential ? (
-        <>
-          {/* Credenciais existentes */}
-          <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-                <Key className="h-4 w-4 text-blue-400" />
-                Credenciais Meta Configuradas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Campo nao-sensivel */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-400">
-                  Meta App ID
-                </label>
-                <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
-                  <code className="text-sm text-zinc-300 font-mono">
-                    {credential.metaAppId}
-                  </code>
-                </div>
-              </div>
-
-              {/* Campos sensiveis com toggle */}
-              <SensitiveField
-                label="Meta App Secret"
-                maskedValue={credential.metaAppSecret}
-                companyId={companyId}
-                fieldName="metaAppSecret"
-              />
-
-              <SensitiveField
-                label="Verify Token"
-                maskedValue={credential.verifyToken}
-                companyId={companyId}
-                fieldName="verifyToken"
-              />
-
-              <SensitiveField
-                label="Access Token"
-                maskedValue={credential.accessToken}
-                companyId={companyId}
-                fieldName="accessToken"
-              />
-
-              {/* Campos opcionais nao-sensiveis */}
-              {credential.phoneNumberId && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-400">
-                    Phone Number ID
-                  </label>
-                  <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
-                    <code className="text-sm text-zinc-300 font-mono">
-                      {credential.phoneNumberId}
-                    </code>
-                  </div>
-                </div>
-              )}
-
-              {credential.wabaId && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-400">
-                    WABA ID
-                  </label>
-                  <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
-                    <code className="text-sm text-zinc-300 font-mono">
-                      {credential.wabaId}
-                    </code>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Formulario para atualizar */}
-          <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-zinc-300">
-                Atualizar Credenciais
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-zinc-500 mb-4">
-                Preencha todos os campos para atualizar as credenciais.
-                Os valores antigos serao substituidos.
-              </p>
-              <CredentialForm companyId={companyId} />
-            </CardContent>
-          </Card>
-        </>
-      ) : (
-        /* Sem credenciais */
-        <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-400" />
-              Nenhuma credencial configurada
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-zinc-500 mb-6">
-              Configure as credenciais do Meta App para que o sistema possa
-              receber e validar webhooks desta empresa.
-            </p>
-            <CredentialForm companyId={companyId} />
-          </CardContent>
-        </Card>
-      )}
+      {/* Formulario unificado — visualizacao + edicao no mesmo lugar */}
+      <CredentialForm
+        companyId={companyId}
+        webhookKey={webhookKey}
+        existingCredential={credential ? {
+          metaAppId: credential.metaAppId,
+          metaAppSecret: credential.metaAppSecret,
+          verifyToken: credential.verifyToken,
+          accessToken: credential.accessToken,
+          phoneNumberId: credential.phoneNumberId,
+          wabaId: credential.wabaId,
+        } : null}
+      />
     </div>
   );
 }

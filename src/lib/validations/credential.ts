@@ -23,16 +23,14 @@ export const upsertCredentialSchema = z.object({
     .trim(),
   phoneNumberId: z
     .string()
+    .min(1, "Phone Number ID e obrigatorio")
     .max(50, "Phone Number ID deve ter no maximo 50 caracteres")
-    .trim()
-    .optional()
-    .or(z.literal("")),
+    .trim(),
   wabaId: z
     .string()
+    .min(1, "WABA ID e obrigatorio")
     .max(50, "WABA ID deve ter no maximo 50 caracteres")
-    .trim()
-    .optional()
-    .or(z.literal("")),
+    .trim(),
 });
 
 export type UpsertCredentialInput = z.infer<typeof upsertCredentialSchema>;

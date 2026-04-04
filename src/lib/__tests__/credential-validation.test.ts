@@ -41,16 +41,16 @@ describe("upsertCredentialSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("allows optional phoneNumberId", () => {
+  it("requires phoneNumberId", () => {
     const { phoneNumberId, ...rest } = validCredential;
     const result = upsertCredentialSchema.safeParse(rest);
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
-  it("allows optional wabaId", () => {
+  it("requires wabaId", () => {
     const { wabaId, ...rest } = validCredential;
     const result = upsertCredentialSchema.safeParse(rest);
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it("rejects empty metaAppId", () => {
