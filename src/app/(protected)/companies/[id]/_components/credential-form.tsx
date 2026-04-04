@@ -54,8 +54,8 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
         metaAppSecret: formData.get("metaAppSecret") as string,
         verifyToken: formData.get("verifyToken") as string,
         accessToken: formData.get("accessToken") as string,
-        phoneNumberId: (formData.get("phoneNumberId") as string) || undefined,
-        wabaId: (formData.get("wabaId") as string) || undefined,
+        phoneNumberId: formData.get("phoneNumberId") as string,
+        wabaId: formData.get("wabaId") as string,
       });
 
       if (result.success) {
