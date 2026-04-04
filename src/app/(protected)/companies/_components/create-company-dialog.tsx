@@ -26,13 +26,11 @@ export function CreateCompanyDialog() {
 
     const name = formData.get("name") as string;
     const logoUrl = formData.get("logoUrl") as string;
-    const webhookKey = formData.get("webhookKey") as string;
 
     startTransition(async () => {
       const result = await createCompany({
         name,
         logoUrl: logoUrl || undefined,
-        webhookKey: webhookKey || undefined,
       });
 
       if (result.success) {
@@ -56,7 +54,7 @@ export function CreateCompanyDialog() {
           <DialogTitle className="text-zinc-100">Criar Empresa</DialogTitle>
           <DialogDescription className="text-zinc-400">
             Adicione uma nova empresa para configurar o roteamento de webhooks.
-            O slug e a webhook key serao gerados automaticamente se nao informados.
+            O slug sera gerado automaticamente a partir do nome.
           </DialogDescription>
         </DialogHeader>
 
@@ -87,24 +85,6 @@ export function CreateCompanyDialog() {
               placeholder="https://example.com/logo.png"
               className="bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="webhookKey" className="text-zinc-300">
-              Webhook Key (opcional)
-            </Label>
-            <Input
-              id="webhookKey"
-              name="webhookKey"
-              placeholder="Deixe vazio para gerar automaticamente"
-              minLength={4}
-              maxLength={50}
-              pattern="^[a-zA-Z0-9_-]+$"
-              className="bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
-            />
-            <p className="text-xs text-zinc-500">
-              Identificador unico na URL do webhook. Ex: minha-empresa
-            </p>
           </div>
 
           {error && (

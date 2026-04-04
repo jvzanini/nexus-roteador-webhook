@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Copy, Check, Globe, Key, Users, Route } from "lucide-react";
+import { Copy, Check, Globe, Key, Route } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -92,25 +92,7 @@ export function OverviewTab({ company }: OverviewTabProps) {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <motion.div variants={itemVariants}>
-          <Card className="bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-blue-500/10">
-                  <Users className="h-5 w-5 text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white tabular-nums">
-                    {company._count.memberships}
-                  </p>
-                  <p className="text-xs text-zinc-500">Membros</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <motion.div variants={itemVariants}>
           <Card className="bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-200">
             <CardContent className="pt-6">

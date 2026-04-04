@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OverviewTab } from "./overview-tab";
 import { CredentialsTab } from "./credentials-tab";
 import { RouteList } from "@/components/routes/route-list";
+import { LogsTab } from "./logs-tab";
 
 interface CompanyTabsProps {
   company: {
@@ -33,13 +34,19 @@ export function CompanyTabs({ company }: CompanyTabsProps) {
           value="credentials"
           className="data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
         >
-          Credenciais
+          WhatsApp Cloud
         </TabsTrigger>
         <TabsTrigger
           value="routes"
           className="data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
         >
-          Rotas
+          Rotas de Webhook
+        </TabsTrigger>
+        <TabsTrigger
+          value="logs"
+          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
+        >
+          Logs
         </TabsTrigger>
       </TabsList>
 
@@ -48,11 +55,15 @@ export function CompanyTabs({ company }: CompanyTabsProps) {
       </TabsContent>
 
       <TabsContent value="credentials">
-        <CredentialsTab companyId={company.id} />
+        <CredentialsTab companyId={company.id} webhookKey={company.webhookKey} />
       </TabsContent>
 
       <TabsContent value="routes">
         <RouteList companyId={company.id} />
+      </TabsContent>
+
+      <TabsContent value="logs">
+        <LogsTab companyId={company.id} />
       </TabsContent>
     </Tabs>
   );
