@@ -6,7 +6,10 @@ const globalForRedis = globalThis as unknown as {
 
 function createRedisClient(): IORedis {
   const url = process.env.REDIS_URL;
-  if (!url) throw new Error("REDIS_URL is not defined");
+  if (!url) {
+    // Build time: REDIS_URL não existe, retorna client com lazyConnect
+    return new IORedis({ lazyConnect: true });
+  }
   return new IORedis(url, { maxRetriesPerRequest: null });
 }
 
