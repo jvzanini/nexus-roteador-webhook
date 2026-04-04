@@ -8,6 +8,7 @@ import { getRetryConfig } from "../lib/global-settings";
 import { decrypt } from "../lib/encryption";
 import { validateUrl } from "../lib/webhook/ssrf";
 import { webhookDeliveryQueue, webhookDlqQueue } from "../lib/queue";
+import { notifyDeliveryFailed } from "../lib/notifications";
 
 // ─── Constantes ─────────────────────────────────────────────────
 
@@ -171,6 +172,8 @@ async function processDeliveryJob(job: Job<DeliveryJobData>): Promise<void> {
       responseBody: null,
       errorMessage: `SSRF validation failed: ${(ssrfError as Error).message}`,
       classification: "failed",
+      companyId: routeDelivery.companyId,
+      routeName: route.name,
     });
     return;
   }
@@ -266,6 +269,8 @@ async function processDeliveryJob(job: Job<DeliveryJobData>): Promise<void> {
     responseBody,
     errorMessage,
     classification,
+    companyId: routeDelivery.companyId,
+    routeName: route.name,
   });
 }
 
@@ -276,6 +281,9 @@ interface DeliveryResult {
   responseBody: string | null;
   errorMessage: string | null;
   classification: DeliveryClassification;
+  // Dados para notificação
+  companyId: string;
+  routeName: string;
 }
 
 async function finalizeDelivery(
@@ -375,11 +383,18 @@ async function finalizeDelivery(
     }
   );
 
-  // Notificação (Fase 1: apenas log. Notificação real na Fase 2)
-  console.warn(
-    `[delivery] [NOTIFICATION] RouteDelivery ${routeDeliveryId} failed permanently. ` +
-    `Would notify admins. Reason: ${errorMessage ?? `HTTP ${httpStatus}`}`
-  );
+  // Notificação de falha permanente
+  try {
+    await notifyDeliveryFailed({
+      companyId: result.companyId,
+      routeName: result.routeName,
+      routeDeliveryId,
+      errorMessage: errorMessage ?? `HTTP ${httpStatus}`,
+      attemptCount: attemptNumber,
+    });
+  } catch (notifyErr) {
+    console.error("[delivery] Falha ao criar notificacao:", (notifyErr as Error).message);
+  }
 
   await checkAndUpdateInboundStatus(routeDeliveryId);
 }
