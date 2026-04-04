@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  app:
+    image: ghcr.io/jvzanini/nexus-roteador-webhook:latest
+    command: ["node", "server.js"]
+    environment:
+      - DATABASE_URL=postgresql://nexus:${DB_PASSWORD}@db:5432/nexus
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=https://roteadorwebhook.nexusai360.com
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    networks:
+      - traefik-public
+      - internal
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.nexus.rule=Host(`roteadorwebhook.nexusai360.com`)
+        - traefik.http.routers.nexus.entrypoints=websecure
+        - traefik.http.services.nexus.loadbalancer.server.port=3000
+
+  worker:
+    image: ghcr.io/jvzanini/nexus-roteador-webhook:latest
+    command: ["node", "worker/index.js"]
+    environment:
+      - DATABASE_URL=postgresql://nexus:${DB_PASSWORD}@db:5432/nexus
+      - REDIS_URL=redis://redis:6379
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    networks:
+      - internal
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=nexus
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=nexus
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  traefik-public:
+    external: true
+  internal:
+    driver: overlay
