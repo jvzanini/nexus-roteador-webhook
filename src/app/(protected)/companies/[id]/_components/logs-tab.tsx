@@ -47,16 +47,18 @@ export function LogsTab({ companyId }: LogsTabProps) {
       pageSize: 25,
     };
     const result = await getWebhookLogs(filterPayload);
-    setPage(result);
+    return result;
   }, [companyId]);
 
   // Carregamento inicial
   useEffect(() => {
+    let cancelled = false;
     Promise.all([
-      fetchLogs(filters),
-      getAvailableEventTypes(companyId).then(setEventTypes),
-      getAvailableRoutes(companyId).then(setRoutes),
-    ]).finally(() => setLoading(false));
+      fetchLogs(filters).then((result) => { if (!cancelled) setPage(result); }),
+      getAvailableEventTypes(companyId).then((types) => { if (!cancelled) setEventTypes(types); }),
+      getAvailableRoutes(companyId).then((r) => { if (!cancelled) setRoutes(r); }),
+    ]).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleApplyFilters = useCallback((newFilters: {
@@ -68,8 +70,9 @@ export function LogsTab({ companyId }: LogsTabProps) {
   }) => {
     const updated = { ...newFilters, cursor: undefined };
     setFilters(updated);
-    startTransition(() => {
-      fetchLogs(updated);
+    startTransition(async () => {
+      const result = await fetchLogs(updated);
+      setPage(result);
     });
   }, [fetchLogs]);
 
@@ -83,24 +86,27 @@ export function LogsTab({ companyId }: LogsTabProps) {
       cursor: undefined,
     };
     setFilters(cleared);
-    startTransition(() => {
-      fetchLogs(cleared);
+    startTransition(async () => {
+      const result = await fetchLogs(cleared);
+      setPage(result);
     });
   }, [fetchLogs]);
 
   const handleNextPage = useCallback((cursor: string) => {
     const updated = { ...filters, cursor };
     setFilters(updated);
-    startTransition(() => {
-      fetchLogs(updated);
+    startTransition(async () => {
+      const result = await fetchLogs(updated);
+      setPage(result);
     });
   }, [filters, fetchLogs]);
 
   const handleFirstPage = useCallback(() => {
     const updated = { ...filters, cursor: undefined };
     setFilters(updated);
-    startTransition(() => {
-      fetchLogs(updated);
+    startTransition(async () => {
+      const result = await fetchLogs(updated);
+      setPage(result);
     });
   }, [filters, fetchLogs]);
 

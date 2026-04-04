@@ -10,7 +10,7 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 ## Status
 - **Fase 1:** CONCLUÍDA (em produção)
 - **Fase 2A:** CONCLUÍDA (em produção) — dashboard real, gráficos, reenvio, UI premium
-- **Pendente imediato:** Aba Logs completa dentro da empresa + Visão Geral como mini dashboard
+- **Pendentes pré-2B:** CONCLUÍDOS — Aba Logs integrada + Visão Geral mini dashboard
 - **Fase 2B:** Pendente (Socket.io, notificações, configurações globais, health check)
 - **Fase 3:** Pendente (gestão usuários, WhatsApp, busca global)
 
@@ -64,17 +64,19 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 - `credential.ts` — CRUD de credenciais (WhatsApp Cloud)
 - `logs.ts` — consulta de logs (cursor-based pagination)
 - `webhook-routes.ts` — CRUD de rotas
-- `dashboard.ts` — métricas e dados do dashboard (action agregadora)
+- `dashboard.ts` — métricas e dados do dashboard (action agregadora) + `getCompanyOverviewData`
 - `resend.ts` — reenvio de webhooks (delivery derivada)
 
 ## Próximo Passo
-Completar pendentes antes da Fase 2B:
-1. **Aba Logs completa** — tabela com filtros (fonte, status, período), payload expandível com editor JSON collapsible, visualização tela cheia, botão replay
-2. **Visão Geral como mini dashboard** — métricas por empresa (requests entregues/falhas, rotas ativas)
+Iniciar Fase 2B:
+1. **Socket.io** — notificações em tempo real
+2. **Configurações globais** — retenção de logs, limites de retry
+3. **Health check** — monitoramento de rotas
 
 ## Documentação
 - **Spec geral:** `docs/superpowers/specs/2026-04-03-nexus-roteador-webhook-design.md` (v7)
 - **Spec Fase 2A:** `docs/superpowers/specs/2026-04-04-fase2a-dashboard-reenvio-design.md` (v3)
 - **Planos Fase 1:** `docs/superpowers/plans/2026-04-03-fase1-*.md`
 - **Plano Fase 2A:** `docs/superpowers/plans/2026-04-04-fase2a-dashboard-reenvio.md`
+- **Spec Logs+Overview:** `docs/superpowers/specs/2026-04-04-logs-overview-tabs-design.md`
 - **Design System:** `design-system/nexus-roteador-webhook/MASTER.md`

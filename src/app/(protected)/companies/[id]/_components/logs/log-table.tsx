@@ -63,15 +63,6 @@ export function LogTable({
     });
   }
 
-  function toggleSelect(deliveryId: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(deliveryId)) next.delete(deliveryId);
-      else next.add(deliveryId);
-      return next;
-    });
-  }
-
   function toggleSelectAll() {
     if (selectedIds.size === failedDeliveryIds.length) {
       setSelectedIds(new Set());
