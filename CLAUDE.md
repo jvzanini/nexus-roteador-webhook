@@ -12,7 +12,7 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 2A:** CONCLUÍDA (em produção) — dashboard real, gráficos, reenvio, UI premium
 - **Pendentes pré-2B:** CONCLUÍDOS — Aba Logs integrada + Visão Geral mini dashboard
 - **Fase 2B:** CONCLUÍDA (em produção) — config globais, notificações, real-time SSE, health check
-- **Fase 3:** Em progresso — gestão usuários OK, ajustes UI/UX massivos OK, super admin auto-vinculado OK, selects padronizados OK. Pendente: esqueci senha, busca global, exportação CSV, perfil, tema light/dark
+- **Fase 3:** Em progresso — gestão usuários OK, ajustes UI/UX massivos OK, super admin auto-vinculado OK, selects padronizados OK, esqueci senha OK. Pendente: perfil, tema light/dark, busca global, exportação CSV
 
 ## Idioma
 Sempre responder em português brasileiro.
@@ -70,6 +70,7 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 - `notifications.ts` — feed de notificações (getNotifications, markAsRead, markAllAsRead)
 - `resend.ts` — reenvio de webhooks (delivery derivada)
 - `users.ts` — CRUD usuários + memberships (com controle hierárquico de acesso)
+- `password-reset.ts` — solicitar e redefinir senha (token + Resend email)
 
 ## Regras de Acesso (Hierarquia)
 - Super Admin > Admin (company_admin) > Gerente (manager) > Visualizador (viewer)
@@ -80,12 +81,11 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 
 ## Próximo Passo
 Continuar Fase 3:
-1. **Esqueci senha** — fluxo de reset por email
-2. **Perfil de usuário** — foto, nome, email, senha, tema
-3. **Seletor de tema** — light/dark/system no sidebar
-4. **Busca global** — busca unificada no header
-5. **Exportação CSV** — logs e métricas
-6. **Integração Meta API** — configurar webhook automaticamente no app Meta
+1. **Perfil de usuário** — foto, nome, email, senha, tema
+2. **Seletor de tema** — light/dark/system no sidebar
+3. **Busca global** — busca unificada no header
+4. **Exportação CSV** — logs e métricas
+5. **Integração Meta API** — configurar webhook automaticamente no app Meta
 
 ## Documentação
 - **Spec geral:** `docs/superpowers/specs/2026-04-03-nexus-roteador-webhook-design.md` (v7)
