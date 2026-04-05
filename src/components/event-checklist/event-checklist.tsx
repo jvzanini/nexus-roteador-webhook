@@ -57,6 +57,7 @@ import {
 import {
   WHATSAPP_EVENT_CATEGORIES,
   TOTAL_EVENTS,
+  CATEGORY_COLOR_MAP,
   type WhatsAppEventCategory,
 } from "@/lib/constants/whatsapp-events";
 
@@ -180,6 +181,8 @@ export function EventChecklist({
             const totalCount = category.events.length;
             const allSelected = selectedCount === totalCount;
             const isOpen = openCategories.has(category.id);
+            const isActive = selectedCount > 0;
+            const colors = CATEGORY_COLOR_MAP[category.id];
 
             return (
               <Collapsible
@@ -187,7 +190,11 @@ export function EventChecklist({
                 open={isOpen}
                 onOpenChange={() => toggleCategory(category.id)}
               >
-                <div className="rounded-lg border border-border/50 bg-card/50 overflow-hidden">
+                <div className={`rounded-lg border overflow-hidden transition-colors ${
+                  isActive && colors
+                    ? `${colors.border} ${colors.bg}`
+                    : "border-border/50 bg-card/50"
+                }`}>
                   {/* Header da categoria */}
                   <div className="flex items-center gap-2 px-3 py-2">
                     <Checkbox
@@ -208,7 +215,9 @@ export function EventChecklist({
                         {(() => {
                           const IconComp = iconMap[category.icon];
                           return IconComp ? (
-                            <IconComp className="h-4 w-4 shrink-0 text-zinc-400" />
+                            <IconComp className={`h-4 w-4 shrink-0 transition-colors ${
+                              isActive && colors ? colors.icon : "text-zinc-400"
+                            }`} />
                           ) : null;
                         })()}
                         <div className="flex flex-col items-start min-w-0">

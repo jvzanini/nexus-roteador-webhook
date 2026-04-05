@@ -9,8 +9,33 @@ export interface WhatsAppEventCategory {
   label: string;
   description: string;
   icon: string;
+  color: string;
   events: WhatsAppEvent[];
 }
+
+/** Mapa de cores por categoria — usado no event-checklist para estilizar cards ativos */
+export const CATEGORY_COLOR_MAP: Record<string, {
+  icon: string;
+  border: string;
+  bg: string;
+}> = {
+  messages:    { icon: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10" },
+  statuses:    { icon: "text-blue-400",    border: "border-blue-500/30",    bg: "bg-blue-500/10" },
+  calls:       { icon: "text-violet-400",  border: "border-violet-500/30",  bg: "bg-violet-500/10" },
+  account:     { icon: "text-rose-400",    border: "border-rose-500/30",    bg: "bg-rose-500/10" },
+  templates:   { icon: "text-purple-400",  border: "border-purple-500/30",  bg: "bg-purple-500/10" },
+  business:    { icon: "text-blue-400",    border: "border-blue-500/30",    bg: "bg-blue-500/10" },
+  groups:      { icon: "text-teal-400",    border: "border-teal-500/30",    bg: "bg-teal-500/10" },
+  payments:    { icon: "text-amber-400",   border: "border-amber-500/30",   bg: "bg-amber-500/10" },
+  flows:       { icon: "text-indigo-400",  border: "border-indigo-500/30",  bg: "bg-indigo-500/10" },
+  messaging:   { icon: "text-cyan-400",    border: "border-cyan-500/30",    bg: "bg-cyan-500/10" },
+  history:     { icon: "text-orange-400",  border: "border-orange-500/30",  bg: "bg-orange-500/10" },
+  tracking:    { icon: "text-lime-400",    border: "border-lime-500/30",    bg: "bg-lime-500/10" },
+  preferences: { icon: "text-slate-400",   border: "border-slate-500/30",   bg: "bg-slate-500/10" },
+  partner:     { icon: "text-pink-400",    border: "border-pink-500/30",    bg: "bg-pink-500/10" },
+  security:    { icon: "text-red-400",     border: "border-red-500/30",     bg: "bg-red-500/10" },
+  smb:         { icon: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10" },
+};
 
 export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
   {
@@ -18,6 +43,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Mensagens",
     description: "Mensagens recebidas pelo WhatsApp (texto, midia, interacoes)",
     icon: "MessageSquare",
+    color: "emerald",
     events: [
       { id: "messages.text", label: "Texto", description: "Mensagem de texto recebida" },
       { id: "messages.image", label: "Imagem", description: "Mensagem com imagem recebida" },
@@ -43,6 +69,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Status de Entrega",
     description: "Confirmacoes de envio, entrega e leitura",
     icon: "CheckCheck",
+    color: "blue",
     events: [
       { id: "statuses.sent", label: "Enviado", description: "Mensagem enviada ao servidor WhatsApp" },
       { id: "statuses.delivered", label: "Entregue", description: "Mensagem entregue ao destinatario" },
@@ -55,6 +82,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Chamadas",
     description: "Chamadas de voz recebidas e realizadas",
     icon: "Phone",
+    color: "violet",
     events: [
       { id: "calls.inbound", label: "Recebida", description: "Chamada de voz recebida" },
       { id: "calls.outbound", label: "Realizada", description: "Chamada de voz realizada" },
@@ -65,6 +93,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Conta",
     description: "Atualizacoes de status, revisao e qualidade da conta",
     icon: "UserCog",
+    color: "rose",
     events: [
       { id: "account_update", label: "Atualizacao de conta", description: "Conta WhatsApp Business atualizada" },
       { id: "account_alerts", label: "Alertas de conta", description: "Alertas sobre a conta (limites, restricoes)" },
@@ -79,6 +108,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Templates",
     description: "Status e qualidade dos templates de mensagem",
     icon: "FileText",
+    color: "purple",
     events: [
       { id: "message_template_status_update", label: "Status do template", description: "Status de aprovacao do template alterado" },
       { id: "message_template_quality_update", label: "Qualidade do template", description: "Qualidade do template atualizada" },
@@ -92,6 +122,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Negocio",
     description: "Atualizacoes de capacidade e limites do negocio",
     icon: "Briefcase",
+    color: "blue",
     events: [
       { id: "business_capability_update", label: "Capacidades", description: "Capacidades do negocio atualizadas" },
       { id: "business_status_update", label: "Status do negocio", description: "Status da conta de negocio atualizado" },
@@ -102,6 +133,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Grupos",
     description: "Eventos de grupos do WhatsApp (lifecycle, participantes, config)",
     icon: "Users",
+    color: "teal",
     events: [
       { id: "group_lifecycle_update", label: "Ciclo de vida do grupo", description: "Grupo criado, arquivado ou excluido" },
       { id: "group_participants_update", label: "Participantes do grupo", description: "Participantes adicionados ou removidos do grupo" },
@@ -114,6 +146,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Pagamentos",
     description: "Configuracoes de pagamento",
     icon: "CreditCard",
+    color: "amber",
     events: [
       { id: "payment_configuration_update", label: "Configuracao de pagamento", description: "Configuracoes de pagamento atualizadas" },
     ],
@@ -123,6 +156,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Flows",
     description: "Eventos de WhatsApp Flows (formularios interativos)",
     icon: "GitBranch",
+    color: "indigo",
     events: [
       { id: "flows", label: "Flows", description: "Eventos relacionados a WhatsApp Flows (status, erros, latencia, disponibilidade)" },
     ],
@@ -132,6 +166,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Mensageria",
     description: "Handovers e ecos de mensagens entre apps",
     icon: "MessageCircle",
+    color: "cyan",
     events: [
       { id: "message_echoes", label: "Echo de mensagens", description: "Eco de mensagens enviadas pelo proprio numero" },
       { id: "messaging_handovers", label: "Handover de mensageria", description: "Transferencia de controle de conversa entre apps" },
@@ -143,6 +178,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Historico",
     description: "Eventos de historico de conversas",
     icon: "History",
+    color: "orange",
     events: [
       { id: "history", label: "Historico", description: "Dados historicos de mensagens e conversas" },
     ],
@@ -152,6 +188,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Rastreamento",
     description: "Eventos de rastreamento e analytics",
     icon: "BarChart3",
+    color: "lime",
     events: [
       { id: "tracking_events", label: "Eventos de rastreamento", description: "Eventos de rastreamento de acoes e interacoes" },
       { id: "automatic_events", label: "Eventos automaticos", description: "Eventos gerados automaticamente pela plataforma" },
@@ -162,6 +199,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Preferencias",
     description: "Preferencias do usuario",
     icon: "Settings",
+    color: "slate",
     events: [
       { id: "user_preferences", label: "Preferencias do usuario", description: "Preferencias de comunicacao do usuario atualizadas" },
     ],
@@ -171,6 +209,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Parceiro",
     description: "Solucoes de parceiros Meta",
     icon: "Handshake",
+    color: "pink",
     events: [
       { id: "partner_solutions", label: "Solucoes de parceiro", description: "Eventos relacionados a solucoes e integracoes de parceiros" },
     ],
@@ -180,6 +219,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Seguranca",
     description: "Alertas de seguranca da conta",
     icon: "ShieldAlert",
+    color: "red",
     events: [
       { id: "security", label: "Evento de seguranca", description: "Evento de seguranca (ex: codigo de verificacao)" },
     ],
@@ -189,6 +229,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "SMB",
     description: "Mensagens enviadas pelo app nativo do WhatsApp Business",
     icon: "Store",
+    color: "emerald",
     events: [
       { id: "smb_message_echoes", label: "Echo de mensagens SMB", description: "Eco de mensagens enviadas por SMB" },
       { id: "smb_app_state_sync", label: "Sincronizacao de estado SMB", description: "Sincronizacao de estado do app SMB" },
