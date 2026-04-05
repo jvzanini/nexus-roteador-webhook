@@ -237,7 +237,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
                 value={selectedUserId}
                 onValueChange={(v) => setSelectedUserId(v ?? "")}
               >
-                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer">
+                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
                   <SelectValue placeholder="Selecione um usuário" />
                 </SelectTrigger>
                 <SelectContent>
@@ -262,7 +262,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
                 value={selectedRole}
                 onValueChange={(v) => setSelectedRole(v ?? "viewer")}
               >
-                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer">
+                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -338,7 +338,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
                         }
                       }}
                     >
-                      <SelectTrigger className="w-36 h-7 bg-transparent border-zinc-700/50 text-zinc-300 text-xs cursor-pointer">
+                      <SelectTrigger className="w-36 h-7 bg-transparent border-zinc-700/50 text-zinc-300 text-xs cursor-pointer transition-all duration-200 hover:border-zinc-600">
                         <SelectValue>
                           <span className="flex items-center gap-1.5">
                             {roleLabels[member.role]?.icon}

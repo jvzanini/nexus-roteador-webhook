@@ -45,7 +45,7 @@ export function DashboardFilters({
           value={selectedCompanyId ?? "all"}
           onValueChange={(val) => onCompanyChange(!val || val === "all" ? undefined : val)}
         >
-          <SelectTrigger className="h-9 min-w-[180px] border-zinc-800 bg-zinc-900/80 text-sm text-zinc-300 cursor-pointer transition-all duration-200 hover:border-zinc-600">
+          <SelectTrigger className="h-9 min-w-[180px] bg-zinc-800/50 border-zinc-700 text-sm text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
             <Building2 className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
             <SelectValue />
           </SelectTrigger>

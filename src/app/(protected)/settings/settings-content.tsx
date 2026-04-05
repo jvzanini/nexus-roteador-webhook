@@ -247,7 +247,7 @@ export function SettingsContent() {
                         val && setRetryStrategy(val as "exponential" | "fixed")
                       }
                     >
-                      <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200">
+                      <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-zinc-900 border-zinc-700">

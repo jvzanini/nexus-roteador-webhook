@@ -171,6 +171,23 @@ export async function createCompany(
       },
     });
 
+    // Auto-vincular todos os super admins como company_admin
+    const superAdmins = await prisma.user.findMany({
+      where: { isSuperAdmin: true },
+      select: { id: true },
+    });
+
+    if (superAdmins.length > 0) {
+      await prisma.userCompanyMembership.createMany({
+        data: superAdmins.map((sa) => ({
+          userId: sa.id,
+          companyId: company.id,
+          role: "company_admin" as const,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
     revalidatePath("/companies");
 
     return { success: true, data: company };

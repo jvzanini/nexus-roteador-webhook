@@ -187,10 +187,10 @@ export function LogFilters({
 
         {/* Route select */}
         <Select value={selectedRouteId} onValueChange={(v) => setSelectedRouteId(v ?? "")}>
-          <SelectTrigger className="w-[180px] h-9 border-zinc-800 bg-zinc-900 text-zinc-400">
+          <SelectTrigger className="w-[180px] h-9 bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
             <SelectValue placeholder="Rota" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-900 border-zinc-800">
+          <SelectContent className="bg-zinc-900 border-zinc-700">
             <SelectItem value="">Todas as rotas</SelectItem>
             {routes.map((r) => (
               <SelectItem key={r.id} value={r.id}>
