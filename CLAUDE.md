@@ -12,7 +12,7 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 2A:** CONCLUÍDA (em produção) — dashboard real, gráficos, reenvio, UI premium
 - **Pendentes pré-2B:** CONCLUÍDOS — Aba Logs integrada + Visão Geral mini dashboard
 - **Fase 2B:** CONCLUÍDA (em produção) — config globais, notificações, real-time SSE, health check
-- **Fase 3:** Em progresso — gestão usuários OK, ajustes UI/UX massivos OK. Pendente: esqueci senha, busca global, exportação CSV, perfil, tema light/dark
+- **Fase 3:** Em progresso — gestão usuários OK, ajustes UI/UX massivos OK, super admin auto-vinculado OK, selects padronizados OK. Pendente: esqueci senha, busca global, exportação CSV, perfil, tema light/dark
 
 ## Idioma
 Sempre responder em português brasileiro.
@@ -73,7 +73,7 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 
 ## Regras de Acesso (Hierarquia)
 - Super Admin > Admin (company_admin) > Gerente (manager) > Visualizador (viewer)
-- Super Admin: vê e edita todos. Não pode ser excluído pela plataforma
+- Super Admin: vê e edita todos. Não pode ser excluído pela plataforma. Auto-vinculado como company_admin em toda nova empresa
 - Admin: vê admins (sem editar) + níveis abaixo (edita). Não vê super admins
 - /users e /settings: apenas super admin e admin
 - Aba Membros: apenas super admin e admin
