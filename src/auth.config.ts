@@ -11,6 +11,7 @@ export const authConfig = {
       const isPublicRoute =
         nextUrl.pathname === '/login' ||
         nextUrl.pathname === '/forgot-password' ||
+        nextUrl.pathname === '/reset-password' ||
         nextUrl.pathname.startsWith('/api/webhook/') ||
         nextUrl.pathname.startsWith('/api/auth/');
 

@@ -1,0 +1,177 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, Loader2, AlertCircle, CheckCircle2, Mail, Webhook } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { requestPasswordReset } from '@/lib/actions/password-reset';
+
+export function ForgotPasswordForm() {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    startTransition(async () => {
+      const result = await requestPasswordReset(email);
+      if (result.success) {
+        setSent(true);
+      } else {
+        setError(result.error || 'Erro ao processar solicitação');
+      }
+    });
+  }
+
+  if (sent) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' as const }}
+        className="w-full max-w-[420px] mx-auto text-center"
+      >
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-[0_0_24px_rgba(37,99,235,0.4)]">
+            <Webhook className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-lg font-bold text-white tracking-tight">Nexus</span>
+        </motion.div>
+
+        <div className="flex items-center justify-center mb-6">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+            <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+          </div>
+        </div>
+
+        <h2 className="text-2xl font-bold text-white tracking-tight mb-3">
+          Verifique seu e-mail
+        </h2>
+        <p className="text-sm text-zinc-400 leading-relaxed mb-2">
+          Se o e-mail <strong className="text-zinc-200">{email}</strong> estiver
+          cadastrado, você receberá um link para redefinir sua senha.
+        </p>
+        <p className="text-xs text-zinc-500 mb-8">
+          O link expira em 1 hora. Verifique também a pasta de spam.
+        </p>
+
+        <Link href="/login">
+          <Button
+            variant="ghost"
+            className="text-zinc-400 hover:text-white cursor-pointer transition-all duration-200"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar ao login
+          </Button>
+        </Link>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' as const }}
+      className="w-full max-w-[420px] mx-auto"
+    >
+      {/* Logo mobile */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-[0_0_24px_rgba(37,99,235,0.4)]">
+          <Webhook className="h-5 w-5 text-white" />
+        </div>
+        <span className="text-lg font-bold text-white tracking-tight">Nexus</span>
+      </motion.div>
+
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center mb-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/20">
+            <Mail className="h-7 w-7 text-blue-400" />
+          </div>
+        </div>
+        <h2 className="text-2xl font-bold text-white tracking-tight">
+          Esqueci minha senha
+        </h2>
+        <p className="text-sm text-zinc-500 mt-2">
+          Informe seu e-mail para receber o link de redefinição
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2.5 rounded-xl border border-red-900/50 bg-red-950/30 p-3.5 text-sm text-red-400"
+          >
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </motion.div>
+        )}
+
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-sm font-medium text-zinc-300">
+            E-mail
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="seu@email.com"
+            required
+            autoComplete="email"
+            autoFocus
+            disabled={isPending}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 text-white placeholder:text-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all duration-200"
+          />
+        </div>
+
+        <Button
+          type="submit"
+          disabled={isPending || !email}
+          className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold text-sm transition-all duration-300 hover:from-blue-500 hover:to-blue-400 hover:shadow-[0_0_24px_rgba(37,99,235,0.4)] disabled:opacity-50 cursor-pointer"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Enviando...
+            </>
+          ) : (
+            <>
+              <ArrowRight className="mr-2 h-4 w-4" />
+              Enviar link de redefinição
+            </>
+          )}
+        </Button>
+
+        <div className="text-center">
+          <Link
+            href="/login"
+            className="text-sm text-zinc-500 transition-colors duration-200 hover:text-blue-400"
+          >
+            <ArrowLeft className="mr-1 h-3 w-3 inline" />
+            Voltar ao login
+          </Link>
+        </div>
+      </form>
+    </motion.div>
+  );
+}

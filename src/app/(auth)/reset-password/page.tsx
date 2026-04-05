@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
 import { LoginBranding } from '@/components/login/login-branding';
-import { ForgotPasswordForm } from './forgot-password-form';
+import { ResetPasswordForm } from './reset-password-form';
 
 export const metadata = {
-  title: 'Esqueci minha senha | Nexus Roteador Webhook',
+  title: 'Redefinir senha | Nexus Roteador Webhook',
 };
 
-export default function ForgotPasswordPage() {
+export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-screen bg-[#09090b]">
       <div className="hidden w-1/2 lg:block">
@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
       </div>
       <div className="flex w-full items-center justify-center p-6 lg:w-1/2">
         <Suspense>
-          <ForgotPasswordForm />
+          <ResetPasswordForm />
         </Suspense>
       </div>
     </div>
