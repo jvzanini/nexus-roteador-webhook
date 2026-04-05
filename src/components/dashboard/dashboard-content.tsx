@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { getDashboardData, type DashboardData } from "@/lib/actions/dashboard";
+import { useRealtime } from "@/hooks/use-realtime";
 import { DashboardFilters } from "./dashboard-filters";
 import { StatsCards } from "./stats-cards";
 import { WebhookChart } from "./webhook-chart";
@@ -42,6 +43,7 @@ export function DashboardContent({ userName }: DashboardContentProps) {
   const [period, setPeriod] = useState("today");
   const [page, setPage] = useState(1);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = useCallback(async (showSkeleton = false) => {
     if (showSkeleton) setIsLoading(true);
@@ -60,6 +62,20 @@ export function DashboardContent({ userName }: DashboardContentProps) {
       setIsInitialLoad(false);
     }
   }, [companyId, period, page]);
+
+  // Real-time: atualiza dashboard ao receber eventos de delivery/webhook
+  useRealtime(useCallback((event) => {
+    if (
+      event.type === "delivery:completed" ||
+      event.type === "delivery:failed" ||
+      event.type === "webhook:received"
+    ) {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        fetchData(false);
+      }, 2000);
+    }
+  }, [fetchData]));
 
   // Polling
   useEffect(() => {

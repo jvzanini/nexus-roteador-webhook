@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, XCircle, AlertTriangle, Info, CheckCheck } from "lucide-react";
+import { useRealtime } from "@/hooks/use-realtime";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -60,6 +61,19 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Real-time: atualiza contagem ao receber notificacao nova
+  useRealtime(useCallback((event) => {
+    if (event.type === "notification:new") {
+      getUnreadCount().then(setUnreadCount);
+      if (isOpen) {
+        getNotifications().then((result) => {
+          setNotifications(result.items);
+          setUnreadCount(result.unreadCount);
+        });
+      }
+    }
+  }, [isOpen]));
 
   // Polling: busca contagem de nao lidas a cada 30s
   const fetchUnreadCount = useCallback(async () => {
