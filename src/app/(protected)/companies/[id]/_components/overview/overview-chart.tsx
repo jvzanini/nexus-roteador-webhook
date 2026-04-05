@@ -57,8 +57,10 @@ export function OverviewChart({ chart }: OverviewChartProps) {
                     border: "1px solid #3f3f46",
                     borderRadius: "8px",
                     fontSize: "12px",
+                    color: "#a1a1aa",
                   }}
-                  labelStyle={{ color: "#a1a1aa" }}
+                  labelStyle={{ color: "#d4d4d8" }}
+                  cursor={{ fill: "rgba(63, 63, 70, 0.3)" }}
                 />
                 <Bar dataKey="delivered" name="Entregues" fill="#34d399" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="failed" name="Falhas" fill="#f87171" radius={[4, 4, 0, 0]} />

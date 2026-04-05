@@ -1,7 +1,14 @@
 "use client";
 
-import { RefreshCw, Building2, ChevronDown } from "lucide-react";
+import { RefreshCw, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface DashboardFiltersProps {
   companies: { id: string; name: string }[];
@@ -34,20 +41,25 @@ export function DashboardFilters({
 
       <div className="flex items-center gap-2.5 ml-auto">
         {/* Filtro de empresa */}
-        <div className="relative">
-          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 pointer-events-none" />
-          <select
-            value={selectedCompanyId ?? ""}
-            onChange={(e) => onCompanyChange(e.target.value || undefined)}
-            className="h-9 pl-8 pr-8 rounded-lg border border-zinc-800 bg-zinc-900/80 text-sm text-zinc-300 outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600/50 transition-all duration-200 cursor-pointer appearance-none"
-          >
-            <option value="">Todas as empresas</option>
+        <Select
+          value={selectedCompanyId ?? "all"}
+          onValueChange={(val) => onCompanyChange(!val || val === "all" ? undefined : val)}
+        >
+          <SelectTrigger className="h-9 min-w-[180px] border-zinc-800 bg-zinc-900/80 text-sm text-zinc-300 cursor-pointer transition-all duration-200 hover:border-zinc-600">
+            <Building2 className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-700">
+            <SelectItem value="all" className="text-zinc-300 cursor-pointer">
+              Todas as empresas
+            </SelectItem>
             {companies.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <SelectItem key={c.id} value={c.id} className="text-zinc-300 cursor-pointer">
+                {c.name}
+              </SelectItem>
             ))}
-          </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 pointer-events-none" />
-        </div>
+          </SelectContent>
+        </Select>
 
         {/* Filtro de periodo */}
         <div className="flex rounded-xl border border-zinc-800 overflow-hidden bg-zinc-900/80">

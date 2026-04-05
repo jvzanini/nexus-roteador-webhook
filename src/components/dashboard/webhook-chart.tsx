@@ -83,7 +83,7 @@ export function WebhookChart({ data, period }: WebhookChartProps) {
                 axisLine={false}
                 allowDecimals={false}
               />
-              <Tooltip content={CustomTooltip} cursor={false} />
+              <Tooltip content={CustomTooltip} cursor={{ stroke: "rgba(63, 63, 70, 0.5)" }} />
               <Line type="monotone" dataKey="Total" stroke="#a1a1aa" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="Concluídas" stroke="#22c55e" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="Falhas" stroke="#ef4444" strokeWidth={2} dot={false} />

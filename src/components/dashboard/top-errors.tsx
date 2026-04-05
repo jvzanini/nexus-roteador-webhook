@@ -16,7 +16,7 @@ export function TopErrors({ errors }: TopErrorsProps) {
   const router = useRouter();
 
   return (
-    <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
+    <Card className="bg-zinc-900 border border-zinc-800 rounded-xl h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold text-zinc-100 flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-red-400" />
