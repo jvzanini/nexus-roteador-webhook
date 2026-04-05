@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { Save, Loader2, Eye, EyeOff, Globe, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { upsertCredential } from "@/lib/actions/credential";
+import { upsertCredential, revealCredentialField } from "@/lib/actions/credential";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://roteadorwebhook.nexusai360.com";
 
@@ -30,10 +30,55 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
   const [success, setSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Toggle visibility per field
+  // Toggle visibility per field — revela valor descriptografado do servidor
   const [visible, setVisible] = useState<Record<string, boolean>>({});
-  function toggleField(field: string) {
-    setVisible((prev) => ({ ...prev, [field]: !prev[field] }));
+  const [revealedValues, setRevealedValues] = useState<Record<string, string>>({});
+  const [revealing, setRevealing] = useState<Record<string, boolean>>({});
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  async function toggleField(field: string) {
+    if (visible[field]) {
+      // Esconder — restaurar valor mascarado original
+      setVisible((prev) => ({ ...prev, [field]: false }));
+      const input = inputRefs.current[field];
+      if (input && existingCredential) {
+        const maskedValue = existingCredential[field as keyof typeof existingCredential] as string;
+        if (maskedValue && revealedValues[field]) {
+          input.value = maskedValue;
+        }
+      }
+      return;
+    }
+
+    // Se ja revelou antes, reutiliza
+    if (revealedValues[field]) {
+      setVisible((prev) => ({ ...prev, [field]: true }));
+      const input = inputRefs.current[field];
+      if (input) input.value = revealedValues[field];
+      return;
+    }
+
+    // Revelar — buscar valor do servidor (apenas campos criptografados)
+    const encryptedFields = ["metaAppSecret", "verifyToken", "accessToken"];
+    if (existingCredential && encryptedFields.includes(field)) {
+      setRevealing((prev) => ({ ...prev, [field]: true }));
+      const result = await revealCredentialField(
+        companyId,
+        field as "metaAppSecret" | "verifyToken" | "accessToken"
+      );
+      setRevealing((prev) => ({ ...prev, [field]: false }));
+
+      if (result.success && result.data) {
+        setRevealedValues((prev) => ({ ...prev, [field]: result.data! }));
+        setVisible((prev) => ({ ...prev, [field]: true }));
+        const input = inputRefs.current[field];
+        if (input) input.value = result.data;
+        return;
+      }
+    }
+
+    // Fallback — apenas toggle tipo do input (campo novo sem dados salvos)
+    setVisible((prev) => ({ ...prev, [field]: true }));
   }
 
   const webhookUrl = `${APP_URL}/api/webhook/${webhookKey}`;
@@ -70,16 +115,20 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
 
   const inputClasses = "h-11 bg-zinc-800/50 border-zinc-700/50 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all duration-200 rounded-lg";
 
-  function SensitiveInput({ id, name, label, placeholder, defaultValue, required = true }: {
-    id: string; name: string; label: string; placeholder: string; defaultValue?: string; required?: boolean;
+  function SensitiveInput({ id, name, label, description, placeholder, defaultValue, required = true }: {
+    id: string; name: string; label: string; description: string; placeholder: string; defaultValue?: string; required?: boolean;
   }) {
     return (
       <div className="space-y-2">
-        <Label htmlFor={id} className="text-sm font-medium text-zinc-300">
-          {label} {required && <span className="text-red-400">*</span>}
-        </Label>
+        <div>
+          <Label htmlFor={id} className="text-sm font-medium text-zinc-300">
+            {label} {required && <span className="text-red-400">*</span>}
+          </Label>
+          <p className="text-xs text-zinc-500 mt-0.5">{description}</p>
+        </div>
         <div className="relative">
           <Input
+            ref={(el) => { inputRefs.current[id] = el; }}
             id={id}
             name={name}
             type={visible[id] ? "text" : "password"}
@@ -91,9 +140,16 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
           <button
             type="button"
             onClick={() => toggleField(id)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+            disabled={revealing[id]}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
           >
-            {visible[id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {revealing[id] ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : visible[id] ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>
@@ -126,9 +182,12 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
       {/* Credenciais */}
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="metaAppId" className="text-sm font-medium text-zinc-300">
-            Meta App ID <span className="text-red-400">*</span>
-          </Label>
+          <div>
+            <Label htmlFor="metaAppId" className="text-sm font-medium text-zinc-300">
+              Meta App ID <span className="text-red-400">*</span>
+            </Label>
+            <p className="text-xs text-zinc-500 mt-0.5">Identificador do aplicativo no painel Meta for Developers</p>
+          </div>
           <Input
             id="metaAppId"
             name="metaAppId"
@@ -143,6 +202,7 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
           id="metaAppSecret"
           name="metaAppSecret"
           label="Meta App Secret"
+          description="Chave secreta do aplicativo — não compartilhe"
           placeholder="Seu app secret"
           defaultValue={existingCredential?.metaAppSecret}
         />
@@ -150,24 +210,29 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
         <SensitiveInput
           id="verifyToken"
           name="verifyToken"
-          label="Verify Token"
-          placeholder="Token de verificacao para webhook"
+          label="Token de Verificação"
+          description="Token usado pela Meta para validar o endpoint do webhook"
+          placeholder="Token de verificação para webhook"
           defaultValue={existingCredential?.verifyToken}
         />
 
         <SensitiveInput
           id="accessToken"
           name="accessToken"
-          label="Access Token"
+          label="Token de Acesso"
+          description="Token de autorização para enviar mensagens via WhatsApp API"
           placeholder="EAAxxxxxxxx"
           defaultValue={existingCredential?.accessToken}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="phoneNumberId" className="text-sm font-medium text-zinc-300">
-              Phone Number ID <span className="text-red-400">*</span>
-            </Label>
+            <div>
+              <Label htmlFor="phoneNumberId" className="text-sm font-medium text-zinc-300">
+                Phone Number ID <span className="text-red-400">*</span>
+              </Label>
+              <p className="text-xs text-zinc-500 mt-0.5">ID do número de telefone na API do WhatsApp Business</p>
+            </div>
             <Input
               id="phoneNumberId"
               name="phoneNumberId"
@@ -179,9 +244,12 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wabaId" className="text-sm font-medium text-zinc-300">
-              WABA ID <span className="text-red-400">*</span>
-            </Label>
+            <div>
+              <Label htmlFor="wabaId" className="text-sm font-medium text-zinc-300">
+                WABA ID <span className="text-red-400">*</span>
+              </Label>
+              <p className="text-xs text-zinc-500 mt-0.5">ID da conta comercial do WhatsApp (WhatsApp Business Account)</p>
+            </div>
             <Input
               id="wabaId"
               name="wabaId"
