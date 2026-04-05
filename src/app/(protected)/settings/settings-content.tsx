@@ -104,7 +104,7 @@ export function SettingsContent() {
         setNotifyThreshold(d.notify_failure_threshold);
         setNotifyRecipients(d.notify_recipients);
       } else {
-        toast.error("Erro ao carregar configurações");
+        toast.error("Erro ao carregar configuracoes");
       }
       setLoading(false);
     }
@@ -119,7 +119,7 @@ export function SettingsContent() {
         .filter((n) => !isNaN(n) && n > 0);
 
       if (intervals.length === 0) {
-        toast.error("Informe pelo menos um intervalo válido");
+        toast.error("Informe pelo menos um intervalo valido");
         return;
       }
 
@@ -131,7 +131,7 @@ export function SettingsContent() {
       });
 
       if (result.success) {
-        toast.success("Configurações de retry salvas");
+        toast.success("Configuracoes de retry salvas");
       } else {
         toast.error(result.error || "Erro ao salvar");
       }
@@ -146,7 +146,7 @@ export function SettingsContent() {
       });
 
       if (result.success) {
-        toast.success("Configurações de retenção salvas");
+        toast.success("Configuracoes de retencao salvas");
       } else {
         toast.error(result.error || "Erro ao salvar");
       }
@@ -164,7 +164,7 @@ export function SettingsContent() {
       });
 
       if (result.success) {
-        toast.success("Configurações de notificações salvas");
+        toast.success("Configuracoes de notificacoes salvas");
       } else {
         toast.error(result.error || "Erro ao salvar");
       }
@@ -181,10 +181,10 @@ export function SettingsContent() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">
-              Configurações
+              Configuracoes
             </h1>
             <p className="text-sm text-zinc-500">
-              Configurações globais da plataforma
+              Configuracoes globais da plataforma
             </p>
           </div>
         </div>
@@ -205,13 +205,13 @@ export function SettingsContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-zinc-100">
                   <RotateCcw className="h-4 w-4 text-blue-500" />
-                  Retry de Webhooks
+                  Retentativas de Webhook
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <FieldLabel>Máximo de tentativas</FieldLabel>
+                    <FieldLabel>Maximo de tentativas</FieldLabel>
                     <Input
                       type="number"
                       min={0}
@@ -224,7 +224,7 @@ export function SettingsContent() {
                       }
                       className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
                     />
-                    <FieldHint>Quantidade de retentativas (0-10)</FieldHint>
+                    <FieldHint>Numero maximo de vezes que o sistema tentara reenviar um webhook que falhou (0-10)</FieldHint>
                   </div>
 
                   <div>
@@ -236,11 +236,11 @@ export function SettingsContent() {
                       placeholder="10, 30, 90"
                       className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
                     />
-                    <FieldHint>Separados por vírgula</FieldHint>
+                    <FieldHint>Tempo entre cada tentativa, separados por virgula (ex: 10, 30, 90 = aguarda 10s, 30s e 90s)</FieldHint>
                   </div>
 
                   <div>
-                    <FieldLabel>Estratégia</FieldLabel>
+                    <FieldLabel>Estrategia</FieldLabel>
                     <Select
                       value={retryStrategy}
                       onValueChange={(val: string | null) =>
@@ -256,7 +256,9 @@ export function SettingsContent() {
                       </SelectContent>
                     </Select>
                     <FieldHint>
-                      Exponencial aumenta o intervalo a cada tentativa
+                      {retryStrategy === "exponential"
+                        ? "Multiplica os intervalos progressivamente (ex: 10s → 20s → 40s). Ignora os intervalos fixos definidos acima"
+                        : "Usa exatamente os intervalos definidos acima na ordem (10s, 30s, 90s)"}
                     </FieldHint>
                   </div>
 
@@ -264,7 +266,7 @@ export function SettingsContent() {
                     <div>
                       <FieldLabel>Jitter</FieldLabel>
                       <FieldHint>
-                        Adiciona variação aleatória ao intervalo
+                        Adiciona variacao aleatoria ao intervalo para evitar que multiplas rotas reenviem ao mesmo tempo
                       </FieldHint>
                     </div>
                     <Switch
@@ -298,13 +300,13 @@ export function SettingsContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-zinc-100">
                   <Archive className="h-4 w-4 text-blue-500" />
-                  Retenção de Logs
+                  Retencao de Logs
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <FieldLabel>Retenção completa (dias)</FieldLabel>
+                    <FieldLabel>Retencao completa (dias)</FieldLabel>
                     <Input
                       type="number"
                       min={1}
@@ -321,12 +323,12 @@ export function SettingsContent() {
                       className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
                     />
                     <FieldHint>
-                      Logs completos com payload (1-365 dias)
+                      Logs completos com payload, headers e resposta (1-365 dias)
                     </FieldHint>
                   </div>
 
                   <div>
-                    <FieldLabel>Retenção resumida (dias)</FieldLabel>
+                    <FieldLabel>Retencao resumida (dias)</FieldLabel>
                     <Input
                       type="number"
                       min={1}
@@ -343,7 +345,7 @@ export function SettingsContent() {
                       className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
                     />
                     <FieldHint>
-                      Resumos sem payload (1-730 dias)
+                      Resumos sem payload — apenas metadados como status, duracao e erro (1-730 dias)
                     </FieldHint>
                   </div>
                 </div>
@@ -372,7 +374,7 @@ export function SettingsContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-zinc-100">
                   <Bell className="h-4 w-4 text-blue-500" />
-                  Notificações
+                  Notificacoes
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
@@ -380,7 +382,7 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-zinc-300">
-                        Notificações na plataforma
+                        Notificacoes na plataforma
                       </p>
                       <p className="text-xs text-zinc-500">
                         Alertas dentro do painel
@@ -395,7 +397,7 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-zinc-300">
-                        Notificações por e-mail
+                        Notificacoes por e-mail
                       </p>
                       <p className="text-xs text-zinc-500">
                         Enviar alertas por e-mail
@@ -403,14 +405,18 @@ export function SettingsContent() {
                     </div>
                     <Switch
                       checked={notifyEmail}
-                      onCheckedChange={setNotifyEmail}
+                      onCheckedChange={(val) => {
+                        if (!val && !notifyWhatsapp) return;
+                        setNotifyEmail(val);
+                      }}
+                      disabled={notifyEmail && !notifyWhatsapp}
                     />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-zinc-300">
-                        Notificações por WhatsApp
+                        Notificacoes por WhatsApp
                       </p>
                       <p className="text-xs text-zinc-500">
                         Enviar alertas via WhatsApp
@@ -418,9 +424,17 @@ export function SettingsContent() {
                     </div>
                     <Switch
                       checked={notifyWhatsapp}
-                      onCheckedChange={setNotifyWhatsapp}
+                      onCheckedChange={(val) => {
+                        if (!val && !notifyEmail) return;
+                        setNotifyWhatsapp(val);
+                      }}
+                      disabled={notifyWhatsapp && !notifyEmail}
                     />
                   </div>
+
+                  <p className="text-xs text-zinc-500 italic">
+                    E obrigatorio manter pelo menos um canal de notificacao ativo (e-mail ou WhatsApp)
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
@@ -442,12 +456,12 @@ export function SettingsContent() {
                       className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
                     />
                     <FieldHint>
-                      Quantidade de falhas consecutivas para disparar alerta
+                      Quantidade de falhas consecutivas de uma mesma rota para disparar alerta de notificacao
                     </FieldHint>
                   </div>
 
                   <div>
-                    <FieldLabel>Destinatários</FieldLabel>
+                    <FieldLabel>Destinatarios</FieldLabel>
                     <Input
                       type="text"
                       value={notifyRecipients}
@@ -456,7 +470,7 @@ export function SettingsContent() {
                       className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
                     />
                     <FieldHint>
-                      E-mails e/ou números separados por vírgula
+                      E-mails ou numeros de WhatsApp que receberao alertas (separados por virgula)
                     </FieldHint>
                   </div>
                 </div>
