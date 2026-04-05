@@ -12,7 +12,7 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 2A:** CONCLUÍDA (em produção) — dashboard real, gráficos, reenvio, UI premium
 - **Pendentes pré-2B:** CONCLUÍDOS — Aba Logs integrada + Visão Geral mini dashboard
 - **Fase 2B:** CONCLUÍDA (em produção) — config globais, notificações, real-time SSE, health check
-- **Fase 3:** Pendente (gestão usuários, WhatsApp, busca global)
+- **Fase 3:** Em progresso — gestão usuários OK, ajustes UI/UX massivos OK. Pendente: esqueci senha, busca global, exportação CSV, perfil, tema light/dark
 
 ## Idioma
 Sempre responder em português brasileiro.
@@ -22,7 +22,8 @@ Sempre responder em português brasileiro.
 - Código e variáveis em inglês
 - Comentários em português quando necessário
 - Server Actions em `src/lib/actions/` (pasta única consolidada)
-- Tabs da empresa: "Visão Geral", "WhatsApp Cloud", "Rotas de Webhook", "Logs"
+- Tabs da empresa: "Visão Geral", "WhatsApp Cloud", "Rotas de Webhook", "Logs", "Membros"
+- Todo texto visível ao usuário DEVE ter acentos e caracteres PT-BR corretos
 
 ## Stack Técnica
 - Next.js 14+ (App Router, Server Components, Server Actions)
@@ -68,12 +69,23 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 - `settings.ts` — CRUD de configurações globais (admin-only)
 - `notifications.ts` — feed de notificações (getNotifications, markAsRead, markAllAsRead)
 - `resend.ts` — reenvio de webhooks (delivery derivada)
+- `users.ts` — CRUD usuários + memberships (com controle hierárquico de acesso)
+
+## Regras de Acesso (Hierarquia)
+- Super Admin > Admin (company_admin) > Gerente (manager) > Visualizador (viewer)
+- Super Admin: vê e edita todos. Não pode ser excluído pela plataforma
+- Admin: vê admins (sem editar) + níveis abaixo (edita). Não vê super admins
+- /users e /settings: apenas super admin e admin
+- Aba Membros: apenas super admin e admin
 
 ## Próximo Passo
-Iniciar Fase 3:
-1. **Gestão de usuários** — CRUD, perfis, convites
-2. **Busca global** — busca unificada no header
-3. **Exportação CSV** — logs e métricas
+Continuar Fase 3:
+1. **Esqueci senha** — fluxo de reset por email
+2. **Perfil de usuário** — foto, nome, email, senha, tema
+3. **Seletor de tema** — light/dark/system no sidebar
+4. **Busca global** — busca unificada no header
+5. **Exportação CSV** — logs e métricas
+6. **Integração Meta API** — configurar webhook automaticamente no app Meta
 
 ## Documentação
 - **Spec geral:** `docs/superpowers/specs/2026-04-03-nexus-roteador-webhook-design.md` (v7)
@@ -81,4 +93,5 @@ Iniciar Fase 3:
 - **Planos Fase 1:** `docs/superpowers/plans/2026-04-03-fase1-*.md`
 - **Plano Fase 2A:** `docs/superpowers/plans/2026-04-04-fase2a-dashboard-reenvio.md`
 - **Spec Logs+Overview:** `docs/superpowers/specs/2026-04-04-logs-overview-tabs-design.md`
+- **Spec Ajustes UI/UX:** `docs/superpowers/specs/2026-04-05-ajustes-ui-ux-massivos.md`
 - **Design System:** `design-system/nexus-roteador-webhook/MASTER.md`
