@@ -11,7 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -102,9 +101,8 @@ export function UsersContent() {
     setLoading(false);
   }
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadUsers(); }, []);
 
   function openCreate() {
     setForm(emptyForm);

@@ -88,11 +88,11 @@ export function MembersTab({ companyId }: MembersTabProps) {
     } else {
       toast.error(result.error || "Erro ao carregar membros");
     }
+    setLoading(false);
   }, [companyId]);
 
-  useEffect(() => {
-    fetchMembers().finally(() => setLoading(false));
-  }, [fetchMembers]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
   function handleOpenAddForm() {
     setShowAddForm(true);
