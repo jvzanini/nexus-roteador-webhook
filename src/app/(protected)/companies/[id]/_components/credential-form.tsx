@@ -10,6 +10,60 @@ import { upsertCredential, revealCredentialField } from "@/lib/actions/credentia
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://roteadorwebhook.nexusai360.com";
 
+interface SensitiveInputProps {
+  id: string;
+  name: string;
+  label: string;
+  description: string;
+  placeholder: string;
+  defaultValue?: string;
+  required?: boolean;
+  visible: boolean;
+  revealing: boolean;
+  onToggle: () => void;
+  inputRef: (el: HTMLInputElement | null) => void;
+  className: string;
+}
+
+function SensitiveInput({ id, name, label, description, placeholder, defaultValue, required = true, visible, revealing, onToggle, inputRef, className }: SensitiveInputProps) {
+  return (
+    <div className="space-y-2">
+      <div>
+        <Label htmlFor={id} className="text-sm font-medium text-zinc-300">
+          {label} {required && <span className="text-red-400">*</span>}
+        </Label>
+        <p className="text-xs text-zinc-500 mt-0.5">{description}</p>
+      </div>
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          id={id}
+          name={name}
+          type={visible ? "text" : "password"}
+          placeholder={placeholder}
+          defaultValue={defaultValue}
+          required={required}
+          className={`${className} pr-10`}
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={revealing}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
+        >
+          {revealing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : visible ? (
+            <EyeOff className="h-4 w-4" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 interface CredentialFormProps {
   companyId: string;
   webhookKey: string;
@@ -115,47 +169,6 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
 
   const inputClasses = "h-11 bg-zinc-800/50 border-zinc-700/50 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all duration-200 rounded-lg";
 
-  function SensitiveInput({ id, name, label, description, placeholder, defaultValue, required = true }: {
-    id: string; name: string; label: string; description: string; placeholder: string; defaultValue?: string; required?: boolean;
-  }) {
-    return (
-      <div className="space-y-2">
-        <div>
-          <Label htmlFor={id} className="text-sm font-medium text-zinc-300">
-            {label} {required && <span className="text-red-400">*</span>}
-          </Label>
-          <p className="text-xs text-zinc-500 mt-0.5">{description}</p>
-        </div>
-        <div className="relative">
-          <Input
-            ref={(el) => { inputRefs.current[id] = el; }}
-            id={id}
-            name={name}
-            type={visible[id] ? "text" : "password"}
-            placeholder={placeholder}
-            defaultValue={defaultValue}
-            required={required}
-            className={`${inputClasses} pr-10`}
-          />
-          <button
-            type="button"
-            onClick={() => toggleField(id)}
-            disabled={revealing[id]}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {revealing[id] ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : visible[id] ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <form action={handleSubmit} className="space-y-6">
       {/* Webhook URL card */}
@@ -205,6 +218,11 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
           description="Chave secreta do aplicativo — não compartilhe"
           placeholder="Seu app secret"
           defaultValue={existingCredential?.metaAppSecret}
+          visible={!!visible["metaAppSecret"]}
+          revealing={!!revealing["metaAppSecret"]}
+          onToggle={() => toggleField("metaAppSecret")}
+          inputRef={(el) => { inputRefs.current["metaAppSecret"] = el; }}
+          className={inputClasses}
         />
 
         <SensitiveInput
@@ -214,6 +232,11 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
           description="Token usado pela Meta para validar o endpoint do webhook"
           placeholder="Token de verificação para webhook"
           defaultValue={existingCredential?.verifyToken}
+          visible={!!visible["verifyToken"]}
+          revealing={!!revealing["verifyToken"]}
+          onToggle={() => toggleField("verifyToken")}
+          inputRef={(el) => { inputRefs.current["verifyToken"] = el; }}
+          className={inputClasses}
         />
 
         <SensitiveInput
@@ -223,6 +246,11 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
           description="Token de autorização para enviar mensagens via WhatsApp API"
           placeholder="EAAxxxxxxxx"
           defaultValue={existingCredential?.accessToken}
+          visible={!!visible["accessToken"]}
+          revealing={!!revealing["accessToken"]}
+          onToggle={() => toggleField("accessToken")}
+          inputRef={(el) => { inputRefs.current["accessToken"] = el; }}
+          className={inputClasses}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
