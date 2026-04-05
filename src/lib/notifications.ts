@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import type { NotificationType } from "@/generated/prisma/client";
+import { publishRealtimeEvent } from "./realtime";
 
 interface CreateNotificationInput {
   userId?: string;
@@ -54,4 +55,9 @@ export async function notifyDeliveryFailed(params: {
       channelsSent: ["platform"],
     })),
   });
+
+  // Publicar evento real-time para cada super admin
+  for (const admin of superAdmins) {
+    await publishRealtimeEvent({ type: "notification:new", userId: admin.id });
+  }
 }

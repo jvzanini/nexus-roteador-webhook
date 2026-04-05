@@ -9,6 +9,7 @@ import { decrypt } from "../lib/encryption";
 import { validateUrl } from "../lib/webhook/ssrf";
 import { webhookDeliveryQueue, webhookDlqQueue } from "../lib/queue";
 import { notifyDeliveryFailed } from "../lib/notifications";
+import { publishRealtimeEvent } from "../lib/realtime";
 
 // ─── Constantes ─────────────────────────────────────────────────
 
@@ -308,6 +309,7 @@ async function finalizeDelivery(
     });
 
     console.log(`[delivery] ${routeDeliveryId} delivered (HTTP ${httpStatus}) on attempt ${attemptNumber}`);
+    await publishRealtimeEvent({ type: "delivery:completed", companyId: result.companyId });
     await checkAndUpdateInboundStatus(routeDeliveryId);
     return;
   }
@@ -395,6 +397,8 @@ async function finalizeDelivery(
   } catch (notifyErr) {
     console.error("[delivery] Falha ao criar notificacao:", (notifyErr as Error).message);
   }
+
+  await publishRealtimeEvent({ type: "delivery:failed", companyId: result.companyId });
 
   await checkAndUpdateInboundStatus(routeDeliveryId);
 }
