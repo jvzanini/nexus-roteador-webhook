@@ -3,6 +3,7 @@ import { OverviewTab } from "./overview-tab";
 import { CredentialsTab } from "./credentials-tab";
 import { RouteList } from "@/components/routes/route-list";
 import { LogsTab } from "./logs-tab";
+import { MembersTab } from "./members-tab";
 
 interface CompanyTabsProps {
   company: {
@@ -48,6 +49,12 @@ export function CompanyTabs({ company }: CompanyTabsProps) {
         >
           Logs
         </TabsTrigger>
+        <TabsTrigger
+          value="members"
+          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
+        >
+          Membros
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview">
@@ -64,6 +71,10 @@ export function CompanyTabs({ company }: CompanyTabsProps) {
 
       <TabsContent value="logs">
         <LogsTab companyId={company.id} />
+      </TabsContent>
+
+      <TabsContent value="members">
+        <MembersTab companyId={company.id} />
       </TabsContent>
     </Tabs>
   );
