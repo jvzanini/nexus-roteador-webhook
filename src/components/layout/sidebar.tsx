@@ -8,6 +8,7 @@ import {
   Webhook,
   LayoutDashboard,
   Building2,
+  Users,
   Settings,
   LogOut,
   Menu,
@@ -37,7 +38,10 @@ export function Sidebar({ user }: SidebarProps) {
   const allMenuItems = [
     ...menuItems,
     ...(user.isSuperAdmin
-      ? [{ label: 'Configuracoes', href: '/settings', icon: Settings }]
+      ? [
+          { label: 'Usuarios', href: '/users', icon: Users },
+          { label: 'Configuracoes', href: '/settings', icon: Settings },
+        ]
       : []),
   ];
 
