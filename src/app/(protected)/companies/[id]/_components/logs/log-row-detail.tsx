@@ -45,7 +45,7 @@ export function LogRowDetail({
   if (!detail) {
     return (
       <div className="p-4 text-sm text-zinc-500">
-        Detalhes nao encontrados.
+        Detalhes não encontrados.
       </div>
     );
   }

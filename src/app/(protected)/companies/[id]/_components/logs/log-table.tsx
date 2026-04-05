@@ -89,7 +89,7 @@ export function LogTable({
       if (result.created && result.enqueued) {
         toast.success("Reenvio criado e enfileirado");
       } else if (result.created && !result.enqueued) {
-        toast.success("Reenvio criado. Sera processado automaticamente");
+        toast.success("Reenvio criado. Será processado automaticamente");
       } else {
         toast.error(result.error || "Erro ao reenviar");
       }
@@ -103,12 +103,12 @@ export function LogTable({
   async function handleResendBatch() {
     if (selectedIds.size === 0) return;
     if (selectedIds.size > 50) {
-      toast.error("Maximo 50 por vez");
+      toast.error("Máximo 50 por vez");
       return;
     }
 
     const confirmed = window.confirm(
-      `Tem certeza que deseja reenviar ${selectedIds.size} entrega${selectedIds.size > 1 ? "s" : ""}? Novas entregas serao criadas e enfileiradas.`
+      `Tem certeza que deseja reenviar ${selectedIds.size} entrega${selectedIds.size > 1 ? "s" : ""}? Novas entregas serão criadas e enfileiradas.`
     );
     if (!confirmed) return;
 
@@ -167,7 +167,7 @@ export function LogTable({
               onClick={handleResendBatch}
               disabled={batchResending || selectedIds.size > 50}
               className="gap-1.5 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-all duration-200"
-              title={selectedIds.size > 50 ? "Maximo 50 por vez" : undefined}
+              title={selectedIds.size > 50 ? "Máximo 50 por vez" : undefined}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${batchResending ? "animate-spin" : ""}`} />
               Reenviar selecionados

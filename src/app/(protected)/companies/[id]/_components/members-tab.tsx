@@ -299,7 +299,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
                 <TableHead className="text-zinc-400">Papel</TableHead>
                 <TableHead className="text-zinc-400">Status</TableHead>
                 <TableHead className="text-zinc-400 text-right">
-                  Acoes
+                  Ações
                 </TableHead>
               </TableRow>
             </TableHeader>

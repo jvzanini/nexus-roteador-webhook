@@ -96,7 +96,7 @@ export function UsersContent() {
     if (result.success && result.data) {
       setUsers(result.data);
     } else {
-      toast.error(result.error || "Erro ao carregar usuarios");
+      toast.error(result.error || "Erro ao carregar usuários");
     }
     setLoading(false);
   }
@@ -122,7 +122,7 @@ export function UsersContent() {
 
   function handleSubmitCreate() {
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
-      toast.error("Preencha todos os campos obrigatorios");
+      toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
@@ -135,12 +135,12 @@ export function UsersContent() {
       });
 
       if (result.success) {
-        toast.success("Usuario criado com sucesso");
+        toast.success("Usuário criado com sucesso");
         setCreateOpen(false);
         setForm(emptyForm);
         await loadUsers();
       } else {
-        toast.error(result.error || "Erro ao criar usuario");
+        toast.error(result.error || "Erro ao criar usuário");
       }
     });
   }
@@ -148,7 +148,7 @@ export function UsersContent() {
   function handleSubmitEdit() {
     if (!editingUser) return;
     if (!form.name.trim() || !form.email.trim()) {
-      toast.error("Nome e email sao obrigatorios");
+      toast.error("Nome e email são obrigatórios");
       return;
     }
 
@@ -165,13 +165,13 @@ export function UsersContent() {
       const result = await updateUser(editingUser.id, data);
 
       if (result.success) {
-        toast.success("Usuario atualizado com sucesso");
+        toast.success("Usuário atualizado com sucesso");
         setEditOpen(false);
         setEditingUser(null);
         setForm(emptyForm);
         await loadUsers();
       } else {
-        toast.error(result.error || "Erro ao atualizar usuario");
+        toast.error(result.error || "Erro ao atualizar usuário");
       }
     });
   }
@@ -183,7 +183,7 @@ export function UsersContent() {
 
       if (result.success) {
         toast.success(
-          user.isActive ? "Usuario desativado" : "Usuario ativado"
+          user.isActive ? "Usuário desativado" : "Usuário ativado"
         );
         await loadUsers();
       } else {
@@ -203,7 +203,7 @@ export function UsersContent() {
           <Input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            placeholder="Nome do usuario"
+            placeholder="Nome do usuário"
             className="bg-zinc-800/50 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
           />
         </div>
@@ -230,7 +230,7 @@ export function UsersContent() {
               setForm((f) => ({ ...f, password: e.target.value }))
             }
             placeholder={
-              mode === "edit" ? "Nova senha (opcional)" : "Senha do usuario"
+              mode === "edit" ? "Nova senha (opcional)" : "Senha do usuário"
             }
             className="bg-zinc-800/50 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
           />
@@ -268,9 +268,9 @@ export function UsersContent() {
             <UsersIcon className="h-5 w-5 text-blue-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-zinc-100">Usuarios</h1>
+            <h1 className="text-xl font-bold text-zinc-100">Usuários</h1>
             <p className="text-sm text-zinc-500">
-              Gerencie os usuarios da plataforma
+              Gerencie os usuários da plataforma
             </p>
           </div>
         </div>
@@ -279,7 +279,7 @@ export function UsersContent() {
           className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
         >
           <Plus className="h-4 w-4" />
-          Novo Usuario
+          Novo Usuário
         </Button>
       </motion.div>
 
@@ -295,7 +295,7 @@ export function UsersContent() {
         ) : users.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-zinc-500">
             <UsersIcon className="h-12 w-12 mb-3 text-zinc-600" />
-            <p className="text-sm">Nenhum usuario encontrado</p>
+            <p className="text-sm">Nenhum usuário encontrado</p>
           </div>
         ) : (
           <Table>
@@ -310,7 +310,7 @@ export function UsersContent() {
                 </TableHead>
                 <TableHead className="text-zinc-400">Criado em</TableHead>
                 <TableHead className="text-zinc-400 text-right">
-                  Acoes
+                  Ações
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -339,7 +339,7 @@ export function UsersContent() {
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 border border-zinc-700 px-2.5 py-0.5 text-xs font-medium text-zinc-400">
-                        Usuario
+                        Usuário
                       </span>
                     )}
                   </TableCell>
@@ -406,9 +406,9 @@ export function UsersContent() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Novo Usuario</DialogTitle>
+            <DialogTitle>Novo Usuário</DialogTitle>
             <DialogDescription>
-              Crie um novo usuario para a plataforma
+              Crie um novo usuário para a plataforma
             </DialogDescription>
           </DialogHeader>
           {renderForm("create")}
@@ -419,7 +419,7 @@ export function UsersContent() {
               className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Criar Usuario
+              Criar Usuário
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -435,9 +435,9 @@ export function UsersContent() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar Usuario</DialogTitle>
+            <DialogTitle>Editar Usuário</DialogTitle>
             <DialogDescription>
-              Atualize os dados do usuario
+              Atualize os dados do usuário
             </DialogDescription>
           </DialogHeader>
           {renderForm("edit")}
@@ -448,7 +448,7 @@ export function UsersContent() {
               className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salvar Alteracoes
+              Salvar Alterações
             </Button>
           </DialogFooter>
         </DialogContent>

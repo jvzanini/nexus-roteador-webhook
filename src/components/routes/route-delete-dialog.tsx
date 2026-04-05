@@ -58,9 +58,9 @@ export function RouteDeleteDialog({
           </AlertDialogTitle>
           <AlertDialogDescription className="text-zinc-400">
             Tem certeza que deseja desativar a rota{" "}
-            <strong className="text-zinc-200">&quot;{routeName}&quot;</strong>? Ela deixara de receber
-            webhooks, mas podera ser reativada futuramente. Entregas pendentes
-            nao serao afetadas.
+            <strong className="text-zinc-200">&quot;{routeName}&quot;</strong>? Ela deixará de receber
+            webhooks, mas poderá ser reativada futuramente. Entregas pendentes
+            não serão afetadas.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

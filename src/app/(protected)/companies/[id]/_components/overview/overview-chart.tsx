@@ -30,7 +30,7 @@ export function OverviewChart({ chart }: OverviewChartProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-zinc-300 flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-blue-400" />
-            Ultimos 7 dias
+            Últimos 7 dias
           </CardTitle>
         </CardHeader>
         <CardContent>

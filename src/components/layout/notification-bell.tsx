@@ -167,7 +167,7 @@ export function NotificationBell() {
       <button
         onClick={handleToggle}
         className="relative flex h-9 w-9 items-center justify-center rounded-lg text-zinc-400 transition-all duration-200 cursor-pointer hover:bg-zinc-800 hover:text-zinc-200"
-        aria-label="Notificacoes"
+        aria-label="Notificações"
       >
         <Bell className="size-5" />
         {unreadCount > 0 && (
@@ -190,7 +190,7 @@ export function NotificationBell() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
               <h3 className="text-sm font-semibold text-zinc-200">
-                Notificacoes
+                Notificações
               </h3>
               {unreadCount > 0 && (
                 <Button
@@ -214,7 +214,7 @@ export function NotificationBell() {
               ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
                   <Bell className="mb-2 size-6" />
-                  <p className="text-sm">Nenhuma notificacao</p>
+                  <p className="text-sm">Nenhuma notificação</p>
                 </div>
               ) : (
                 <div className="py-1">

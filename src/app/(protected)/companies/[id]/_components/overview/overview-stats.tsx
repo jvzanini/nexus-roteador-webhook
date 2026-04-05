@@ -15,10 +15,10 @@ interface OverviewStatsProps {
 }
 
 const cards = [
-  { key: "webhooksReceived", label: "Webhooks Recebidos", sublabel: "ultimas 24h", icon: Inbox, color: "blue" },
-  { key: "deliveriesCompleted", label: "Entregas Concluidas", sublabel: "ultimas 24h", icon: CheckCircle2, color: "emerald" },
-  { key: "deliveriesFailed", label: "Entregas com Falha", sublabel: "ultimas 24h", icon: XCircle, color: "red" },
-  { key: "successRate", label: "Taxa de Sucesso", sublabel: "ultimas 24h", icon: TrendingUp, color: "violet" },
+  { key: "webhooksReceived", label: "Webhooks Recebidos", sublabel: "últimas 24h", icon: Inbox, color: "blue" },
+  { key: "deliveriesCompleted", label: "Entregas Concluídas", sublabel: "últimas 24h", icon: CheckCircle2, color: "emerald" },
+  { key: "deliveriesFailed", label: "Entregas com Falha", sublabel: "últimas 24h", icon: XCircle, color: "red" },
+  { key: "successRate", label: "Taxa de Sucesso", sublabel: "últimas 24h", icon: TrendingUp, color: "violet" },
 ] as const;
 
 const colorMap: Record<string, { bg: string; text: string }> = {

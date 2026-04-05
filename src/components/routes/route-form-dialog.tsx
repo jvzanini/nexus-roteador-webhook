@@ -199,7 +199,7 @@ export function RouteFormDialog({
                   className={inputClasses}
                 />
                 <p className="text-xs text-zinc-500">
-                  Somente URLs com HTTPS sao aceitas
+                  Somente URLs com HTTPS são aceitas
                 </p>
                 {fieldErrors.url && (
                   <p className="text-xs text-red-400">
@@ -238,7 +238,7 @@ export function RouteFormDialog({
                   </button>
                 </div>
                 <p className="text-xs text-zinc-500">
-                  Sera criptografada com AES-256-GCM antes de salvar
+                  Será criptografada com AES-256-GCM antes de salvar
                 </p>
               </div>
 

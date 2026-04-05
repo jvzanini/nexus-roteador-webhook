@@ -33,10 +33,10 @@ export async function CredentialsTab({ companyId, webhookKey }: CredentialsTabPr
           <ShieldCheck className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-medium text-amber-300">
-              Dados sensiveis criptografados
+              Dados sensíveis criptografados
             </p>
             <p className="text-xs text-amber-400/70 mt-0.5">
-              Todos os campos sensiveis sao armazenados com criptografia AES-256-GCM.
+              Todos os campos sensíveis são armazenados com criptografia AES-256-GCM.
             </p>
           </div>
         </CardContent>

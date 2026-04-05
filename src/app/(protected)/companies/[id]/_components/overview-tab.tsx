@@ -182,7 +182,7 @@ export function OverviewTab({ company }: OverviewTabProps) {
       <motion.div variants={itemVariants}>
         <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-zinc-300">Informacoes</CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-300">Informações</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between text-sm">

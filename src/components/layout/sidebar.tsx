@@ -39,8 +39,8 @@ export function Sidebar({ user }: SidebarProps) {
     ...menuItems,
     ...(user.isSuperAdmin
       ? [
-          { label: 'Usuarios', href: '/users', icon: Users },
-          { label: 'Configuracoes', href: '/settings', icon: Settings },
+          { label: 'Usuários', href: '/users', icon: Users },
+          { label: 'Configurações', href: '/settings', icon: Settings },
         ]
       : []),
   ];

@@ -29,7 +29,7 @@ export function CompanyTabs({ company }: CompanyTabsProps) {
           value="overview"
           className="data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
         >
-          Visao Geral
+          Visão Geral
         </TabsTrigger>
         <TabsTrigger
           value="credentials"

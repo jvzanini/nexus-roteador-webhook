@@ -72,7 +72,7 @@ export function RouteList({ companyId }: RouteListProps) {
             Rotas de Webhook
           </h2>
           <p className="text-sm text-zinc-500">
-            Configure para onde os eventos WhatsApp serao encaminhados
+            Configure para onde os eventos WhatsApp serão encaminhados
           </p>
         </div>
         <Button

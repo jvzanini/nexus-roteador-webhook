@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { getDashboardData, type DashboardData } from "@/lib/actions/dashboard";
 import { useRealtime } from "@/hooks/use-realtime";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import { DashboardFilters } from "./dashboard-filters";
 import { StatsCards } from "./stats-cards";
 import { WebhookChart } from "./webhook-chart";
@@ -154,12 +155,15 @@ export function DashboardContent({ userName }: DashboardContentProps) {
       animate="visible"
       className="space-y-8"
     >
-      {/* Greeting */}
-      <motion.div variants={itemVariants}>
-        <h1 className="text-2xl font-bold text-white tracking-tight">
-          Ola, {userName}
-        </h1>
-        <p className="text-sm text-zinc-500 mt-1 capitalize">{today}</p>
+      {/* Greeting + Bell */}
+      <motion.div variants={itemVariants} className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            Olá, {userName}
+          </h1>
+          <p className="text-sm text-zinc-500 mt-1 capitalize">{today}</p>
+        </div>
+        <NotificationBell />
       </motion.div>
 
       {/* Filters */}
