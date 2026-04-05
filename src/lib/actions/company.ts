@@ -52,7 +52,10 @@ export async function getCompanies(options?: {
           select: { id: true }, // so verifica se existe, sem expor dados
         },
         _count: {
-          select: { memberships: true, routes: true },
+          select: {
+            memberships: true,
+            routes: { where: { isActive: true } },
+          },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -84,7 +87,7 @@ export async function getCompanyById(
         _count: {
           select: {
             memberships: true,
-            routes: true,
+            routes: { where: { isActive: true } },
           },
         },
       },

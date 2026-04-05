@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { RouteCard } from "@/components/routes/route-card";
 import { RouteFormDialog } from "@/components/routes/route-form-dialog";
 import { RouteDeleteDialog } from "@/components/routes/route-delete-dialog";
-import { listWebhookRoutes } from "@/lib/actions/webhook-routes";
+import { listWebhookRoutes, toggleWebhookRouteActive } from "@/lib/actions/webhook-routes";
+import { toast } from "sonner";
 
 interface RouteData {
   id: string;
@@ -62,6 +63,15 @@ export function RouteList({ companyId }: RouteListProps) {
     setFormOpen(open);
     if (!open) setEditingRoute(null);
   }, []);
+
+  const handleToggle = useCallback(async (routeId: string) => {
+    const result = await toggleWebhookRouteActive(routeId, companyId);
+    if (result.success) {
+      fetchRoutes();
+    } else {
+      toast.error(result.error ?? "Erro ao alterar status da rota");
+    }
+  }, [companyId, fetchRoutes]);
 
   return (
     <div className="space-y-4">
@@ -128,12 +138,14 @@ export function RouteList({ companyId }: RouteListProps) {
             route={route}
             onEdit={() => handleEdit(route)}
             onDelete={() => setDeleteRoute(route)}
+            onToggle={() => handleToggle(route.id)}
           />
         ))}
       </AnimatePresence>
 
       {/* Form Dialog (criar/editar) */}
       <RouteFormDialog
+        key={editingRoute?.id ?? "new"}
         companyId={companyId}
         open={formOpen}
         onOpenChange={handleFormClose}

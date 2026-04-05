@@ -7,6 +7,7 @@ import { Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { TOTAL_EVENTS } from "@/lib/constants/whatsapp-events";
 import type { LucideIcon } from "lucide-react";
 
@@ -23,6 +24,7 @@ interface RouteCardProps {
   };
   onEdit: () => void;
   onDelete: () => void;
+  onToggle: () => void;
 }
 
 function maskUrl(url: string): string {
@@ -38,7 +40,7 @@ function maskUrl(url: string): string {
   }
 }
 
-export function RouteCard({ route, onEdit, onDelete }: RouteCardProps) {
+export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps) {
   const Icon = useMemo(() => {
     const icon = (LucideIcons as unknown as Record<string, LucideIcon>)[route.icon];
     return icon ?? LucideIcons.Webhook;
@@ -70,16 +72,14 @@ export function RouteCard({ route, onEdit, onDelete }: RouteCardProps) {
               <h3 className="text-sm font-medium text-zinc-100 truncate">
                 {route.name}
               </h3>
-              <Badge
-                variant={route.isActive ? "default" : "secondary"}
-                className={`text-xs shrink-0 ${
-                  route.isActive
-                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                    : "bg-zinc-500/15 text-zinc-400 border border-zinc-500/30"
-                }`}
-              >
+              <Switch
+                checked={route.isActive}
+                onCheckedChange={onToggle}
+                className="cursor-pointer transition-all duration-200 data-checked:bg-emerald-500 data-unchecked:bg-zinc-700"
+              />
+              <span className={`text-xs shrink-0 ${route.isActive ? "text-emerald-400" : "text-zinc-500"}`}>
                 {route.isActive ? "Ativa" : "Inativa"}
-              </Badge>
+              </span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-zinc-500">
               <ExternalLink className="h-3 w-3 shrink-0" />
@@ -118,7 +118,7 @@ export function RouteCard({ route, onEdit, onDelete }: RouteCardProps) {
               size="icon"
               onClick={onDelete}
               className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
-              title="Desativar rota"
+              title="Excluir rota"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

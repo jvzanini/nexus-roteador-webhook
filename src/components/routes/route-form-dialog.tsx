@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { IconPicker } from "@/components/icon-picker/icon-picker";
+// import { IconPicker } from "@/components/icon-picker/icon-picker"; // Arquivado temporariamente
 import { EventChecklist } from "@/components/event-checklist/event-checklist";
 import {
   RouteHeaderFields,
@@ -110,6 +110,13 @@ export function RouteFormDialog({
         } else {
           if (result.fieldErrors) {
             setFieldErrors(result.fieldErrors);
+            // Scroll para eventos se o erro for apenas nessa secao
+            if (result.fieldErrors.events) {
+              setTimeout(() => {
+                const eventsSection = document.getElementById("events-section");
+                eventsSection?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }, 100);
+            }
           }
           toast.error(result.error ?? "Erro ao salvar rota");
         }
@@ -157,34 +164,35 @@ export function RouteFormDialog({
               transition={{ duration: 0.2 }}
               className="space-y-6 pb-4"
             >
-              {/* Nome e icone */}
-              <div className="grid grid-cols-[auto_1fr] gap-3 items-end">
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">Icone</Label>
-                  <IconPicker
-                    value={icon}
-                    onChange={setIcon}
-                    disabled={isPending}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="route-name" className="text-zinc-300">Nome *</Label>
-                  <Input
-                    id="route-name"
-                    placeholder="Ex: N8N Producao, Chatwoot, etc."
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={isPending}
-                    maxLength={100}
-                    className={inputClasses}
-                  />
-                  {fieldErrors.name && (
-                    <p className="text-xs text-red-400">
-                      {fieldErrors.name[0]}
-                    </p>
-                  )}
-                </div>
+              {/* Nome */}
+              <div className="space-y-2">
+                <Label htmlFor="route-name" className="text-zinc-300">Nome *</Label>
+                <Input
+                  id="route-name"
+                  placeholder="Ex: N8N Producao, Chatwoot, etc."
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={isPending}
+                  maxLength={100}
+                  className={inputClasses}
+                />
+                {fieldErrors.name && (
+                  <p className="text-xs text-red-400">
+                    {fieldErrors.name[0]}
+                  </p>
+                )}
               </div>
+
+              {/* Icone arquivado — funcionalidade desativada temporariamente
+              <div className="space-y-2">
+                <Label className="text-zinc-300">Icone</Label>
+                <IconPicker
+                  value={icon}
+                  onChange={setIcon}
+                  disabled={isPending}
+                />
+              </div>
+              */}
 
               {/* URL */}
               <div className="space-y-2">
@@ -274,7 +282,7 @@ export function RouteFormDialog({
               />
 
               {/* Eventos */}
-              <div className="space-y-2">
+              <div id="events-section" className="space-y-2">
                 <Label className="text-zinc-300">Eventos WhatsApp *</Label>
                 <EventChecklist
                   selectedEvents={events}

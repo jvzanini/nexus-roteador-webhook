@@ -46,6 +46,30 @@ export async function createWebhookRoute(
       return { success: false, error: "Empresa nao encontrada ou inativa" };
     }
 
+    // Validar duplicidade de nome
+    const existingName = await prisma.webhookRoute.findFirst({
+      where: { companyId, name: data.name, isActive: true },
+    });
+    if (existingName) {
+      return {
+        success: false,
+        error: "Ja existe uma rota com este nome",
+        fieldErrors: { name: ["Ja existe uma rota com este nome nesta empresa"] },
+      };
+    }
+
+    // Validar duplicidade de URL
+    const existingUrl = await prisma.webhookRoute.findFirst({
+      where: { companyId, url: data.url, isActive: true },
+    });
+    if (existingUrl) {
+      return {
+        success: false,
+        error: "Ja existe uma rota com esta URL",
+        fieldErrors: { url: ["Ja existe uma rota com esta URL nesta empresa"] },
+      };
+    }
+
     // Criptografar secret_key se fornecida
     const encryptedSecretKey = data.secretKey
       ? encrypt(data.secretKey)
@@ -103,6 +127,34 @@ export async function updateWebhookRoute(
       return { success: false, error: "Rota nao encontrada" };
     }
 
+    // Validar duplicidade de nome (excluindo a propria rota)
+    if (data.name !== undefined) {
+      const existingName = await prisma.webhookRoute.findFirst({
+        where: { companyId, name: data.name, isActive: true, id: { not: routeId } },
+      });
+      if (existingName) {
+        return {
+          success: false,
+          error: "Ja existe uma rota com este nome",
+          fieldErrors: { name: ["Ja existe uma rota com este nome nesta empresa"] },
+        };
+      }
+    }
+
+    // Validar duplicidade de URL (excluindo a propria rota)
+    if (data.url !== undefined) {
+      const existingUrl = await prisma.webhookRoute.findFirst({
+        where: { companyId, url: data.url, isActive: true, id: { not: routeId } },
+      });
+      if (existingUrl) {
+        return {
+          success: false,
+          error: "Ja existe uma rota com esta URL",
+          fieldErrors: { url: ["Ja existe uma rota com esta URL nesta empresa"] },
+        };
+      }
+    }
+
     // Montar dados de atualizacao
     const updateData: Record<string, unknown> = {};
 
@@ -132,16 +184,56 @@ export async function updateWebhookRoute(
   }
 }
 
-// --- SOFT DELETE ---
+// --- HARD DELETE ---
 
-export async function deleteWebhookRoute(
+export async function hardDeleteWebhookRoute(
   routeId: string,
   companyId: string
 ): Promise<ActionResult> {
   try {
     // Verificar se a rota existe e pertence a empresa
     const existingRoute = await prisma.webhookRoute.findFirst({
-      where: { id: routeId, companyId, isActive: true },
+      where: { id: routeId, companyId },
+    });
+
+    if (!existingRoute) {
+      return { success: false, error: "Rota nao encontrada" };
+    }
+
+    // Verificar se tem deliveries vinculadas (FK Restrict impede delete)
+    const deliveryCount = await prisma.routeDelivery.count({
+      where: { routeId },
+    });
+
+    if (deliveryCount > 0) {
+      return {
+        success: false,
+        error: `Nao e possivel excluir: existem ${deliveryCount} entregas vinculadas a esta rota. Desative-a ao inves de excluir.`,
+      };
+    }
+
+    await prisma.webhookRoute.delete({
+      where: { id: routeId },
+    });
+
+    revalidatePath(`/companies/${companyId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("[hardDeleteWebhookRoute] Erro:", error);
+    return { success: false, error: "Erro interno ao excluir rota" };
+  }
+}
+
+// --- TOGGLE ACTIVE ---
+
+export async function toggleWebhookRouteActive(
+  routeId: string,
+  companyId: string
+): Promise<ActionResult> {
+  try {
+    const existingRoute = await prisma.webhookRoute.findFirst({
+      where: { id: routeId, companyId },
     });
 
     if (!existingRoute) {
@@ -150,15 +242,15 @@ export async function deleteWebhookRoute(
 
     await prisma.webhookRoute.update({
       where: { id: routeId },
-      data: { isActive: false },
+      data: { isActive: !existingRoute.isActive },
     });
 
     revalidatePath(`/companies/${companyId}`);
 
     return { success: true };
   } catch (error) {
-    console.error("[deleteWebhookRoute] Erro:", error);
-    return { success: false, error: "Erro interno ao desativar rota" };
+    console.error("[toggleWebhookRouteActive] Erro:", error);
+    return { success: false, error: "Erro interno ao alterar status da rota" };
   }
 }
 
@@ -167,7 +259,7 @@ export async function deleteWebhookRoute(
 export async function listWebhookRoutes(companyId: string) {
   try {
     const routes = await prisma.webhookRoute.findMany({
-      where: { companyId, isActive: true },
+      where: { companyId },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -196,7 +288,7 @@ export async function listWebhookRoutes(companyId: string) {
 export async function getWebhookRoute(routeId: string, companyId: string) {
   try {
     const route = await prisma.webhookRoute.findFirst({
-      where: { id: routeId, companyId, isActive: true },
+      where: { id: routeId, companyId },
       select: {
         id: true,
         name: true,

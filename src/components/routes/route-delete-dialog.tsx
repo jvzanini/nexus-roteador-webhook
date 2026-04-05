@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteWebhookRoute } from "@/lib/actions/webhook-routes";
+import { hardDeleteWebhookRoute } from "@/lib/actions/webhook-routes";
 import { toast } from "sonner";
 
 interface RouteDeleteDialogProps {
@@ -36,14 +36,14 @@ export function RouteDeleteDialog({
 
   const handleDelete = () => {
     startTransition(async () => {
-      const result = await deleteWebhookRoute(routeId, companyId);
+      const result = await hardDeleteWebhookRoute(routeId, companyId);
 
       if (result.success) {
-        toast.success(`Rota "${routeName}" desativada com sucesso`);
+        toast.success(`Rota "${routeName}" excluida com sucesso`);
         onOpenChange(false);
         onSuccess?.();
       } else {
-        toast.error(result.error ?? "Erro ao desativar rota");
+        toast.error(result.error ?? "Erro ao excluir rota");
       }
     });
   };
@@ -54,13 +54,12 @@ export function RouteDeleteDialog({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-zinc-100">
             <AlertTriangle className="h-5 w-5 text-red-400" />
-            Desativar rota
+            Excluir rota
           </AlertDialogTitle>
           <AlertDialogDescription className="text-zinc-400">
-            Tem certeza que deseja desativar a rota{" "}
-            <strong className="text-zinc-200">&quot;{routeName}&quot;</strong>? Ela deixará de receber
-            webhooks, mas poderá ser reativada futuramente. Entregas pendentes
-            não serão afetadas.
+            Tem certeza que deseja excluir a rota{" "}
+            <strong className="text-zinc-200">&quot;{routeName}&quot;</strong>? Esta ação não pode ser
+            desfeita. Entregas pendentes não serão afetadas.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -76,7 +75,7 @@ export function RouteDeleteDialog({
             className="bg-red-600 text-white hover:bg-red-700 cursor-pointer transition-all duration-200"
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Desativar
+            Excluir
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
