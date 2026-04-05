@@ -16,6 +16,9 @@ export interface UserItem {
   isActive: boolean;
   createdAt: Date;
   companiesCount: number;
+  highestRole: string; // "Super Admin" | "Admin" | "Gerente" | "Visualizador" | "Sem acesso"
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
 export interface UserDetail {
@@ -49,20 +52,60 @@ export interface MemberItem {
 
 type ActionResult<T = unknown> = { success: boolean; data?: T; error?: string };
 
+// --- Helpers ---
+
+const ROLE_HIERARCHY: Record<string, number> = {
+  company_admin: 3,
+  manager: 2,
+  viewer: 1,
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  company_admin: "Admin",
+  manager: "Gerente",
+  viewer: "Visualizador",
+};
+
+function getHighestRole(
+  isSuperAdmin: boolean,
+  memberships: { role: CompanyRole }[]
+): string {
+  if (isSuperAdmin) return "Super Admin";
+  if (memberships.length === 0) return "Sem acesso";
+
+  let highest = 0;
+  let highestRole = "viewer";
+  for (const m of memberships) {
+    const level = ROLE_HIERARCHY[m.role] ?? 0;
+    if (level > highest) {
+      highest = level;
+      highestRole = m.role;
+    }
+  }
+  return ROLE_LABELS[highestRole] ?? "Sem acesso";
+}
+
+async function isCompanyAdmin(userId: string): Promise<boolean> {
+  const membership = await prisma.userCompanyMembership.findFirst({
+    where: { userId, role: "company_admin", isActive: true },
+  });
+  return !!membership;
+}
+
 // --- Validation ---
 
 const CreateUserSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
   password: z.string().min(8),
-  isSuperAdmin: z.boolean().default(false),
+  role: z.enum(["super_admin", "company_admin", "manager", "viewer"]),
 });
 
 const UpdateUserSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   email: z.string().email().optional(),
   password: z.string().min(8).optional(),
-  isSuperAdmin: z.boolean().optional(),
+  role: z.enum(["super_admin", "company_admin", "manager", "viewer"]).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -78,11 +121,18 @@ const UpdateMemberSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-// --- User CRUD (super admin only) ---
+// --- User CRUD ---
 
 export async function getUsers(): Promise<ActionResult<UserItem[]>> {
-  const user = await getCurrentUser();
-  if (!user?.isSuperAdmin) return { success: false, error: "Acesso negado" };
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return { success: false, error: "Não autenticado" };
+
+  const isSuperAdmin = currentUser.isSuperAdmin;
+  const isAdmin = !isSuperAdmin && (await isCompanyAdmin(currentUser.id));
+
+  if (!isSuperAdmin && !isAdmin) {
+    return { success: false, error: "Acesso negado" };
+  }
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
@@ -94,20 +144,52 @@ export async function getUsers(): Promise<ActionResult<UserItem[]>> {
       isActive: true,
       createdAt: true,
       _count: { select: { memberships: true } },
+      memberships: { select: { role: true } },
     },
   });
 
+  // Filtrar: admin nao ve super admins
+  const filtered = isSuperAdmin
+    ? users
+    : users.filter((u) => !u.isSuperAdmin);
+
   return {
     success: true,
-    data: users.map((u) => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      isSuperAdmin: u.isSuperAdmin,
-      isActive: u.isActive,
-      createdAt: u.createdAt,
-      companiesCount: u._count.memberships,
-    })),
+    data: filtered.map((u) => {
+      // Determinar canEdit e canDelete baseado no nivel do usuario logado
+      const targetIsSuperAdmin = u.isSuperAdmin;
+      const targetIsAdmin =
+        !targetIsSuperAdmin &&
+        u.memberships.some((m) => m.role === "company_admin");
+
+      let canEdit = false;
+      let canDelete = false;
+
+      if (isSuperAdmin) {
+        // Super admin edita todos
+        canEdit = true;
+        // Super admin deleta todos EXCETO super admins
+        canDelete = !targetIsSuperAdmin;
+      } else if (isAdmin) {
+        // Admin edita apenas manager e viewer
+        canEdit = !targetIsSuperAdmin && !targetIsAdmin;
+        // Admin deleta apenas manager e viewer
+        canDelete = !targetIsSuperAdmin && !targetIsAdmin;
+      }
+
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        isSuperAdmin: u.isSuperAdmin,
+        isActive: u.isActive,
+        createdAt: u.createdAt,
+        companiesCount: u._count.memberships,
+        highestRole: getHighestRole(u.isSuperAdmin, u.memberships),
+        canEdit,
+        canDelete,
+      };
+    }),
   };
 }
 
@@ -142,7 +224,7 @@ export async function getUserDetail(
     },
   });
 
-  if (!found) return { success: false, error: "Usuario nao encontrado" };
+  if (!found) return { success: false, error: "Usuário não encontrado" };
 
   return {
     success: true,
@@ -162,16 +244,28 @@ export async function getUserDetail(
 export async function createUser(
   data: z.infer<typeof CreateUserSchema>
 ): Promise<ActionResult<{ id: string }>> {
-  const user = await getCurrentUser();
-  if (!user?.isSuperAdmin) return { success: false, error: "Acesso negado" };
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return { success: false, error: "Não autenticado" };
+
+  const isSuperAdmin = currentUser.isSuperAdmin;
+  const isAdmin = !isSuperAdmin && (await isCompanyAdmin(currentUser.id));
+
+  if (!isSuperAdmin && !isAdmin) {
+    return { success: false, error: "Acesso negado" };
+  }
 
   try {
     const parsed = CreateUserSchema.parse(data);
 
+    // Admin nao pode criar super admin
+    if (parsed.role === "super_admin" && !isSuperAdmin) {
+      return { success: false, error: "Sem permissão para criar Super Admin" };
+    }
+
     const existing = await prisma.user.findUnique({
       where: { email: parsed.email },
     });
-    if (existing) return { success: false, error: "E-mail ja cadastrado" };
+    if (existing) return { success: false, error: "E-mail já cadastrado" };
 
     const hashedPassword = await bcrypt.hash(parsed.password, 12);
 
@@ -180,17 +274,17 @@ export async function createUser(
         name: parsed.name,
         email: parsed.email,
         password: hashedPassword,
-        isSuperAdmin: parsed.isSuperAdmin,
-        invitedById: user.id,
+        isSuperAdmin: parsed.role === "super_admin",
+        invitedById: currentUser.id,
       },
     });
 
     return { success: true, data: { id: created.id } };
   } catch (error) {
     if (error instanceof z.ZodError)
-      return { success: false, error: "Dados invalidos" };
+      return { success: false, error: "Dados inválidos" };
     console.error("[users] Erro ao criar:", error);
-    return { success: false, error: "Erro ao criar usuario" };
+    return { success: false, error: "Erro ao criar usuário" };
   }
 }
 
@@ -198,11 +292,46 @@ export async function updateUser(
   userId: string,
   data: z.infer<typeof UpdateUserSchema>
 ): Promise<ActionResult> {
-  const user = await getCurrentUser();
-  if (!user?.isSuperAdmin) return { success: false, error: "Acesso negado" };
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return { success: false, error: "Não autenticado" };
+
+  const isSuperAdmin = currentUser.isSuperAdmin;
+  const isAdmin = !isSuperAdmin && (await isCompanyAdmin(currentUser.id));
+
+  if (!isSuperAdmin && !isAdmin) {
+    return { success: false, error: "Acesso negado" };
+  }
 
   try {
     const parsed = UpdateUserSchema.parse(data);
+
+    // Buscar o usuario alvo para validar hierarquia
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        isSuperAdmin: true,
+        memberships: { select: { role: true } },
+      },
+    });
+
+    if (!targetUser) return { success: false, error: "Usuário não encontrado" };
+
+    // Validar hierarquia
+    if (!isSuperAdmin) {
+      // Admin nao pode editar super admin
+      if (targetUser.isSuperAdmin) {
+        return { success: false, error: "Sem permissão para editar Super Admin" };
+      }
+      // Admin nao pode editar outro admin
+      if (targetUser.memberships.some((m) => m.role === "company_admin")) {
+        return { success: false, error: "Sem permissão para editar outro Admin" };
+      }
+      // Admin nao pode promover para super admin
+      if (parsed.role === "super_admin") {
+        return { success: false, error: "Sem permissão para definir Super Admin" };
+      }
+    }
+
     const updateData: Record<string, unknown> = {};
 
     if (parsed.name !== undefined) updateData.name = parsed.name;
@@ -210,22 +339,76 @@ export async function updateUser(
       const existing = await prisma.user.findFirst({
         where: { email: parsed.email, id: { not: userId } },
       });
-      if (existing) return { success: false, error: "E-mail ja em uso" };
+      if (existing) return { success: false, error: "E-mail já em uso" };
       updateData.email = parsed.email;
     }
     if (parsed.password !== undefined)
       updateData.password = await bcrypt.hash(parsed.password, 12);
-    if (parsed.isSuperAdmin !== undefined)
-      updateData.isSuperAdmin = parsed.isSuperAdmin;
+    if (parsed.role !== undefined) {
+      updateData.isSuperAdmin = parsed.role === "super_admin";
+    }
     if (parsed.isActive !== undefined) updateData.isActive = parsed.isActive;
 
     await prisma.user.update({ where: { id: userId }, data: updateData });
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError)
-      return { success: false, error: "Dados invalidos" };
+      return { success: false, error: "Dados inválidos" };
     console.error("[users] Erro ao atualizar:", error);
-    return { success: false, error: "Erro ao atualizar usuario" };
+    return { success: false, error: "Erro ao atualizar usuário" };
+  }
+}
+
+export async function deleteUser(userId: string): Promise<ActionResult> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return { success: false, error: "Não autenticado" };
+
+  const isSuperAdmin = currentUser.isSuperAdmin;
+  const isAdmin = !isSuperAdmin && (await isCompanyAdmin(currentUser.id));
+
+  if (!isSuperAdmin && !isAdmin) {
+    return { success: false, error: "Acesso negado" };
+  }
+
+  try {
+    // Buscar o usuario alvo
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        isSuperAdmin: true,
+        memberships: { select: { role: true } },
+      },
+    });
+
+    if (!targetUser) return { success: false, error: "Usuário não encontrado" };
+
+    // Super admin nunca pode ser deletado
+    if (targetUser.isSuperAdmin) {
+      return { success: false, error: "Super Admin não pode ser excluído" };
+    }
+
+    // Admin so pode deletar manager e viewer
+    if (!isSuperAdmin) {
+      if (targetUser.memberships.some((m) => m.role === "company_admin")) {
+        return { success: false, error: "Sem permissão para excluir Admin" };
+      }
+    }
+
+    // Nao pode deletar a si mesmo
+    if (userId === currentUser.id) {
+      return { success: false, error: "Você não pode excluir a si mesmo" };
+    }
+
+    // Remover memberships primeiro, depois o user
+    await prisma.userCompanyMembership.deleteMany({
+      where: { userId },
+    });
+    await prisma.user.delete({ where: { id: userId } });
+
+    return { success: true };
+  } catch (error) {
+    console.error("[users] Erro ao deletar:", error);
+    return { success: false, error: "Erro ao excluir usuário" };
   }
 }
 
@@ -235,7 +418,7 @@ export async function getCompanyMembers(
   companyId: string
 ): Promise<ActionResult<MemberItem[]>> {
   const user = await getCurrentUser();
-  if (!user) return { success: false, error: "Nao autenticado" };
+  if (!user) return { success: false, error: "Não autenticado" };
 
   // Super admin ou membro da empresa pode visualizar
   if (!user.isSuperAdmin) {
@@ -290,7 +473,7 @@ export async function addCompanyMember(
       },
     });
     if (existing)
-      return { success: false, error: "Usuario ja e membro desta empresa" };
+      return { success: false, error: "Usuário já é membro desta empresa" };
 
     await prisma.userCompanyMembership.create({
       data: {
@@ -303,7 +486,7 @@ export async function addCompanyMember(
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError)
-      return { success: false, error: "Dados invalidos" };
+      return { success: false, error: "Dados inválidos" };
     console.error("[users] Erro ao adicionar membro:", error);
     return { success: false, error: "Erro ao adicionar membro" };
   }
@@ -328,7 +511,7 @@ export async function updateMembership(
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError)
-      return { success: false, error: "Dados invalidos" };
+      return { success: false, error: "Dados inválidos" };
     console.error("[users] Erro ao atualizar membro:", error);
     return { success: false, error: "Erro ao atualizar membro" };
   }

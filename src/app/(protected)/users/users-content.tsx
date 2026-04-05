@@ -22,16 +22,38 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Plus,
   Pencil,
+  Trash2,
   UserCheck,
   UserX,
   Shield,
+  ShieldCheck,
+  Crown,
+  Eye,
+  EyeOff,
   Users as UsersIcon,
   Loader2,
+  AlertTriangle,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getUsers, createUser, updateUser } from "@/lib/actions/users";
+import {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+} from "@/lib/actions/users";
 import type { UserItem } from "@/lib/actions/users";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -53,19 +75,88 @@ const itemVariants = {
   },
 };
 
+// --- Role config ---
+
+type RoleOption = {
+  value: string;
+  label: string;
+  description: string;
+};
+
+const ALL_ROLES: RoleOption[] = [
+  {
+    value: "super_admin",
+    label: "Super Admin",
+    description: "Acesso total a toda a plataforma",
+  },
+  {
+    value: "company_admin",
+    label: "Admin",
+    description: "Gerencia empresas e usuários",
+  },
+  {
+    value: "manager",
+    label: "Gerente",
+    description: "Gerencia rotas e webhooks",
+  },
+  {
+    value: "viewer",
+    label: "Visualizador",
+    description: "Apenas visualização",
+  },
+];
+
+function getRoleBadge(role: string) {
+  switch (role) {
+    case "Super Admin":
+      return {
+        bg: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+        icon: Crown,
+      };
+    case "Admin":
+      return {
+        bg: "bg-blue-500/10 border-blue-500/20 text-blue-400",
+        icon: ShieldCheck,
+      };
+    case "Gerente":
+      return {
+        bg: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+        icon: Shield,
+      };
+    case "Visualizador":
+      return {
+        bg: "bg-zinc-800 border-zinc-700 text-zinc-400",
+        icon: Eye,
+      };
+    default:
+      return {
+        bg: "bg-zinc-800 border-zinc-700 text-zinc-500",
+        icon: UserX,
+      };
+  }
+}
+
+// --- Form types ---
+
 interface UserFormData {
   name: string;
   email: string;
   password: string;
-  isSuperAdmin: boolean;
+  confirmPassword: string;
+  role: string;
+  isActive: boolean;
 }
 
 const emptyForm: UserFormData = {
   name: "",
   email: "",
   password: "",
-  isSuperAdmin: false,
+  confirmPassword: "",
+  role: "viewer",
+  isActive: true,
 };
+
+// --- Components ---
 
 function TableSkeleton() {
   return (
@@ -80,16 +171,109 @@ function TableSkeleton() {
   );
 }
 
-export function UsersContent() {
+function PasswordInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="relative">
+      <Input
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="bg-zinc-800/50 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 pr-10"
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 cursor-pointer transition-colors duration-200"
+      >
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+}
+
+function RoleSelect({
+  value,
+  onChange,
+  availableRoles,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  availableRoles: RoleOption[];
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = availableRoles.find((r) => r.value === value);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between rounded-md border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 cursor-pointer transition-all duration-200 hover:border-zinc-600"
+      >
+        <span>{selected?.label ?? "Selecionar nível"}</span>
+        <ChevronDown
+          className={`h-4 w-4 text-zinc-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 shadow-xl shadow-black/30 overflow-hidden">
+          {availableRoles.map((role) => (
+            <button
+              key={role.value}
+              type="button"
+              onClick={() => {
+                onChange(role.value);
+                setOpen(false);
+              }}
+              className={`flex w-full flex-col items-start px-3 py-2.5 text-left cursor-pointer transition-all duration-200 hover:bg-zinc-700/50 ${
+                value === role.value ? "bg-zinc-700/30" : ""
+              }`}
+            >
+              <span className="text-sm font-medium text-zinc-100">
+                {role.label}
+              </span>
+              <span className="text-xs text-zinc-500">{role.description}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Main component ---
+
+interface UsersContentProps {
+  isSuperAdmin: boolean;
+}
+
+export function UsersContent({ isSuperAdmin }: UsersContentProps) {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [form, setForm] = useState<UserFormData>(emptyForm);
+  const [passwordError, setPasswordError] = useState("");
   const [saving, startSaving] = useTransition();
-  const [toggling, startToggling] = useTransition();
-  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deleting, startDeleting] = useTransition();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
+
+  const availableRoles = isSuperAdmin
+    ? ALL_ROLES
+    : ALL_ROLES.filter((r) => r.value !== "super_admin");
 
   async function loadUsers() {
     const result = await getUsers();
@@ -102,10 +286,13 @@ export function UsersContent() {
   }
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { loadUsers(); }, []);
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
   function openCreate() {
     setForm(emptyForm);
+    setPasswordError("");
     setCreateOpen(true);
   }
 
@@ -115,9 +302,25 @@ export function UsersContent() {
       name: user.name,
       email: user.email,
       password: "",
-      isSuperAdmin: user.isSuperAdmin,
+      confirmPassword: "",
+      role: user.isSuperAdmin
+        ? "super_admin"
+        : user.highestRole === "Admin"
+          ? "company_admin"
+          : user.highestRole === "Gerente"
+            ? "manager"
+            : user.highestRole === "Visualizador"
+              ? "viewer"
+              : "viewer",
+      isActive: user.isActive,
     });
+    setPasswordError("");
     setEditOpen(true);
+  }
+
+  function openDeleteDialog(user: UserItem) {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
   }
 
   function handleSubmitCreate() {
@@ -126,12 +329,23 @@ export function UsersContent() {
       return;
     }
 
+    if (form.password !== form.confirmPassword) {
+      setPasswordError("As senhas não coincidem");
+      return;
+    }
+
+    setPasswordError("");
+
     startSaving(async () => {
       const result = await createUser({
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
-        isSuperAdmin: form.isSuperAdmin,
+        role: form.role as
+          | "super_admin"
+          | "company_admin"
+          | "manager"
+          | "viewer",
       });
 
       if (result.success) {
@@ -152,11 +366,30 @@ export function UsersContent() {
       return;
     }
 
+    // Se digitou senha, validar confirmacao
+    if (form.password.trim() && form.password !== form.confirmPassword) {
+      setPasswordError("As senhas não coincidem");
+      return;
+    }
+
+    setPasswordError("");
+
     startSaving(async () => {
-      const data: Parameters<typeof updateUser>[1] = {
+      const data: {
+        name?: string;
+        email?: string;
+        password?: string;
+        role?: "super_admin" | "company_admin" | "manager" | "viewer";
+        isActive?: boolean;
+      } = {
         name: form.name.trim(),
         email: form.email.trim(),
-        isSuperAdmin: form.isSuperAdmin,
+        role: form.role as
+          | "super_admin"
+          | "company_admin"
+          | "manager"
+          | "viewer",
+        isActive: form.isActive,
       };
       if (form.password.trim()) {
         data.password = form.password;
@@ -176,26 +409,30 @@ export function UsersContent() {
     });
   }
 
-  function handleToggleActive(user: UserItem) {
-    setTogglingId(user.id);
-    startToggling(async () => {
-      const result = await updateUser(user.id, { isActive: !user.isActive });
+  function handleDelete() {
+    if (!userToDelete) return;
+
+    startDeleting(async () => {
+      const result = await deleteUser(userToDelete.id);
 
       if (result.success) {
-        toast.success(
-          user.isActive ? "Usuário desativado" : "Usuário ativado"
-        );
+        toast.success(`Usuário "${userToDelete.name}" excluído com sucesso`);
+        setDeleteDialogOpen(false);
+        setUserToDelete(null);
         await loadUsers();
       } else {
-        toast.error(result.error || "Erro ao alterar status");
+        toast.error(result.error || "Erro ao excluir usuário");
       }
-      setTogglingId(null);
     });
   }
 
   function renderForm(mode: "create" | "edit") {
+    const showConfirmPassword =
+      mode === "create" || form.password.trim().length > 0;
+
     return (
       <div className="space-y-4">
+        {/* Nome */}
         <div>
           <label className="block text-sm font-medium text-zinc-300 mb-1.5">
             Nome
@@ -207,6 +444,8 @@ export function UsersContent() {
             className="bg-zinc-800/50 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
           />
         </div>
+
+        {/* Email */}
         <div>
           <label className="block text-sm font-medium text-zinc-300 mb-1.5">
             Email
@@ -219,34 +458,79 @@ export function UsersContent() {
             className="bg-zinc-800/50 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
           />
         </div>
+
+        {/* Senha */}
         <div>
           <label className="block text-sm font-medium text-zinc-300 mb-1.5">
-            Senha{mode === "edit" ? " (deixe vazio para manter)" : ""}
+            {mode === "edit"
+              ? "Nova senha (deixe vazio para manter)"
+              : "Senha"}
           </label>
-          <Input
-            type="password"
+          <PasswordInput
             value={form.password}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, password: e.target.value }))
-            }
+            onChange={(value) => {
+              setForm((f) => ({ ...f, password: value }));
+              setPasswordError("");
+            }}
             placeholder={
-              mode === "edit" ? "Nova senha (opcional)" : "Senha do usuário"
+              mode === "edit" ? "Nova senha (opcional)" : "Mínimo 8 caracteres"
             }
-            className="bg-zinc-800/50 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
           />
         </div>
-        <div className="flex items-center justify-between rounded-lg bg-zinc-800/30 border border-zinc-800 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-purple-400" />
-            <span className="text-sm text-zinc-300">Super Admin</span>
+
+        {/* Confirmar senha */}
+        {showConfirmPassword && (
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+              Confirmar senha
+            </label>
+            <PasswordInput
+              value={form.confirmPassword}
+              onChange={(value) => {
+                setForm((f) => ({ ...f, confirmPassword: value }));
+                setPasswordError("");
+              }}
+              placeholder="Confirme a senha"
+            />
+            {passwordError && (
+              <p className="mt-1.5 text-xs text-red-400">{passwordError}</p>
+            )}
           </div>
-          <Switch
-            checked={form.isSuperAdmin}
-            onCheckedChange={(checked) =>
-              setForm((f) => ({ ...f, isSuperAdmin: !!checked }))
-            }
+        )}
+
+        {/* Nivel de acesso */}
+        <div>
+          <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+            Nível de acesso
+          </label>
+          <RoleSelect
+            value={form.role}
+            onChange={(value) => setForm((f) => ({ ...f, role: value }))}
+            availableRoles={availableRoles}
           />
         </div>
+
+        {/* Ativo/Inativo (apenas na edicao) */}
+        {mode === "edit" && (
+          <div className="flex items-center justify-between rounded-lg bg-zinc-800/30 border border-zinc-800 px-4 py-3">
+            <div className="flex items-center gap-2">
+              {form.isActive ? (
+                <UserCheck className="h-4 w-4 text-emerald-400" />
+              ) : (
+                <UserX className="h-4 w-4 text-red-400" />
+              )}
+              <span className="text-sm text-zinc-300">
+                {form.isActive ? "Ativo" : "Inativo"}
+              </span>
+            </div>
+            <Switch
+              checked={form.isActive}
+              onCheckedChange={(checked) =>
+                setForm((f) => ({ ...f, isActive: !!checked }))
+              }
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -303,100 +587,109 @@ export function UsersContent() {
               <TableRow className="border-zinc-800 hover:bg-transparent">
                 <TableHead className="text-zinc-400">Nome</TableHead>
                 <TableHead className="text-zinc-400">Email</TableHead>
-                <TableHead className="text-zinc-400">Perfil</TableHead>
-                <TableHead className="text-zinc-400">Status</TableHead>
+                <TableHead className="text-zinc-400 text-center">
+                  Nível
+                </TableHead>
+                <TableHead className="text-zinc-400 text-center">
+                  Status
+                </TableHead>
                 <TableHead className="text-zinc-400 text-center">
                   Empresas
                 </TableHead>
-                <TableHead className="text-zinc-400">Criado em</TableHead>
-                <TableHead className="text-zinc-400 text-right">
+                <TableHead className="text-zinc-400 text-center">
+                  Criado em
+                </TableHead>
+                <TableHead className="text-zinc-400 text-center">
                   Ações
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user, index) => (
-                <motion.tr
-                  key={user.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.2,
-                    delay: index * 0.03,
-                    ease: "easeOut" as const,
-                  }}
-                  className="border-zinc-800 hover:bg-zinc-800/30 transition-colors duration-200"
-                >
-                  <TableCell className="font-medium text-zinc-200">
-                    {user.name}
-                  </TableCell>
-                  <TableCell className="text-zinc-400">{user.email}</TableCell>
-                  <TableCell>
-                    {user.isSuperAdmin ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 text-xs font-medium text-purple-400">
-                        <Shield className="h-3 w-3" />
-                        Super Admin
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 border border-zinc-700 px-2.5 py-0.5 text-xs font-medium text-zinc-400">
-                        Usuário
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.isActive ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-                        <UserCheck className="h-3 w-3" />
-                        Ativo
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-xs font-medium text-red-400">
-                        <UserX className="h-3 w-3" />
-                        Inativo
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center text-zinc-400">
-                    {user.companiesCount}
-                  </TableCell>
-                  <TableCell className="text-zinc-500 text-sm">
-                    {format(new Date(user.createdAt), "dd MMM yyyy", {
-                      locale: ptBR,
-                    })}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEdit(user)}
-                        className="h-8 w-8 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 cursor-pointer transition-all duration-200"
+              {users.map((user, index) => {
+                const badge = getRoleBadge(user.highestRole);
+                const BadgeIcon = badge.icon;
+
+                return (
+                  <motion.tr
+                    key={user.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.2,
+                      delay: index * 0.03,
+                      ease: "easeOut" as const,
+                    }}
+                    className="border-zinc-800 hover:bg-zinc-800/30 transition-colors duration-200"
+                  >
+                    <TableCell className="font-medium text-zinc-200">
+                      {user.name}
+                    </TableCell>
+                    <TableCell className="text-zinc-400">
+                      {user.email}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${badge.bg}`}
                       >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleToggleActive(user)}
-                        disabled={toggling && togglingId === user.id}
-                        className={`h-8 w-8 cursor-pointer transition-all duration-200 ${
-                          user.isActive
-                            ? "text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
-                            : "text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10"
-                        }`}
-                      >
-                        {toggling && togglingId === user.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : user.isActive ? (
-                          <UserX className="h-4 w-4" />
-                        ) : (
-                          <UserCheck className="h-4 w-4" />
+                        <BadgeIcon className="h-3 w-3" />
+                        {user.highestRole}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {user.isActive ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+                          <UserCheck className="h-3 w-3" />
+                          Ativo
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-xs font-medium text-red-400">
+                          <UserX className="h-3 w-3" />
+                          Inativo
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center text-zinc-400">
+                      {user.companiesCount}
+                    </TableCell>
+                    <TableCell className="text-center text-zinc-500 text-sm">
+                      {format(new Date(user.createdAt), "dd MMM yyyy HH:mm", {
+                        locale: ptBR,
+                      })}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => user.canEdit && openEdit(user)}
+                          disabled={!user.canEdit}
+                          title={
+                            user.canEdit
+                              ? "Editar usuário"
+                              : "Sem permissão para editar"
+                          }
+                          className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-all duration-200 ${
+                            user.canEdit
+                              ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 cursor-pointer"
+                              : "text-zinc-700 cursor-not-allowed"
+                          }`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        {user.canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => openDeleteDialog(user)}
+                            title="Excluir usuário"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         )}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </motion.tr>
-              ))}
+                      </div>
+                    </TableCell>
+                  </motion.tr>
+                );
+              })}
             </TableBody>
           </Table>
         )}
@@ -453,6 +746,42 @@ export function UsersContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-zinc-900 border border-zinc-800 rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-zinc-100">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+              Excluir usuário
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              Tem certeza que deseja excluir o usuário{" "}
+              <strong className="text-zinc-200">
+                &quot;{userToDelete?.name}&quot;
+              </strong>
+              ? Esta ação é irreversível. Todas as associações com empresas
+              serão removidas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={deleting}
+              className="border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-red-600 text-white hover:bg-red-700 cursor-pointer transition-all duration-200"
+            >
+              {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
