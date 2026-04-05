@@ -19,7 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserPlus, Trash2, Shield, Eye, Briefcase, Users, X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { UserPlus, Trash2, Shield, Eye, Briefcase, Users, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import {
   getCompanyMembers,
@@ -80,6 +90,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
   const [availableUsers, setAvailableUsers] = useState<UserItem[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<string>("viewer");
+  const [deletingMember, setDeletingMember] = useState<MemberItem | null>(null);
 
   const fetchMembers = useCallback(async () => {
     const result = await getCompanyMembers(companyId);
@@ -114,7 +125,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
 
   function handleAddMember() {
     if (!selectedUserId) {
-      toast.error("Selecione um usuario");
+      toast.error("Selecione um usuário");
       return;
     }
 
@@ -151,14 +162,15 @@ export function MembersTab({ companyId }: MembersTabProps) {
     });
   }
 
-  function handleRemoveMember(membershipId: string, userName: string) {
-    if (!window.confirm(`Remover ${userName} desta empresa?`)) return;
+  function handleConfirmRemoveMember() {
+    if (!deletingMember) return;
 
     startTransition(async () => {
-      const result = await removeMembership(membershipId);
+      const result = await removeMembership(deletingMember.id);
 
       if (result.success) {
         toast.success("Membro removido");
+        setDeletingMember(null);
         await fetchMembers();
       } else {
         toast.error(result.error || "Erro ao remover membro");
@@ -197,9 +209,10 @@ export function MembersTab({ companyId }: MembersTabProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50 hover:text-zinc-100"
+            className="border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50 hover:text-zinc-100 cursor-pointer transition-all duration-200"
             onClick={handleOpenAddForm}
             disabled={isPending}
+            title="Adicionar novo membro"
           >
             <UserPlus className="size-4 mr-1" />
             Adicionar Membro
@@ -207,30 +220,30 @@ export function MembersTab({ companyId }: MembersTabProps) {
         )}
       </motion.div>
 
-      {/* Formulario de adicionar membro */}
+      {/* Formulário de adicionar membro */}
       {showAddForm && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4"
+          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4"
         >
           <div className="flex items-end gap-3">
             <div className="flex-1 space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">
-                Usuario
+                Usuário
               </label>
               <Select
                 value={selectedUserId}
                 onValueChange={(v) => setSelectedUserId(v ?? "")}
               >
-                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200">
-                  <SelectValue placeholder="Selecione um usuario" />
+                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer">
+                  <SelectValue placeholder="Selecione um usuário" />
                 </SelectTrigger>
                 <SelectContent>
                   {availableUsers.length === 0 ? (
                     <SelectItem value="_none" disabled>
-                      Nenhum usuario disponivel
+                      Nenhum usuário disponível
                     </SelectItem>
                   ) : (
                     availableUsers.map((user) => (
@@ -249,7 +262,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
                 value={selectedRole}
                 onValueChange={(v) => setSelectedRole(v ?? "viewer")}
               >
-                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200">
+                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -262,7 +275,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
 
             <Button
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
               onClick={handleAddMember}
               disabled={isPending || !selectedUserId}
             >
@@ -270,11 +283,12 @@ export function MembersTab({ companyId }: MembersTabProps) {
             </Button>
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="sm"
               onClick={handleCancelAdd}
               disabled={isPending}
+              className="text-zinc-400 hover:text-zinc-200 cursor-pointer transition-all duration-200"
             >
-              <X className="size-4 text-zinc-400" />
+              Cancelar
             </Button>
           </div>
         </motion.div>
@@ -294,11 +308,11 @@ export function MembersTab({ companyId }: MembersTabProps) {
           <Table>
             <TableHeader>
               <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-400">Nome</TableHead>
-                <TableHead className="text-zinc-400">Email</TableHead>
-                <TableHead className="text-zinc-400">Papel</TableHead>
-                <TableHead className="text-zinc-400">Status</TableHead>
-                <TableHead className="text-zinc-400 text-right">
+                <TableHead className="text-zinc-400 px-4 py-2">Nome</TableHead>
+                <TableHead className="text-zinc-400 px-4 py-2">Email</TableHead>
+                <TableHead className="text-zinc-400 px-4 py-2">Papel</TableHead>
+                <TableHead className="text-zinc-400 px-4 py-2">Status</TableHead>
+                <TableHead className="text-zinc-400 text-right px-4 py-2">
                   Ações
                 </TableHead>
               </TableRow>
@@ -309,13 +323,13 @@ export function MembersTab({ companyId }: MembersTabProps) {
                   key={member.id}
                   className="border-zinc-800/50 hover:bg-zinc-800/30"
                 >
-                  <TableCell className="text-zinc-200 font-medium">
+                  <TableCell className="text-zinc-200 font-medium px-4 py-2">
                     {member.userName}
                   </TableCell>
-                  <TableCell className="text-zinc-400">
+                  <TableCell className="text-zinc-400 px-4 py-2">
                     {member.userEmail}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-2">
                     <Select
                       value={member.role}
                       onValueChange={(v) => {
@@ -324,7 +338,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
                         }
                       }}
                     >
-                      <SelectTrigger className="w-36 h-7 bg-transparent border-zinc-700/50 text-zinc-300 text-xs">
+                      <SelectTrigger className="w-36 h-7 bg-transparent border-zinc-700/50 text-zinc-300 text-xs cursor-pointer">
                         <SelectValue>
                           <span className="flex items-center gap-1.5">
                             {roleLabels[member.role]?.icon}
@@ -345,7 +359,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-2">
                     <Badge
                       className={
                         member.isActive
@@ -356,15 +370,14 @@ export function MembersTab({ companyId }: MembersTabProps) {
                       {member.isActive ? "Ativo" : "Inativo"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right px-4 py-2">
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() =>
-                        handleRemoveMember(member.id, member.userName)
-                      }
+                      onClick={() => setDeletingMember(member)}
                       disabled={isPending}
-                      className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
+                      className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+                      title="Remover membro"
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -375,6 +388,42 @@ export function MembersTab({ companyId }: MembersTabProps) {
           </Table>
         )}
       </motion.div>
+
+      {/* Dialog de confirmação para remover membro */}
+      <AlertDialog
+        open={!!deletingMember}
+        onOpenChange={(open) => { if (!open) setDeletingMember(null); }}
+      >
+        <AlertDialogContent className="bg-zinc-900 border border-zinc-800 rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-zinc-100">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+              Remover membro
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              Tem certeza que deseja remover{" "}
+              <strong className="text-zinc-200">{deletingMember?.userName}</strong>{" "}
+              ({deletingMember?.userEmail}) desta empresa?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={isPending}
+              className="border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmRemoveMember}
+              disabled={isPending}
+              className="bg-red-600 text-white hover:bg-red-700 cursor-pointer transition-all duration-200"
+            >
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
