@@ -166,6 +166,12 @@ export function ProfileContent() {
       return;
     }
 
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!EMAIL_REGEX.test(newEmail.trim())) {
+      toast.error("Digite um e-mail válido (ex: usuario@dominio.com)");
+      return;
+    }
+
     startTransition(async () => {
       const result = await requestEmailChange(newEmail, emailPassword);
       if (result.success) {

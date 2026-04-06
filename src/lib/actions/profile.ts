@@ -149,8 +149,9 @@ export async function requestEmailChange(
 
     const normalizedEmail = newEmail.trim().toLowerCase();
 
-    if (!normalizedEmail || !normalizedEmail.includes("@")) {
-      return { success: false, error: "E-mail inválido" };
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!normalizedEmail || !EMAIL_REGEX.test(normalizedEmail)) {
+      return { success: false, error: "E-mail inválido. Use o formato usuario@dominio.com" };
     }
 
     if (normalizedEmail === currentUser.email) {
