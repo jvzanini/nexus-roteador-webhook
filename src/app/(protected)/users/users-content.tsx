@@ -210,13 +210,16 @@ function BadgeSelect({
   onChange,
   options,
   getBadgeStyle,
+  useFixed = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: string; description?: string; bg: string; icon: React.ComponentType<{ className?: string }> }[];
   getBadgeStyle: (value: string) => { bg: string; icon: React.ComponentType<{ className?: string }> };
+  useFixed?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<React.CSSProperties>({});
   const ref = useRef<HTMLDivElement>(null);
   const current = getBadgeStyle(value);
   const CurrentIcon = current.icon;
@@ -231,8 +234,22 @@ function BadgeSelect({
   }, []);
 
   function handleToggle() {
+    if (!open && useFixed && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setDropdownPos({
+        position: 'fixed' as const,
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: Math.max(rect.width, 240),
+        zIndex: 200,
+      });
+    }
     setOpen(!open);
   }
+
+  const dropdownClasses = useFixed
+    ? "rounded-lg border border-border bg-popover shadow-xl overflow-hidden"
+    : "absolute left-0 top-full mt-1 z-[200] min-w-[240px] rounded-lg border border-border bg-popover shadow-xl overflow-hidden";
 
   return (
     <div ref={ref} className="relative inline-flex">
@@ -252,7 +269,8 @@ function BadgeSelect({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 top-full mt-1 z-[200] min-w-[240px] rounded-lg border border-border bg-popover shadow-xl overflow-hidden"
+            style={useFixed ? dropdownPos : undefined}
+            className={dropdownClasses}
           >
             {options.map((option) => {
               const OptionIcon = option.icon;
@@ -744,6 +762,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
 
                         return (
                           <BadgeSelect
+                            useFixed
                             value={mapRoleToValue(user.highestRole)}
                             onChange={(val) => handleInlineRoleChange(user.id, val)}
                             options={roleSelectOptions}
@@ -774,6 +793,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                         )
                       ) : (
                         <BadgeSelect
+                          useFixed
                           value={user.isActive ? "active" : "inactive"}
                           onChange={(val) => handleInlineStatusChange(user.id, val === "active")}
                           options={[

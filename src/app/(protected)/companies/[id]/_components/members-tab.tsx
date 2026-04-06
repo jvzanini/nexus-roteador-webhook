@@ -306,31 +306,30 @@ export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="rounded-xl border border-border bg-card/50 p-4"
+          className="space-y-4 rounded-xl border border-border bg-card p-4"
         >
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-            <div className="flex-1 space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                Usuário
-              </label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground/80">Usuário</label>
+            {availableUsers.length === 0 ? (
+              <div className="text-sm text-muted-foreground px-3 py-2 border border-border rounded-lg bg-muted/30">
+                Nenhum usuário disponível
+              </div>
+            ) : (
               <CustomSelect
                 value={selectedUserId}
                 onChange={(v) => setSelectedUserId(v)}
                 placeholder="Selecione um usuário"
-                options={
-                  availableUsers.length === 0
-                    ? [{ value: "_none", label: "Nenhum usuário disponível" }]
-                    : availableUsers.map((user) => ({
-                        value: user.id,
-                        label: user.name,
-                        description: user.email,
-                      }))
-                }
+                options={availableUsers.map((user) => ({
+                  value: user.id,
+                  label: user.name,
+                  description: user.email,
+                }))}
               />
-            </div>
-
-            <div className="w-44 space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Papel</label>
+            )}
+          </div>
+          <div className="flex items-end gap-3">
+            <div className="space-y-2 flex-1">
+              <label className="text-sm font-medium text-foreground/80">Papel</label>
               <MemberBadgeSelect
                 value={selectedRole}
                 onChange={(v) => setSelectedRole(v)}
@@ -348,12 +347,11 @@ export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
                 }}
               />
             </div>
-
             <Button
               size="sm"
               className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
               onClick={handleAddMember}
-              disabled={isPending || !selectedUserId}
+              disabled={isPending || !selectedUserId || availableUsers.length === 0}
             >
               Adicionar
             </Button>

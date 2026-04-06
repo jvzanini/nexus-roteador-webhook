@@ -119,38 +119,13 @@
   --sidebar-ring: #7c3aed;
 }
 
-/* Force toast close button visible */
-[data-sonner-toast] [data-close-button] {
-  opacity: 1 !important;
-  position: relative !important;
-  right: auto !important;
-  top: auto !important;
-  left: auto !important;
-  transform: none !important;
-  margin-left: auto;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  background: transparent !important;
-  border: none !important;
-  color: var(--muted-foreground) !important;
-  cursor: pointer;
-}
-
-[data-sonner-toast] [data-close-button]:hover {
-  color: var(--foreground) !important;
-}
-
-/* Toast — container precisa de position relative para a barra */
+/* Toast container */
 [data-sonner-toast] {
   position: relative !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
-/* Toast progress bar — barra que encolhe da direita pra esquerda em 4s */
+/* Toast progress bar */
 [data-sonner-toast]::after {
   content: '';
   position: absolute;
@@ -164,7 +139,6 @@
   transform-origin: left;
 }
 
-/* PAUSA a barra ao hover — nao some, apenas pausa */
 [data-sonner-toast]:hover::after {
   animation-play-state: paused;
 }
@@ -172,6 +146,40 @@
 @keyframes toast-progress {
   from { transform: scaleX(1); }
   to { transform: scaleX(0); }
+}
+
+/* Toast close button — canto superior esquerdo */
+[data-sonner-toast] [data-close-button] {
+  position: absolute !important;
+  top: -8px !important;
+  left: -8px !important;
+  right: auto !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  border-radius: 50% !important;
+  background: var(--popover) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--muted-foreground) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  z-index: 10 !important;
+  transition: color 0.2s !important;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  color: var(--foreground) !important;
+  background: var(--accent) !important;
+}
+
+[data-sonner-toast] [data-close-button] svg {
+  width: 12px !important;
+  height: 12px !important;
 }
 
 @layer base {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { Save, Loader2, Eye, EyeOff, Globe, Copy, Check, Pencil } from "lucide-react";
+import { Save, Loader2, Eye, EyeOff, Globe, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,7 +56,7 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
           required={required}
           disabled={disabled}
           readOnly={plaintextMasking && !visible}
-          className={`${className} ${hideToggle ? "" : "pr-10"}`}
+          className={`${className} ${hideToggle ? "" : "pr-10"} ${(plaintextMasking && !visible) ? "font-mono tracking-wider" : ""}`}
         />
         {!hideToggle && (
           <button
@@ -212,21 +212,20 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
   }
 
   // Slug state
-  const [slug, setSlug] = useState("");
-  const [editingSlug, setEditingSlug] = useState(false);
-  const [slugSaving, setSlugSaving] = useState(false);
+  const [slug, setSlug] = useState(webhookKey);
 
-  async function handleSaveSlug() {
-    if (!slug.trim()) return;
-    setSlugSaving(true);
-    const result = await updateCompany(companyId, { slug: slug.trim() });
-    setSlugSaving(false);
-    if (result.success) {
-      toast.success("Slug atualizado");
-      setEditingSlug(false);
-    } else {
-      toast.error(result.error || "Erro ao atualizar slug");
-    }
+  async function handleSaveWebhookConfig() {
+    startTransition(async () => {
+      if (slug.trim() && slug.trim() !== webhookKey) {
+        const slugResult = await updateCompany(companyId, { slug: slug.trim() });
+        if (!slugResult.success) {
+          toast.error(slugResult.error || "Erro ao atualizar slug");
+          return;
+        }
+      }
+      toast.success("Configurações do webhook salvas");
+      onSuccess?.();
+    });
   }
 
   const inputClasses = "h-11 bg-muted/50 border-border/50 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200 rounded-lg";
@@ -260,59 +259,24 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
 
           {/* Slug da empresa */}
           <div className="pt-3 border-t border-border space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-medium text-foreground">
-                  Slug da Empresa <span className="text-red-400">*</span>
-                </h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Identificador unico usado na URL do webhook. Ex: /api/webhook/<span className="font-mono">minha-empresa</span>
-                </p>
-              </div>
-              {canEdit && !editingSlug && (
-                <button
-                  type="button"
-                  onClick={() => { setSlug(webhookKey); setEditingSlug(true); }}
-                  className="text-violet-400 hover:text-violet-300 cursor-pointer transition-colors"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-              )}
+            <div>
+              <h4 className="text-sm font-medium text-foreground">
+                Slug da Empresa <span className="text-red-400">*</span>
+              </h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Identificador único usado na URL do webhook. Ex: /api/webhook/minha-empresa
+              </p>
             </div>
-
-            {editingSlug && canEdit ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground font-mono">/</span>
-                <Input
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="minha-empresa"
-                  className="h-9 text-sm flex-1 min-w-[120px]"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleSaveSlug}
-                  disabled={slugSaving || !slug.trim()}
-                  className="h-9 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
-                >
-                  Salvar
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => { setEditingSlug(false); setSlug(webhookKey); }}
-                  className="h-9 text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
-                >
-                  Cancelar
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-2">
-                <code className="text-sm text-foreground font-mono">/{webhookKey}</code>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground font-mono">/</span>
+              <Input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="minha-empresa"
+                disabled={!canEdit}
+                className={inputClasses}
+              />
+            </div>
           </div>
 
           {/* Token de Verificação — dentro do card de webhook */}
@@ -333,6 +297,20 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
               hideToggle={!canEdit}
             />
           </div>
+
+          {canEdit && (
+            <div className="pt-3 border-t border-border">
+              <Button
+                type="button"
+                onClick={handleSaveWebhookConfig}
+                disabled={isPending}
+                className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
+              >
+                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Salvar Configurações
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
