@@ -240,7 +240,7 @@ function BadgeSelect({
         position: 'fixed' as const,
         top: rect.bottom + 4,
         left: rect.left,
-        width: Math.max(rect.width, 240),
+        width: Math.max(rect.width, 300),
         zIndex: 200,
       });
     }
@@ -249,7 +249,7 @@ function BadgeSelect({
 
   const dropdownClasses = useFixed
     ? "rounded-lg border border-border bg-popover shadow-xl overflow-hidden"
-    : "absolute left-0 top-full mt-1 z-[200] min-w-[240px] rounded-lg border border-border bg-popover shadow-xl overflow-hidden";
+    : "absolute left-0 top-full mt-1 z-[200] min-w-[300px] rounded-lg border border-border bg-popover shadow-xl overflow-hidden";
 
   return (
     <div ref={ref} className="relative inline-flex">
@@ -278,7 +278,7 @@ function BadgeSelect({
                 <button
                   key={option.value}
                   onClick={() => { onChange(option.value); setOpen(false); }}
-                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-left cursor-pointer transition-all hover:bg-accent ${value === option.value ? "bg-accent/50" : ""}`}
+                  className={`flex w-full items-center gap-3 px-3 py-2.5 pr-10 text-left cursor-pointer transition-all hover:bg-accent ${value === option.value ? "bg-accent/50" : ""}`}
                 >
                   <OptionIcon className={`h-4 w-4 shrink-0 ${option.bg.includes("purple") ? "text-purple-400" : option.bg.includes("blue") ? "text-blue-400" : option.bg.includes("amber") ? "text-amber-400" : option.bg.includes("emerald") ? "text-emerald-400" : option.bg.includes("red") ? "text-red-400" : "text-muted-foreground"}`} />
                   <div className="flex-1 min-w-0">

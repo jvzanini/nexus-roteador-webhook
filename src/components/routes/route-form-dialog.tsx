@@ -13,7 +13,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 // import { IconPicker } from "@/components/icon-picker/icon-picker"; // Arquivado temporariamente
 import { EventChecklist } from "@/components/event-checklist/event-checklist";
 import {
@@ -157,7 +156,7 @@ export function RouteFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <ScrollArea className="h-[60vh] px-6 pr-7">
+          <div className="h-[60vh] overflow-y-auto px-8">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -296,7 +295,7 @@ export function RouteFormDialog({
                 )}
               </div>
             </motion.div>
-          </ScrollArea>
+          </div>
 
           <DialogFooter className="pt-4 border-t border-border">
             <Button

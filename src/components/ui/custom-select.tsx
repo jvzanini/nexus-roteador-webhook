@@ -110,9 +110,12 @@ export function CustomSelect({
                 )}
               >
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-foreground">
-                    {option.label}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground">
+                      {option.label}
+                    </span>
+                    {option.icon && <span className="shrink-0">{option.icon}</span>}
+                  </div>
                   {option.description && (
                     <span className="block text-xs text-muted-foreground mt-0.5">
                       {option.description}

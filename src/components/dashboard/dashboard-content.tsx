@@ -113,14 +113,14 @@ export function DashboardContent({ userName }: DashboardContentProps) {
     // Não reinicia timer, busca dados imediatamente via useEffect
   }
 
-  const todayRaw = new Date().toLocaleDateString("pt-BR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  // Normalizar: primeira letra maiúscula, corrigir "De" → "de"
-  const today = (todayRaw.charAt(0).toUpperCase() + todayRaw.slice(1)).replace(/ De /g, " de ");
+  const now = new Date();
+  const weekdays = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+  const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const weekday = weekdays[now.getDay()];
+  const day = now.getDate();
+  const month = months[now.getMonth()];
+  const year = now.getFullYear();
+  const today = `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${day} de ${month} de ${year}`;
 
   // Skeleton loading no primeiro carregamento
   if (isInitialLoad && !data) {
