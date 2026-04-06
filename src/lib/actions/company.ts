@@ -238,17 +238,30 @@ export async function updateCompany(
 
     const data: Record<string, unknown> = {};
 
-    if (parsed.data.name !== undefined) {
-      data.name = parsed.data.name;
-      // Regerar slug se nome mudar
-      let slug = slugify(parsed.data.name);
+    if (parsed.data.slug !== undefined) {
+      // Slug explícito tem prioridade
       const existingSlug = await prisma.company.findFirst({
-        where: { slug, id: { not: companyId } },
+        where: { slug: parsed.data.slug, id: { not: companyId } },
       });
       if (existingSlug) {
-        slug = `${slug}-${nanoid(6)}`;
+        return { success: false, error: "Slug já está em uso por outra empresa" };
       }
-      data.slug = slug;
+      data.slug = parsed.data.slug;
+    }
+
+    if (parsed.data.name !== undefined) {
+      data.name = parsed.data.name;
+      // Regerar slug se nome mudar e slug não foi informado explicitamente
+      if (parsed.data.slug === undefined) {
+        let slug = slugify(parsed.data.name);
+        const existingSlug = await prisma.company.findFirst({
+          where: { slug, id: { not: companyId } },
+        });
+        if (existingSlug) {
+          slug = `${slug}-${nanoid(6)}`;
+        }
+        data.slug = slug;
+      }
     }
 
     if (parsed.data.logoUrl !== undefined) {
@@ -281,5 +294,55 @@ export async function updateCompany(
   } catch (error) {
     console.error("[updateCompany]", error);
     return { success: false, error: "Erro ao atualizar empresa" };
+  }
+}
+
+/**
+ * Exclui uma empresa e todos os dados relacionados em cascata.
+ * Apenas super_admin pode excluir.
+ */
+export async function deleteCompany(
+  companyId: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Não autenticado" };
+
+    if (!user.isSuperAdmin) {
+      return { success: false, error: "Apenas Super Admin pode excluir empresas" };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Buscar rotas para cascade delete de deliveries
+      const routes = await tx.webhookRoute.findMany({
+        where: { companyId },
+        select: { id: true },
+      });
+      const routeIds = routes.map((r) => r.id);
+
+      if (routeIds.length > 0) {
+        await tx.deliveryAttempt.deleteMany({
+          where: { delivery: { routeId: { in: routeIds } } },
+        });
+        await tx.routeDelivery.deleteMany({
+          where: { routeId: { in: routeIds } },
+        });
+      }
+
+      await tx.webhookRoute.deleteMany({ where: { companyId } });
+      await tx.inboundWebhook.deleteMany({ where: { companyId } });
+      await tx.companyCredential.deleteMany({ where: { companyId } });
+      await tx.notification.deleteMany({ where: { companyId } });
+      await tx.auditLog.deleteMany({ where: { companyId } });
+      await tx.userCompanyMembership.deleteMany({ where: { companyId } });
+      await tx.company.delete({ where: { id: companyId } });
+    });
+
+    revalidatePath("/companies");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao excluir empresa:", error);
+    return { success: false, error: "Erro ao excluir empresa" };
   }
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { getDashboardData, type DashboardData } from "@/lib/actions/dashboard";
 import { useRealtime } from "@/hooks/use-realtime";
+import { Building2 } from "lucide-react";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { DashboardFilters } from "./dashboard-filters";
 import { StatsCards } from "./stats-cards";
@@ -145,6 +146,27 @@ export function DashboardContent({ userName }: DashboardContentProps) {
           Tentar novamente
         </button>
       </div>
+    );
+  }
+
+  // Usuário sem empresas vinculadas
+  if (data.companies && data.companies.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center py-20 text-center"
+      >
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/50 mb-4">
+          <Building2 className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-2">
+          Nenhuma empresa vinculada
+        </h3>
+        <p className="text-sm text-muted-foreground max-w-md">
+          Para visualizar os dados do dashboard, você precisa estar vinculado a pelo menos uma empresa. Entre em contato com o administrador do sistema.
+        </p>
+      </motion.div>
     );
   }
 

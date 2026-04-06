@@ -15,6 +15,7 @@ interface CompanyListProps {
     _count: { memberships: number };
     credential: { id: string } | null;
   }>;
+  isSuperAdmin?: boolean;
 }
 
 const containerVariants = {
@@ -34,7 +35,7 @@ const itemVariants = {
   },
 };
 
-export function CompanyList({ companies }: CompanyListProps) {
+export function CompanyList({ companies, isSuperAdmin }: CompanyListProps) {
   if (companies.length === 0) {
     return (
       <motion.div
@@ -42,15 +43,28 @@ export function CompanyList({ companies }: CompanyListProps) {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center justify-center py-16 text-center"
       >
-        <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mb-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/50 mb-4">
           <Building2 className="h-7 w-7 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-1">
-          Nenhuma empresa cadastrada
-        </h3>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          Crie sua primeira empresa para comecar a configurar o roteamento de webhooks.
-        </p>
+        {isSuperAdmin ? (
+          <>
+            <h3 className="text-lg font-semibold text-foreground mb-1">
+              Nenhuma empresa cadastrada
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              Crie sua primeira empresa para começar a configurar o roteamento de webhooks.
+            </p>
+          </>
+        ) : (
+          <>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Sem acesso a empresas
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Você ainda não está vinculado a nenhuma empresa. Solicite ao administrador que adicione você como membro.
+            </p>
+          </>
+        )}
       </motion.div>
     );
   }
