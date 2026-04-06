@@ -525,7 +525,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
       {/* Table */}
       <motion.div
         variants={itemVariants}
-        className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden"
+        className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden overflow-x-auto"
       >
         {loading ? (
           <div className="p-6">
@@ -551,7 +551,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
                 <TableHead className="text-zinc-400 text-center">
                   Empresas
                 </TableHead>
-                <TableHead className="text-zinc-400 text-center">
+                <TableHead className="text-zinc-400 text-center hidden sm:table-cell">
                   Criado em
                 </TableHead>
                 <TableHead className="text-zinc-400 text-center">
@@ -606,7 +606,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
                     <TableCell className="text-center text-zinc-400">
                       {user.companiesCount}
                     </TableCell>
-                    <TableCell className="text-center text-zinc-500 text-sm">
+                    <TableCell className="text-center text-zinc-500 text-sm hidden sm:table-cell">
                       {format(new Date(user.createdAt), "dd MMM yyyy HH:mm", {
                         locale: ptBR,
                       })}

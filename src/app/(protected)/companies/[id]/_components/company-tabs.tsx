@@ -24,7 +24,8 @@ interface CompanyTabsProps {
 export function CompanyTabs({ company }: CompanyTabsProps) {
   return (
     <Tabs defaultValue="overview" className="space-y-6">
-      <TabsList className="bg-zinc-900 border border-zinc-800 rounded-lg p-1">
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+      <TabsList className="bg-zinc-900 border border-zinc-800 rounded-lg p-1 w-max sm:w-auto">
         <TabsTrigger
           value="overview"
           className="data-[state=active]:bg-zinc-800 data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
@@ -56,6 +57,7 @@ export function CompanyTabs({ company }: CompanyTabsProps) {
           Membros
         </TabsTrigger>
       </TabsList>
+      </div>
 
       <TabsContent value="overview">
         <OverviewTab company={company} />

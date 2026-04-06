@@ -268,7 +268,7 @@ export function ProfileContent() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
               {/* Avatar */}
               <div className="relative group">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-800 border-2 border-zinc-700 overflow-hidden">
@@ -318,7 +318,7 @@ export function ProfileContent() {
               <Button
                 onClick={handleSaveProfile}
                 disabled={isPending}
-                className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
+                className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
                 size="sm"
               >
                 {isPending ? (
@@ -392,7 +392,7 @@ export function ProfileContent() {
                     disabled={isPending || !newEmail || !emailPassword}
                     variant="outline"
                     size="sm"
-                    className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-all duration-200"
+                    className="w-full sm:w-auto border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-all duration-200"
                   >
                     {isPending ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -486,7 +486,7 @@ export function ProfileContent() {
                 }
                 variant="outline"
                 size="sm"
-                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-all duration-200"
+                className="w-full sm:w-auto border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-all duration-200"
               >
                 {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -510,7 +510,7 @@ export function ProfileContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {themeOptions.map((option) => (
                 <button
                   key={option.value}

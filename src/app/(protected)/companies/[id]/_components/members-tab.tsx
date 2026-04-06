@@ -222,7 +222,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
           exit={{ opacity: 0, height: 0 }}
           className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4"
         >
-          <div className="flex items-end gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-1 space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">
                 Usuário
@@ -280,7 +280,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
       {/* Tabela de membros */}
       <motion.div
         variants={itemVariants}
-        className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden"
+        className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden overflow-x-auto"
       >
         {members.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-zinc-500">

@@ -33,7 +33,7 @@ export function DashboardFilters({
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
       <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
 
-      <div className="flex items-center gap-2.5 ml-auto">
+      <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto sm:ml-auto">
         {/* Filtro de empresa */}
         <CustomSelect
           value={selectedCompanyId ?? "all"}

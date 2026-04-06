@@ -52,7 +52,7 @@ export function Sidebar({ user }: SidebarProps) {
   }
 
   const sidebarContent = (
-    <div className="flex h-full flex-col bg-[#09090b] border-r border-zinc-800">
+    <div className="flex h-full flex-col bg-[#09090b] border-r border-zinc-800 overflow-y-auto">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6">
         <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={36} height={36} className="rounded-lg" />
@@ -100,7 +100,7 @@ export function Sidebar({ user }: SidebarProps) {
         <Link
           href="/profile"
           onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-3 rounded-lg px-1 py-1.5 -mx-1 transition-all duration-200 hover:bg-zinc-800/50 cursor-pointer group"
+          className="flex items-center gap-3 rounded-lg px-2 py-2.5 -mx-1 transition-all duration-200 hover:bg-zinc-800/50 cursor-pointer group"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-xs font-semibold text-zinc-300 overflow-hidden shrink-0">
             {user.avatarUrl ? (

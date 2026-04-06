@@ -176,8 +176,8 @@ export function LogTable({
         )}
       </div>
 
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
-        <Table>
+      <div className="overflow-x-auto rounded-xl border border-zinc-800">
+        <Table className="min-w-[700px]">
           <TableHeader>
             <TableRow className="border-zinc-800 hover:bg-transparent">
               <TableHead className="w-8 text-zinc-500 text-xs">
@@ -195,8 +195,8 @@ export function LogTable({
               <TableHead className="text-zinc-500 text-xs">Evento</TableHead>
               <TableHead className="text-zinc-500 text-xs">Rota(s)</TableHead>
               <TableHead className="w-[120px] text-zinc-500 text-xs">Status</TableHead>
-              <TableHead className="w-[100px] text-right text-zinc-500 text-xs">Duracao</TableHead>
-              <TableHead className="w-[80px] text-right text-zinc-500 text-xs">Tentativas</TableHead>
+              <TableHead className="w-[100px] text-right text-zinc-500 text-xs hidden md:table-cell">Duracao</TableHead>
+              <TableHead className="w-[80px] text-right text-zinc-500 text-xs hidden md:table-cell">Tentativas</TableHead>
               <TableHead className="w-[50px] text-zinc-500 text-xs" />
             </TableRow>
           </TableHeader>
@@ -272,10 +272,10 @@ export function LogTable({
                     <TableCell onClick={() => toggleRow(entry.id)}>
                       <LogStatusBadge status={primaryStatus} />
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs text-zinc-500" onClick={() => toggleRow(entry.id)}>
+                    <TableCell className="text-right font-mono text-xs text-zinc-500 hidden md:table-cell" onClick={() => toggleRow(entry.id)}>
                       {maxDuration > 0 ? `${maxDuration}ms` : "-"}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs text-zinc-500" onClick={() => toggleRow(entry.id)}>
+                    <TableCell className="text-right font-mono text-xs text-zinc-500 hidden md:table-cell" onClick={() => toggleRow(entry.id)}>
                       {totalAttempts}
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>

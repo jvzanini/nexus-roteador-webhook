@@ -41,8 +41,8 @@ export function RecentDeliveries({ items, currentPage, totalPages, onPageChange 
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="rounded-b-xl overflow-hidden">
-          <Table>
+        <div className="rounded-b-xl overflow-x-auto">
+          <Table className="min-w-[600px]">
             <TableHeader>
               <TableRow className="border-zinc-800 hover:bg-transparent">
                 <TableHead className="text-zinc-500 text-xs font-medium h-9">Quando</TableHead>
