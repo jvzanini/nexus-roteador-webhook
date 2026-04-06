@@ -22,6 +22,8 @@ import {
   Monitor,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTheme } from "next-themes";
+import { useSession } from "next-auth/react";
 import {
   getProfile,
   updateProfile,
@@ -85,6 +87,8 @@ function resizeImage(file: File, maxSize: number): Promise<string> {
 export function ProfileContent() {
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const { setTheme: setNextTheme } = useTheme();
+  const { update: updateSession } = useSession();
 
   // Profile data
   const [name, setName] = useState("");
@@ -148,6 +152,7 @@ export function ProfileContent() {
     startTransition(async () => {
       const result = await updateProfile(name, avatarUrl);
       if (result.success) {
+        await updateSession();
         toast.success("Perfil atualizado");
       } else {
         toast.error(result.error || "Erro ao salvar");
@@ -202,9 +207,12 @@ export function ProfileContent() {
 
   function handleThemeChange(theme: "dark" | "light" | "system") {
     setCurrentTheme(theme);
+    setNextTheme(theme);
     startTransition(async () => {
       const result = await updateTheme(theme);
-      if (!result.success) {
+      if (result.success) {
+        await updateSession();
+      } else {
         toast.error(result.error || "Erro ao atualizar tema");
       }
     });

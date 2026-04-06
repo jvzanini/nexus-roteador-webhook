@@ -20,12 +20,26 @@ export const authConfig = {
       if (isLoggedIn) return true;
       return false; // Redirect para /login
     },
-    jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id!;
         token.isSuperAdmin = (user as any).isSuperAdmin;
         token.avatarUrl = (user as any).avatarUrl;
         token.theme = (user as any).theme;
+        token.name = user.name;
+      }
+      if (trigger === "update" && token.id) {
+        const { prisma } = await import("@/lib/prisma");
+        const freshUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { name: true, avatarUrl: true, theme: true, isSuperAdmin: true },
+        });
+        if (freshUser) {
+          token.name = freshUser.name;
+          token.avatarUrl = freshUser.avatarUrl;
+          token.theme = freshUser.theme;
+          token.isSuperAdmin = freshUser.isSuperAdmin;
+        }
       }
       return token;
     },
