@@ -55,7 +55,7 @@ export function Sidebar({ user }: SidebarProps) {
     <div className="flex h-full flex-col bg-background border-r border-border overflow-y-auto">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6">
-        <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-xl shadow-[0_0_12px_rgba(124,58,237,0.3)]" />
+        <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-[22%] shadow-[0_0_12px_rgba(124,58,237,0.3)]" />
         <div>
           <h1 className="text-base font-bold text-foreground tracking-tight">Nexus AI</h1>
           <p className="text-[11px] text-muted-foreground leading-none">Roteador Webhook</p>

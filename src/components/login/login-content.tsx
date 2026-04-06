@@ -30,35 +30,35 @@ export function LoginContent() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' as const }}
-      className="flex flex-col items-center"
+      transition={{ duration: 0.5, ease: 'easeOut' as const }}
+      className="flex flex-col items-center w-full"
     >
-      {/* Logo grande */}
+      {/* Logo */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="mb-6"
+        transition={{ duration: 0.4 }}
+        className="mb-5"
       >
         <motion.div
           animate={{
             boxShadow: [
-              '0 0 40px rgba(124, 58, 237, 0.15)',
-              '0 0 60px rgba(124, 58, 237, 0.25)',
-              '0 0 40px rgba(124, 58, 237, 0.15)',
+              '0 0 30px rgba(124, 58, 237, 0.12)',
+              '0 0 50px rgba(124, 58, 237, 0.2)',
+              '0 0 30px rgba(124, 58, 237, 0.12)',
             ],
           }}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          className="rounded-2xl"
+          className="rounded-[22%]"
         >
           <Image
             src="/logo-nexus-ai.png"
             alt="Nexus AI"
-            width={100}
-            height={100}
-            className="rounded-2xl"
+            width={88}
+            height={88}
+            className="rounded-[22%]"
             priority
           />
         </motion.div>
@@ -68,23 +68,14 @@ export function LoginContent() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="text-center mb-8"
+        transition={{ delay: 0.15 }}
+        className="text-center mb-10"
       >
         <h1 className="text-2xl font-bold text-white tracking-tight">Nexus AI</h1>
         <p className="text-sm text-zinc-500 mt-1">Roteador de Webhooks</p>
       </motion.div>
 
-      {/* Header do form */}
-      <div className="text-center mb-6 w-full">
-        <h2 className="text-xl font-bold text-white tracking-tight">
-          Bem-vindo de volta
-        </h2>
-        <p className="text-sm text-zinc-500 mt-1">
-          Entre com suas credenciais para acessar o painel
-        </p>
-      </div>
-
+      {/* Form */}
       <form action={handleSubmit} className="space-y-5 w-full">
         {error && (
           <motion.div
