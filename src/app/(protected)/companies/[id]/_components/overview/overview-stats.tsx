@@ -25,7 +25,6 @@ const colorMap: Record<string, { bg: string; text: string }> = {
   violet: { bg: "bg-violet-500/10", text: "text-violet-400" },
   emerald: { bg: "bg-emerald-500/10", text: "text-emerald-400" },
   red: { bg: "bg-red-500/10", text: "text-red-400" },
-  violet: { bg: "bg-violet-500/10", text: "text-violet-400" },
 };
 
 export function OverviewStats({ stats }: OverviewStatsProps) {
