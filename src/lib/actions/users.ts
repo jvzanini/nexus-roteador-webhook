@@ -360,25 +360,46 @@ export async function updateUser(
     }
     if (parsed.isActive !== undefined) updateData.isActive = parsed.isActive;
 
-    await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       await tx.user.update({ where: { id: userId }, data: updateData });
 
+      let membershipsUpdated = 0;
       if (parsed.role !== undefined) {
         if (parsed.role === "super_admin") {
           // Super admin: todas as memberships viram company_admin
-          await tx.userCompanyMembership.updateMany({
-            where: { userId },
-            data: { role: "company_admin" },
+          // + vincular a todas as empresas existentes (regra de super admin)
+          const allCompanies = await tx.company.findMany({
+            where: { isActive: true },
+            select: { id: true },
           });
+          for (const company of allCompanies) {
+            await tx.userCompanyMembership.upsert({
+              where: { userId_companyId: { userId, companyId: company.id } },
+              create: { userId, companyId: company.id, role: "company_admin" },
+              update: { role: "company_admin", isActive: true },
+            });
+          }
+          membershipsUpdated = allCompanies.length;
         } else {
-          // Qualquer outro role: propagar para todas as memberships
-          await tx.userCompanyMembership.updateMany({
+          // Qualquer outro role: propagar para todas as memberships existentes
+          const updated = await tx.userCompanyMembership.updateMany({
             where: { userId },
             data: { role: parsed.role as "company_admin" | "manager" | "viewer" },
           });
+          membershipsUpdated = updated.count;
         }
       }
+
+      return { membershipsUpdated };
     });
+
+    if (parsed.role !== undefined && result.membershipsUpdated === 0) {
+      return {
+        success: true,
+        warning: "Nível atualizado, mas o usuário não está vinculado a nenhuma empresa. Vincule-o a uma empresa para que o nível tenha efeito.",
+      } as any;
+    }
+
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError)

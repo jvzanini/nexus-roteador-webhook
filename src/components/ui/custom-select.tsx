@@ -21,6 +21,7 @@ interface CustomSelectProps {
   triggerClassName?: string;
   icon?: React.ReactNode;
   disabled?: boolean;
+  renderTrigger?: (option: SelectOption | undefined, open: boolean, toggle: () => void) => React.ReactNode;
 }
 
 export function CustomSelect({
@@ -32,6 +33,7 @@ export function CustomSelect({
   triggerClassName,
   icon,
   disabled = false,
+  renderTrigger,
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
@@ -55,7 +57,7 @@ export function CustomSelect({
         position: 'fixed' as const,
         top: rect.bottom + 4,
         left: rect.left,
-        width: rect.width,
+        width: Math.max(rect.width, 220),
       });
     }
     if (!disabled) setOpen(!open);

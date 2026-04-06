@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useTransition, useCallback } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useTransition, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Table,
   TableBody,
@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { UserPlus, Trash2, Shield, Eye, Briefcase, Users, Loader2, AlertTriangle } from "lucide-react";
+import { UserPlus, Trash2, Shield, ShieldCheck, Eye, Briefcase, Users, Loader2, AlertTriangle, Crown, ChevronDown, Check } from "lucide-react";
 import { toast } from "sonner";
 import {
   getCompanyMembers,
@@ -75,6 +75,92 @@ const itemVariants = {
     transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const },
   },
 } as const;
+
+function MemberBadgeSelect({
+  value,
+  onChange,
+  options,
+  getBadgeStyle,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string; description?: string; bg: string; icon: React.ComponentType<{ className?: string }> }[];
+  getBadgeStyle: (value: string) => { bg: string; icon: React.ComponentType<{ className?: string }> };
+}) {
+  const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const ref = useRef<HTMLDivElement>(null);
+  const current = getBadgeStyle(value);
+  const CurrentIcon = current.icon;
+  const currentOption = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handleToggle() {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: "fixed" as const,
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: Math.max(rect.width, 240),
+        zIndex: 100,
+      });
+    }
+    setOpen(!open);
+  }
+
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        onClick={handleToggle}
+        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium cursor-pointer transition-all hover:opacity-80 ${current.bg}`}
+      >
+        <CurrentIcon className="h-3 w-3" />
+        {currentOption?.label ?? value}
+        <ChevronDown className={`h-3 w-3 ml-0.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            style={dropdownStyle}
+            className="rounded-lg border border-border bg-popover shadow-xl overflow-hidden"
+          >
+            {options.map((option) => {
+              const OptionIcon = option.icon;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => { onChange(option.value); setOpen(false); }}
+                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-left cursor-pointer transition-all hover:bg-accent ${value === option.value ? "bg-accent/50" : ""}`}
+                >
+                  <OptionIcon className={`h-4 w-4 shrink-0 ${option.bg.includes("purple") ? "text-purple-400" : option.bg.includes("blue") ? "text-blue-400" : option.bg.includes("amber") ? "text-amber-400" : "text-muted-foreground"}`} />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-foreground">{option.label}</span>
+                    {option.description && (
+                      <span className="block text-xs text-muted-foreground">{option.description}</span>
+                    )}
+                  </div>
+                  {value === option.value && <Check className="h-4 w-4 text-primary shrink-0" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
   const [members, setMembers] = useState<MemberItem[]>([]);
@@ -315,24 +401,30 @@ export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
                   </TableCell>
                   <TableCell className="px-4 py-2">
                     {member.isSuperAdmin ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-purple-500/15 text-purple-400 border-purple-500/30">
-                        <Shield className="size-3" />
-                        Admin
+                      <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-purple-500/10 text-purple-400 border-purple-500/20">
+                        <Crown className="size-3" />
+                        Super Admin
                       </span>
                     ) : canEdit ? (
-                      <CustomSelect
+                      <MemberBadgeSelect
                         value={member.role}
                         onChange={(v) => {
                           if (v !== member.role) {
                             handleRoleChange(member.id, v);
                           }
                         }}
-                        triggerClassName="w-36 h-7 text-xs"
                         options={[
-                          { value: "company_admin", label: "Admin", description: "Gerencia a empresa" },
-                          { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks" },
-                          { value: "viewer", label: "Visualizador", description: "Apenas visualização" },
+                          { value: "company_admin", label: "Admin", description: "Gerencia a empresa", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck },
+                          { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks", bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield },
+                          { value: "viewer", label: "Visualizador", description: "Apenas visualização", bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye },
                         ]}
+                        getBadgeStyle={(val) => {
+                          switch (val) {
+                            case "company_admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
+                            case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
+                            default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
+                          }
+                        }}
                       />
                     ) : (
                       <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${roleLabels[member.role]?.className ?? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30"}`}>
@@ -343,16 +435,18 @@ export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
                   </TableCell>
                   {canEdit && (
                     <TableCell className="text-right px-4 py-2">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => setDeletingMember(member)}
-                        disabled={isPending}
-                        className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
-                        title="Remover membro"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      {!member.isSuperAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setDeletingMember(member)}
+                          disabled={isPending}
+                          className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+                          title="Remover membro"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   )}
                 </TableRow>

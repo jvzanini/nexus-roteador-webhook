@@ -119,18 +119,29 @@
   --sidebar-ring: #7c3aed;
 }
 
-/* Toast progress bar — barra avanca da esquerda pra direita durante a duracao */
-[data-sonner-toast] [data-progress] {
-  height: 3px;
-  background: linear-gradient(90deg, rgba(124, 58, 237, 0.7), rgba(168, 85, 247, 0.7));
-  border-radius: 0 0 var(--radius) var(--radius);
-  transition: width 100ms linear;
+/* Toast — container precisa de position relative para a barra */
+[data-sonner-toast] {
+  position: relative !important;
+  overflow: hidden !important;
 }
 
-/* Toast close button mobile-friendly */
-[data-sonner-toast] [data-close-button] {
-  min-width: 28px;
-  min-height: 28px;
+/* Toast progress bar — barra que encolhe da direita pra esquerda em 4s */
+[data-sonner-toast]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.7), rgba(168, 85, 247, 0.7));
+  border-radius: 0 0 12px 12px;
+  animation: toast-progress 4s linear forwards;
+  transform-origin: left;
+}
+
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 
 @layer base {

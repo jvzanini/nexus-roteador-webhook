@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useTransition, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Table,
   TableBody,
@@ -45,6 +45,8 @@ import {
   Users as UsersIcon,
   Loader2,
   AlertTriangle,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
@@ -198,6 +200,94 @@ function PasswordInput({
       >
         {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
+    </div>
+  );
+}
+
+// --- BadgeSelect component ---
+
+function BadgeSelect({
+  value,
+  onChange,
+  options,
+  getBadgeStyle,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string; description?: string; bg: string; icon: React.ComponentType<{ className?: string }> }[];
+  getBadgeStyle: (value: string) => { bg: string; icon: React.ComponentType<{ className?: string }> };
+}) {
+  const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const ref = useRef<HTMLDivElement>(null);
+  const current = getBadgeStyle(value);
+  const CurrentIcon = current.icon;
+  const currentOption = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handleToggle() {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: "fixed" as const,
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: Math.max(rect.width, 240),
+        zIndex: 100,
+      });
+    }
+    setOpen(!open);
+  }
+
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        onClick={handleToggle}
+        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium cursor-pointer transition-all hover:opacity-80 ${current.bg}`}
+      >
+        <CurrentIcon className="h-3 w-3" />
+        {currentOption?.label ?? value}
+        <ChevronDown className={`h-3 w-3 ml-0.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            style={dropdownStyle}
+            className="rounded-lg border border-border bg-popover shadow-xl overflow-hidden"
+          >
+            {options.map((option) => {
+              const OptionIcon = option.icon;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => { onChange(option.value); setOpen(false); }}
+                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-left cursor-pointer transition-all hover:bg-accent ${value === option.value ? "bg-accent/50" : ""}`}
+                >
+                  <OptionIcon className={`h-4 w-4 shrink-0 ${option.bg.includes("purple") ? "text-purple-400" : option.bg.includes("blue") ? "text-blue-400" : option.bg.includes("amber") ? "text-amber-400" : option.bg.includes("emerald") ? "text-emerald-400" : option.bg.includes("red") ? "text-red-400" : "text-muted-foreground"}`} />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-foreground">{option.label}</span>
+                    {option.description && (
+                      <span className="block text-xs text-muted-foreground">{option.description}</span>
+                    )}
+                  </div>
+                  {value === option.value && <Check className="h-4 w-4 text-primary shrink-0" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -391,7 +481,12 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
     startSaving(async () => {
       const result = await updateUser(userId, { role: role as "super_admin" | "company_admin" | "manager" | "viewer" });
       if (result.success) {
-        toast.success("Nível atualizado");
+        const warning = (result as any).warning;
+        if (warning) {
+          toast.warning(warning);
+        } else {
+          toast.success("Nível atualizado");
+        }
         await loadUsers();
       } else {
         toast.error(result.error || "Erro ao atualizar nível");
@@ -633,16 +728,27 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                           );
                         }
 
+                        const roleSelectOptions = (isSuperAdmin ? [
+                          { value: "super_admin", label: "Super Admin", description: "Acesso total a toda a plataforma", bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", icon: Crown },
+                        ] : []).concat([
+                          { value: "company_admin", label: "Admin", description: "Gerencia empresas e usuários", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck },
+                          { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks", bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield },
+                          { value: "viewer", label: "Visualizador", description: "Apenas visualização", bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye },
+                        ]);
+
                         return (
-                          <CustomSelect
+                          <BadgeSelect
                             value={mapRoleToValue(user.highestRole)}
                             onChange={(val) => handleInlineRoleChange(user.id, val)}
-                            triggerClassName="h-7 text-xs w-36 mx-auto"
-                            options={
-                              isSuperAdmin
-                                ? ALL_ROLES.map((r) => ({ value: r.value, label: r.label, description: r.description }))
-                                : ALL_ROLES.filter((r) => r.value !== "super_admin").map((r) => ({ value: r.value, label: r.label, description: r.description }))
-                            }
+                            options={roleSelectOptions}
+                            getBadgeStyle={(val) => {
+                              switch (val) {
+                                case "super_admin": return { bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", icon: Crown };
+                                case "company_admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
+                                case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
+                                default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
+                              }
+                            }}
                           />
                         );
                       })()}
@@ -661,14 +767,17 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                           </span>
                         )
                       ) : (
-                        <CustomSelect
+                        <BadgeSelect
                           value={user.isActive ? "active" : "inactive"}
                           onChange={(val) => handleInlineStatusChange(user.id, val === "active")}
-                          triggerClassName="h-7 text-xs w-24 mx-auto"
                           options={[
-                            { value: "active", label: "Ativo" },
-                            { value: "inactive", label: "Inativo" },
+                            { value: "active", label: "Ativo", bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", icon: UserCheck },
+                            { value: "inactive", label: "Inativo", bg: "bg-red-500/10 border-red-500/20 text-red-400", icon: UserX },
                           ]}
+                          getBadgeStyle={(val) => val === "active"
+                            ? { bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", icon: UserCheck }
+                            : { bg: "bg-red-500/10 border-red-500/20 text-red-400", icon: UserX }
+                          }
                         />
                       )}
                     </TableCell>
