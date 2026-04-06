@@ -121,10 +121,17 @@
 
 /* ===== TOAST NOTIFICATIONS ===== */
 
-/* Toast — container com overflow hidden para clipar a barra */
+/* Forcar toasts sempre expandidos (empilhados verticalmente, nao colapsados) */
+[data-sonner-toaster] {
+  --front-toast-height: auto !important;
+}
+
 [data-sonner-toaster] [data-sonner-toast] {
   overflow: hidden !important;
   position: relative !important;
+  opacity: 1 !important;
+  transform: translateY(0) scale(1) !important;
+  height: auto !important;
 }
 
 /* Progress bar no rodapé absoluto */

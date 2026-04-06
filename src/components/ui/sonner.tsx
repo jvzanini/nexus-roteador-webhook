@@ -12,9 +12,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       closeButton
-      expand={true}
-      visibleToasts={5}
-      gap={8}
+      visibleToasts={4}
+      gap={12}
       position="bottom-right"
       icons={{
         success: (
