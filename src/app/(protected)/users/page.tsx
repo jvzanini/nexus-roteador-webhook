@@ -9,7 +9,7 @@ export default async function UsersPage() {
 
   // Super admin tem acesso direto
   if (user.isSuperAdmin) {
-    return <UsersContent isSuperAdmin />;
+    return <UsersContent isSuperAdmin currentUserId={user.id} />;
   }
 
   // Verificar se o usuario e company_admin em alguma empresa
@@ -21,5 +21,5 @@ export default async function UsersPage() {
     redirect("/dashboard");
   }
 
-  return <UsersContent isSuperAdmin={false} />;
+  return <UsersContent isSuperAdmin={false} currentUserId={user.id} />;
 }

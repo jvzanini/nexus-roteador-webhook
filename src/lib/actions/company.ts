@@ -321,9 +321,18 @@ export async function deleteCompany(
       const routeIds = routes.map((r) => r.id);
 
       if (routeIds.length > 0) {
-        await tx.deliveryAttempt.deleteMany({
-          where: { delivery: { routeId: { in: routeIds } } },
+        // Buscar deliveries para cascade de attempts
+        const deliveries = await tx.routeDelivery.findMany({
+          where: { routeId: { in: routeIds } },
+          select: { id: true },
         });
+        const deliveryIds = deliveries.map((d) => d.id);
+
+        if (deliveryIds.length > 0) {
+          await tx.deliveryAttempt.deleteMany({
+            where: { routeDeliveryId: { in: deliveryIds } },
+          });
+        }
         await tx.routeDelivery.deleteMany({
           where: { routeId: { in: routeIds } },
         });

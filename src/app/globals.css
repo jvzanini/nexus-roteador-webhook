@@ -119,10 +119,18 @@
   --sidebar-ring: #7c3aed;
 }
 
-/* Toast progress bar */
+/* Toast progress bar — barra avanca da esquerda pra direita durante a duracao */
 [data-sonner-toast] [data-progress] {
   height: 3px;
-  background: linear-gradient(to right, rgba(124, 58, 237, 0.6), rgba(147, 51, 234, 0.6));
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.7), rgba(168, 85, 247, 0.7));
+  border-radius: 0 0 var(--radius) var(--radius);
+  transition: width 100ms linear;
+}
+
+/* Toast close button mobile-friendly */
+[data-sonner-toast] [data-close-button] {
+  min-width: 28px;
+  min-height: 28px;
 }
 
 @layer base {

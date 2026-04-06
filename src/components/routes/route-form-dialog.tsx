@@ -149,7 +149,7 @@ export function RouteFormDialog({
         onOpenChange(value);
       }}
     >
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] bg-card border border-border rounded-2xl overflow-hidden">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] bg-card border border-border rounded-2xl">
         <DialogHeader>
           <DialogTitle className="text-foreground">
             {isEditing ? "Editar Rota" : "Nova Rota de Webhook"}
@@ -157,7 +157,7 @@ export function RouteFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <ScrollArea className="h-[60vh] px-3 pr-5">
+          <ScrollArea className="h-[60vh] px-5 pr-6">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

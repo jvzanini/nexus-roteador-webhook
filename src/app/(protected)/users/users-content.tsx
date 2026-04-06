@@ -206,9 +206,20 @@ function PasswordInput({
 
 interface UsersContentProps {
   isSuperAdmin: boolean;
+  currentUserId: string;
 }
 
-export function UsersContent({ isSuperAdmin }: UsersContentProps) {
+function mapRoleToValue(displayRole: string): string {
+  switch (displayRole) {
+    case "Super Admin": return "super_admin";
+    case "Admin": return "company_admin";
+    case "Gerente": return "manager";
+    case "Visualizador": return "viewer";
+    default: return "viewer";
+  }
+}
+
+export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps) {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -372,6 +383,30 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
         await loadUsers();
       } else {
         toast.error(result.error || "Erro ao excluir usuário");
+      }
+    });
+  }
+
+  async function handleInlineRoleChange(userId: string, role: string) {
+    startSaving(async () => {
+      const result = await updateUser(userId, { role: role as "super_admin" | "company_admin" | "manager" | "viewer" });
+      if (result.success) {
+        toast.success("Nível atualizado");
+        await loadUsers();
+      } else {
+        toast.error(result.error || "Erro ao atualizar nível");
+      }
+    });
+  }
+
+  async function handleInlineStatusChange(userId: string, isActive: boolean) {
+    startSaving(async () => {
+      const result = await updateUser(userId, { isActive });
+      if (result.success) {
+        toast.success(isActive ? "Usuário ativado" : "Usuário inativado");
+        await loadUsers();
+      } else {
+        toast.error(result.error || "Erro ao atualizar status");
       }
     });
   }
@@ -583,24 +618,58 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
                       {user.email}
                     </TableCell>
                     <TableCell className="text-center">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${badge.bg}`}
-                      >
-                        <BadgeIcon className="h-3 w-3" />
-                        {user.highestRole}
-                      </span>
+                      {(() => {
+                        const isOwnUser = user.id === currentUserId;
+                        const isTargetSuperAdmin = user.highestRole === "Super Admin";
+
+                        if (isOwnUser || (isTargetSuperAdmin && !isSuperAdmin)) {
+                          return (
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${badge.bg}`}
+                            >
+                              <BadgeIcon className="h-3 w-3" />
+                              {user.highestRole}
+                            </span>
+                          );
+                        }
+
+                        return (
+                          <CustomSelect
+                            value={mapRoleToValue(user.highestRole)}
+                            onChange={(val) => handleInlineRoleChange(user.id, val)}
+                            triggerClassName="h-7 text-xs w-36 mx-auto"
+                            options={
+                              isSuperAdmin
+                                ? ALL_ROLES.map((r) => ({ value: r.value, label: r.label, description: r.description }))
+                                : ALL_ROLES.filter((r) => r.value !== "super_admin").map((r) => ({ value: r.value, label: r.label, description: r.description }))
+                            }
+                          />
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="text-center">
-                      {user.isActive ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-                          <UserCheck className="h-3 w-3" />
-                          Ativo
-                        </span>
+                      {user.highestRole === "Super Admin" || user.id === currentUserId ? (
+                        user.isActive ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+                            <UserCheck className="h-3 w-3" />
+                            Ativo
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-xs font-medium text-red-400">
+                            <UserX className="h-3 w-3" />
+                            Inativo
+                          </span>
+                        )
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-xs font-medium text-red-400">
-                          <UserX className="h-3 w-3" />
-                          Inativo
-                        </span>
+                        <CustomSelect
+                          value={user.isActive ? "active" : "inactive"}
+                          onChange={(val) => handleInlineStatusChange(user.id, val === "active")}
+                          triggerClassName="h-7 text-xs w-24 mx-auto"
+                          options={[
+                            { value: "active", label: "Ativo" },
+                            { value: "inactive", label: "Inativo" },
+                          ]}
+                        />
                       )}
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground">
