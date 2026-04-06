@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Loader2, ArrowRight, AlertCircle, Webhook } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,10 +42,8 @@ export function LoginForm() {
         transition={{ delay: 0.1 }}
         className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-[0_0_24px_rgba(37,99,235,0.4)]">
-          <Webhook className="h-5 w-5 text-white" />
-        </div>
-        <span className="text-lg font-bold text-white tracking-tight">Nexus</span>
+        <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-xl" />
+        <span className="text-lg font-bold text-white tracking-tight">Nexus AI</span>
       </motion.div>
 
       {/* Header */}
@@ -84,7 +83,7 @@ export function LoginForm() {
             autoComplete="email"
             autoFocus
             disabled={isPending}
-            className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 text-white placeholder:text-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all duration-200"
+            className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 text-white placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
           />
         </div>
 
@@ -102,7 +101,7 @@ export function LoginForm() {
               required
               autoComplete="current-password"
               disabled={isPending}
-              className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 pr-11 text-white placeholder:text-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all duration-200"
+              className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 pr-11 text-white placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
             />
             <button
               type="button"
@@ -123,7 +122,7 @@ export function LoginForm() {
         <div className="flex justify-end">
           <a
             href="/forgot-password"
-            className="text-sm text-zinc-500 transition-colors duration-200 hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            className="text-sm text-zinc-500 transition-colors duration-200 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded"
             tabIndex={isPending ? -1 : 0}
           >
             Esqueci minha senha
@@ -134,7 +133,7 @@ export function LoginForm() {
         <Button
           type="submit"
           disabled={isPending}
-          className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold text-sm transition-all duration-300 hover:from-blue-500 hover:to-blue-400 hover:shadow-[0_0_24px_rgba(37,99,235,0.4)] disabled:opacity-50 cursor-pointer"
+          className="w-full h-12 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold text-sm transition-all duration-300 hover:from-violet-500 hover:to-purple-500 hover:shadow-[0_0_24px_rgba(124,58,237,0.4)] disabled:opacity-50 cursor-pointer"
         >
           {isPending ? (
             <>

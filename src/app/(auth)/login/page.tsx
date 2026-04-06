@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen bg-[#09090b]">
+    <div className="flex min-h-screen bg-background">
       {/* Lado esquerdo -- Branding (hidden no mobile) */}
       <div className="hidden w-1/2 lg:block">
         <LoginBranding />

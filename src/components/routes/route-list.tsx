@@ -88,7 +88,7 @@ export function RouteList({ companyId }: RouteListProps) {
         <Button
           onClick={handleCreate}
           size="sm"
-          className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200 hover:shadow-[0_0_16px_rgba(37,99,235,0.3)]"
+          className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200 hover:shadow-[0_0_16px_rgba(124,58,237,0.3)]"
         >
           <Plus className="mr-1.5 h-4 w-4" />
           Nova Rota
@@ -122,7 +122,7 @@ export function RouteList({ companyId }: RouteListProps) {
           <Button
             onClick={handleCreate}
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+            className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
           >
             <Plus className="mr-1.5 h-4 w-4" />
             Criar primeira rota

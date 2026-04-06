@@ -62,7 +62,7 @@ export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps)
       <Card className="group bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all duration-200 rounded-xl">
         <CardContent className="flex items-center gap-4 p-4">
           {/* Icone */}
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
             <Icon className="h-5 w-5" />
           </div>
 

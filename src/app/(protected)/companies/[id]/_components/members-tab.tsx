@@ -12,13 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +47,7 @@ const roleLabels: Record<string, { label: string; icon: React.ReactNode; classNa
   manager: {
     label: "Gerente",
     icon: <Briefcase className="size-3" />,
-    className: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+    className: "bg-violet-500/15 text-violet-400 border-violet-500/30",
   },
   viewer: {
     label: "Visualizador",
@@ -233,49 +227,38 @@ export function MembersTab({ companyId }: MembersTabProps) {
               <label className="text-xs font-medium text-zinc-400">
                 Usuário
               </label>
-              <Select
+              <CustomSelect
                 value={selectedUserId}
-                onValueChange={(v) => setSelectedUserId(v ?? "")}
-              >
-                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
-                  <SelectValue placeholder="Selecione um usuário" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableUsers.length === 0 ? (
-                    <SelectItem value="_none" disabled>
-                      Nenhum usuário disponível
-                    </SelectItem>
-                  ) : (
-                    availableUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.name} ({user.email})
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                onChange={(v) => setSelectedUserId(v)}
+                placeholder="Selecione um usuário"
+                options={
+                  availableUsers.length === 0
+                    ? [{ value: "_none", label: "Nenhum usuário disponível" }]
+                    : availableUsers.map((user) => ({
+                        value: user.id,
+                        label: user.name,
+                        description: user.email,
+                      }))
+                }
+              />
             </div>
 
             <div className="w-44 space-y-1.5">
               <label className="text-xs font-medium text-zinc-400">Papel</label>
-              <Select
+              <CustomSelect
                 value={selectedRole}
-                onValueChange={(v) => setSelectedRole(v ?? "viewer")}
-              >
-                <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="company_admin">Admin</SelectItem>
-                  <SelectItem value="manager">Gerente</SelectItem>
-                  <SelectItem value="viewer">Visualizador</SelectItem>
-                </SelectContent>
-              </Select>
+                onChange={(v) => setSelectedRole(v)}
+                options={[
+                  { value: "company_admin", label: "Admin", description: "Gerencia a empresa" },
+                  { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks" },
+                  { value: "viewer", label: "Visualizador", description: "Apenas visualização" },
+                ]}
+              />
             </div>
 
             <Button
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+              className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
               onClick={handleAddMember}
               disabled={isPending || !selectedUserId}
             >
@@ -330,34 +313,20 @@ export function MembersTab({ companyId }: MembersTabProps) {
                     {member.userEmail}
                   </TableCell>
                   <TableCell className="px-4 py-2">
-                    <Select
+                    <CustomSelect
                       value={member.role}
-                      onValueChange={(v) => {
-                        if (v && v !== member.role) {
+                      onChange={(v) => {
+                        if (v !== member.role) {
                           handleRoleChange(member.id, v);
                         }
                       }}
-                    >
-                      <SelectTrigger className="w-36 h-7 bg-transparent border-zinc-700/50 text-zinc-300 text-xs cursor-pointer transition-all duration-200 hover:border-zinc-600">
-                        <SelectValue>
-                          <span className="flex items-center gap-1.5">
-                            {roleLabels[member.role]?.icon}
-                            {roleLabels[member.role]?.label || member.role}
-                          </span>
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="company_admin">
-                          <Shield className="size-3 mr-1 inline" /> Admin
-                        </SelectItem>
-                        <SelectItem value="manager">
-                          <Briefcase className="size-3 mr-1 inline" /> Gerente
-                        </SelectItem>
-                        <SelectItem value="viewer">
-                          <Eye className="size-3 mr-1 inline" /> Visualizador
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                      triggerClassName="w-36 h-7 text-xs"
+                      options={[
+                        { value: "company_admin", label: "Admin", description: "Gerencia a empresa" },
+                        { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks" },
+                        { value: "viewer", label: "Visualizador", description: "Apenas visualização" },
+                      ]}
+                    />
                   </TableCell>
                   <TableCell className="px-4 py-2">
                     <Badge

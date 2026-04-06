@@ -28,7 +28,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   failed: { label: "Falhou", className: "bg-red-500/15 text-red-400 border-red-500/30" },
   pending: { label: "Pendente", className: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" },
   retrying: { label: "Retentando", className: "bg-orange-500/15 text-orange-400 border-orange-500/30" },
-  delivering: { label: "Entregando", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+  delivering: { label: "Entregando", className: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
 };
 
 export function RecentDeliveries({ items, currentPage, totalPages, onPageChange }: RecentDeliveriesProps) {
@@ -36,7 +36,7 @@ export function RecentDeliveries({ items, currentPage, totalPages, onPageChange 
     <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-semibold text-zinc-100 flex items-center gap-2">
-          <Activity className="h-4 w-4 text-blue-400" />
+          <Activity className="h-4 w-4 text-violet-400" />
           Entregas Recentes
         </CardTitle>
       </CardHeader>

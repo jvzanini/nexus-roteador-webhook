@@ -58,7 +58,7 @@ export function WebhookChart({ data, period }: WebhookChartProps) {
     <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold text-zinc-100 flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-blue-400" />
+          <BarChart3 className="h-4 w-4 text-violet-400" />
           {title}
         </CardTitle>
       </CardHeader>

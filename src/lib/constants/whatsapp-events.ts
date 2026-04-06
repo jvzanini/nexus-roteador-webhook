@@ -20,11 +20,11 @@ export const CATEGORY_COLOR_MAP: Record<string, {
   bg: string;
 }> = {
   messages:    { icon: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10" },
-  statuses:    { icon: "text-blue-400",    border: "border-blue-500/30",    bg: "bg-blue-500/10" },
+  statuses:    { icon: "text-violet-400",    border: "border-violet-500/30",    bg: "bg-violet-500/10" },
   calls:       { icon: "text-violet-400",  border: "border-violet-500/30",  bg: "bg-violet-500/10" },
   account:     { icon: "text-rose-400",    border: "border-rose-500/30",    bg: "bg-rose-500/10" },
   templates:   { icon: "text-purple-400",  border: "border-purple-500/30",  bg: "bg-purple-500/10" },
-  business:    { icon: "text-blue-400",    border: "border-blue-500/30",    bg: "bg-blue-500/10" },
+  business:    { icon: "text-violet-400",    border: "border-violet-500/30",    bg: "bg-violet-500/10" },
   groups:      { icon: "text-teal-400",    border: "border-teal-500/30",    bg: "bg-teal-500/10" },
   payments:    { icon: "text-amber-400",   border: "border-amber-500/30",   bg: "bg-amber-500/10" },
   flows:       { icon: "text-indigo-400",  border: "border-indigo-500/30",  bg: "bg-indigo-500/10" },
@@ -69,7 +69,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Status de Entrega",
     description: "Confirmacoes de envio, entrega e leitura",
     icon: "CheckCheck",
-    color: "blue",
+    color: "violet",
     events: [
       { id: "statuses.sent", label: "Enviado", description: "Mensagem enviada ao servidor WhatsApp" },
       { id: "statuses.delivered", label: "Entregue", description: "Mensagem entregue ao destinatario" },
@@ -122,7 +122,7 @@ export const WHATSAPP_EVENT_CATEGORIES: WhatsAppEventCategory[] = [
     label: "Negocio",
     description: "Atualizacoes de capacidade e limites do negocio",
     icon: "Briefcase",
-    color: "blue",
+    color: "violet",
     events: [
       { id: "business_capability_update", label: "Capacidades", description: "Capacidades do negocio atualizadas" },
       { id: "business_status_update", label: "Status do negocio", description: "Status da conta de negocio atualizado" },

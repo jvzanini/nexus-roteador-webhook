@@ -32,7 +32,7 @@ function timeAgo(date: Date): string {
 const typeConfig = {
   error: { icon: XCircle, color: "text-red-400" },
   warning: { icon: AlertTriangle, color: "text-amber-400" },
-  info: { icon: Info, color: "text-blue-400" },
+  info: { icon: Info, color: "text-violet-400" },
 } as const;
 
 const dropdownVariants = {
@@ -228,7 +228,7 @@ export function NotificationBell() {
                         onClick={() => handleItemClick(notification)}
                         className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-all duration-200 cursor-pointer hover:bg-zinc-800/50 ${
                           !notification.isRead
-                            ? "border-l-2 border-l-blue-500 bg-zinc-800/20"
+                            ? "border-l-2 border-l-violet-500 bg-zinc-800/20"
                             : "border-l-2 border-l-transparent"
                         }`}
                       >

@@ -62,7 +62,7 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
     });
   }
 
-  const inputClasses = "bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200";
+  const inputClasses = "bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -133,7 +133,7 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
             <Button
               type="submit"
               disabled={isPending}
-              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+              className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
             >
               {isPending ? (
                 <>

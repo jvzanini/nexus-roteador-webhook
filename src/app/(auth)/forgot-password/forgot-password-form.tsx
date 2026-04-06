@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Loader2, AlertCircle, CheckCircle2, Mail, Webhook } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,10 +44,8 @@ export function ForgotPasswordForm() {
           transition={{ delay: 0.1 }}
           className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-[0_0_24px_rgba(37,99,235,0.4)]">
-            <Webhook className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-lg font-bold text-white tracking-tight">Nexus</span>
+          <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-xl" />
+          <span className="text-lg font-bold text-white tracking-tight">Nexus AI</span>
         </motion.div>
 
         <div className="flex items-center justify-center mb-6">
@@ -93,17 +92,15 @@ export function ForgotPasswordForm() {
         transition={{ delay: 0.1 }}
         className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-[0_0_24px_rgba(37,99,235,0.4)]">
-          <Webhook className="h-5 w-5 text-white" />
-        </div>
-        <span className="text-lg font-bold text-white tracking-tight">Nexus</span>
+        <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-xl" />
+        <span className="text-lg font-bold text-white tracking-tight">Nexus AI</span>
       </motion.div>
 
       {/* Header */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center mb-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/20">
-            <Mail className="h-7 w-7 text-blue-400" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20">
+            <Mail className="h-7 w-7 text-violet-400" />
           </div>
         </div>
         <h2 className="text-2xl font-bold text-white tracking-tight">
@@ -140,14 +137,14 @@ export function ForgotPasswordForm() {
             disabled={isPending}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 text-white placeholder:text-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all duration-200"
+            className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 text-white placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
           />
         </div>
 
         <Button
           type="submit"
           disabled={isPending || !email}
-          className="w-full h-12 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold text-sm transition-all duration-300 hover:from-blue-500 hover:to-blue-400 hover:shadow-[0_0_24px_rgba(37,99,235,0.4)] disabled:opacity-50 cursor-pointer"
+          className="w-full h-12 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold text-sm transition-all duration-300 hover:from-violet-500 hover:to-purple-500 hover:shadow-[0_0_24px_rgba(124,58,237,0.4)] disabled:opacity-50 cursor-pointer"
         >
           {isPending ? (
             <>
@@ -165,7 +162,7 @@ export function ForgotPasswordForm() {
         <div className="text-center">
           <Link
             href="/login"
-            className="text-sm text-zinc-500 transition-colors duration-200 hover:text-blue-400"
+            className="text-sm text-zinc-500 transition-colors duration-200 hover:text-violet-400"
           >
             <ArrowLeft className="mr-1 h-3 w-3 inline" />
             Voltar ao login

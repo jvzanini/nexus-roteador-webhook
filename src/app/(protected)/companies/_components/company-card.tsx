@@ -43,7 +43,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
     >
       {/* Hover glow */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-blue-600/5 blur-2xl" />
+        <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-violet-600/5 blur-2xl" />
       </div>
 
       <CardContent className="p-5 relative">

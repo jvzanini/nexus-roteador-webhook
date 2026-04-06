@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Webhook,
   LayoutDashboard,
   Building2,
   Users,
@@ -14,6 +13,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'next-auth/react';
 
@@ -55,11 +55,9 @@ export function Sidebar({ user }: SidebarProps) {
     <div className="flex h-full flex-col bg-[#09090b] border-r border-zinc-800">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 shadow-[0_0_12px_rgba(37,99,235,0.3)]">
-          <Webhook className="h-5 w-5 text-white" />
-        </div>
+        <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={36} height={36} className="rounded-lg" />
         <div>
-          <h1 className="text-base font-bold text-white tracking-tight">Nexus</h1>
+          <h1 className="text-base font-bold text-white tracking-tight">Nexus AI</h1>
           <p className="text-[11px] text-zinc-500 leading-none">Roteador Webhook</p>
         </div>
       </div>
@@ -83,12 +81,12 @@ export function Sidebar({ user }: SidebarProps) {
                   transition-all duration-200 cursor-pointer
                   ${
                     active
-                      ? 'bg-zinc-800/50 text-blue-500 border-l-2 border-blue-500 pl-[10px]'
+                      ? 'bg-zinc-800/50 text-violet-500 border-l-2 border-violet-500 pl-[10px]'
                       : 'text-zinc-400 hover:bg-zinc-800/30 hover:text-zinc-200'
                   }
                 `}
               >
-                <item.icon className={`h-[18px] w-[18px] transition-colors duration-200 ${active ? 'text-blue-500' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+                <item.icon className={`h-[18px] w-[18px] transition-colors duration-200 ${active ? 'text-violet-500' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
                 {item.label}
               </Link>
             </motion.div>

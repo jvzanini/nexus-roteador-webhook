@@ -22,8 +22,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       value: stats.webhooksReceived.toLocaleString("pt-BR"),
       comparison: stats.comparison.webhooksReceived,
       icon: Inbox,
-      iconBg: "bg-blue-500/10",
-      iconColor: "text-blue-400",
+      iconBg: "bg-violet-500/10",
+      iconColor: "text-violet-400",
       invertTrend: false,
     },
     {

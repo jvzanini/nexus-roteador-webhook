@@ -312,7 +312,7 @@ export function ProfileContent() {
               <Button
                 onClick={handleSaveProfile}
                 disabled={isPending}
-                className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+                className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
                 size="sm"
               >
                 {isPending ? (
@@ -513,7 +513,7 @@ export function ProfileContent() {
                   disabled={isPending}
                   className={`flex flex-col items-center gap-2 rounded-xl border p-4 transition-all duration-200 cursor-pointer ${
                     currentTheme === option.value
-                      ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                      ? "border-violet-500 bg-violet-500/10 text-violet-400"
                       : "border-zinc-700 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
                   }`}
                 >

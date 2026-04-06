@@ -186,7 +186,7 @@ export function LogTable({
                     type="checkbox"
                     checked={selectedIds.size === failedDeliveryIds.length && failedDeliveryIds.length > 0}
                     onChange={toggleSelectAll}
-                    className="cursor-pointer accent-blue-600"
+                    className="cursor-pointer accent-violet-600"
                   />
                 )}
               </TableHead>
@@ -240,7 +240,7 @@ export function LogTable({
                             }
                             setSelectedIds(next);
                           }}
-                          className="cursor-pointer accent-blue-600"
+                          className="cursor-pointer accent-violet-600"
                         />
                       )}
                     </TableCell>

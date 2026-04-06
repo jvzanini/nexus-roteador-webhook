@@ -54,7 +54,7 @@ export function VerifyEmailContent() {
         transition={{ delay: 0.1 }}
         className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 shadow-[0_0_24px_rgba(37,99,235,0.4)]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600 shadow-[0_0_24px_rgba(124,58,237,0.4)]">
           <Webhook className="h-5 w-5 text-white" />
         </div>
         <span className="text-lg font-bold text-white tracking-tight">
@@ -65,8 +65,8 @@ export function VerifyEmailContent() {
       {status === "loading" && (
         <>
           <div className="flex items-center justify-center mb-6">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/20">
-              <Loader2 className="h-7 w-7 text-blue-400 animate-spin" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20">
+              <Loader2 className="h-7 w-7 text-violet-400 animate-spin" />
             </div>
           </div>
           <h2 className="text-2xl font-bold text-white tracking-tight mb-3">
@@ -93,7 +93,7 @@ export function VerifyEmailContent() {
             endereço.
           </p>
           <Link href="/login">
-            <Button className="bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold text-sm rounded-xl h-11 px-6 cursor-pointer transition-all duration-300 hover:from-blue-500 hover:to-blue-400 hover:shadow-[0_0_24px_rgba(37,99,235,0.4)]">
+            <Button className="bg-gradient-to-r from-violet-600 to-violet-500 text-white font-semibold text-sm rounded-xl h-11 px-6 cursor-pointer transition-all duration-300 hover:from-violet-500 hover:to-violet-400 hover:shadow-[0_0_24px_rgba(124,58,237,0.4)]">
               <ArrowRight className="mr-2 h-4 w-4" />
               Ir para o login
             </Button>
@@ -113,7 +113,7 @@ export function VerifyEmailContent() {
           </h2>
           <p className="text-sm text-zinc-400 mb-8">{errorMessage}</p>
           <Link href="/profile">
-            <Button className="bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold text-sm rounded-xl h-11 px-6 cursor-pointer transition-all duration-300 hover:from-blue-500 hover:to-blue-400 hover:shadow-[0_0_24px_rgba(37,99,235,0.4)]">
+            <Button className="bg-gradient-to-r from-violet-600 to-violet-500 text-white font-semibold text-sm rounded-xl h-11 px-6 cursor-pointer transition-all duration-300 hover:from-violet-500 hover:to-violet-400 hover:shadow-[0_0_24px_rgba(124,58,237,0.4)]">
               Voltar ao perfil
             </Button>
           </Link>

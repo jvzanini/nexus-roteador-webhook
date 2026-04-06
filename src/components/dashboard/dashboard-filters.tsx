@@ -2,13 +2,7 @@
 
 import { RefreshCw, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface DashboardFiltersProps {
   companies: { id: string; name: string }[];
@@ -41,25 +35,16 @@ export function DashboardFilters({
 
       <div className="flex items-center gap-2.5 ml-auto">
         {/* Filtro de empresa */}
-        <Select
+        <CustomSelect
           value={selectedCompanyId ?? "all"}
-          onValueChange={(val) => onCompanyChange(!val || val === "all" ? undefined : val)}
-        >
-          <SelectTrigger className="h-9 min-w-[180px] bg-zinc-800/50 border-zinc-700 text-sm text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
-            <Building2 className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-900 border-zinc-700">
-            <SelectItem value="all" className="text-zinc-300 cursor-pointer">
-              Todas as empresas
-            </SelectItem>
-            {companies.map((c) => (
-              <SelectItem key={c.id} value={c.id} className="text-zinc-300 cursor-pointer">
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(val) => onCompanyChange(!val || val === "all" ? undefined : val)}
+          icon={<Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+          triggerClassName="h-9 min-w-[160px] sm:min-w-[180px]"
+          options={[
+            { value: "all", label: "Todas as empresas", description: "Exibir dados de todas" },
+            ...companies.map((c) => ({ value: c.id, label: c.name })),
+          ]}
+        />
 
         {/* Filtro de periodo */}
         <div className="flex rounded-xl border border-zinc-800 overflow-hidden bg-zinc-900/80">
@@ -69,7 +54,7 @@ export function DashboardFilters({
               onClick={() => onPeriodChange(p.value)}
               className={`px-3.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${
                 selectedPeriod === p.value
-                  ? "bg-blue-600 text-white shadow-[0_0_8px_rgba(37,99,235,0.3)]"
+                  ? "bg-violet-600 text-white shadow-[0_0_8px_rgba(124,58,237,0.3)]"
                   : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50"
               }`}
             >

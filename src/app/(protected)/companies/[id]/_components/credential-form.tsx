@@ -167,7 +167,7 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
     });
   }
 
-  const inputClasses = "h-11 bg-zinc-800/50 border-zinc-700/50 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all duration-200 rounded-lg";
+  const inputClasses = "h-11 bg-zinc-800/50 border-zinc-700/50 text-zinc-100 placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200 rounded-lg";
 
   return (
     <form action={handleSubmit} className="space-y-6">
@@ -175,7 +175,7 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
       <Card className="bg-zinc-800/30 border border-zinc-700/40 rounded-xl">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Globe className="h-4 w-4 text-blue-400" />
+            <Globe className="h-4 w-4 text-violet-400" />
             <span className="text-sm font-medium text-zinc-300">URL do Webhook</span>
           </div>
           <div className="flex items-center gap-2 p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-700/30">
@@ -296,7 +296,7 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
       <Button
         type="submit"
         disabled={isPending}
-        className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+        className="gap-2 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
       >
         {isPending ? (
           <>

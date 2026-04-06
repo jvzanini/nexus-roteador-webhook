@@ -44,7 +44,7 @@ export function CreateCompanyDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        render={<Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200 hover:shadow-[0_0_16px_rgba(37,99,235,0.3)]" />}
+        render={<Button className="gap-2 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200 hover:shadow-[0_0_16px_rgba(124,58,237,0.3)]" />}
       >
         <Plus className="h-4 w-4" />
         Nova Empresa
@@ -70,7 +70,7 @@ export function CreateCompanyDialog() {
               required
               minLength={2}
               maxLength={100}
-              className="bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
+              className="bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200"
             />
           </div>
 
@@ -83,7 +83,7 @@ export function CreateCompanyDialog() {
               name="logoUrl"
               type="url"
               placeholder="https://example.com/logo.png"
-              className="bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
+              className="bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200"
             />
           </div>
 
@@ -103,7 +103,7 @@ export function CreateCompanyDialog() {
             <Button
               type="submit"
               disabled={isPending}
-              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+              className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
             >
               {isPending ? (
                 <>

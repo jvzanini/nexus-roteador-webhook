@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import {
   Popover,
   PopoverContent,
@@ -124,7 +118,7 @@ export function LogFilters({
             <Filter className="h-4 w-4" />
             Status
             {selectedStatuses.length > 0 && (
-              <Badge variant="secondary" className="ml-1 bg-blue-500/15 text-blue-400 border-blue-500/30">
+              <Badge variant="secondary" className="ml-1 bg-violet-500/15 text-violet-400 border-violet-500/30">
                 {selectedStatuses.length}
               </Badge>
             )}
@@ -137,7 +131,7 @@ export function LogFilters({
                   onClick={() => toggleStatus(s.value)}
                   className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer ${
                     selectedStatuses.includes(s.value)
-                      ? "bg-blue-500/10 text-blue-400"
+                      ? "bg-violet-500/10 text-violet-400"
                       : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
                   }`}
                 >
@@ -156,7 +150,7 @@ export function LogFilters({
             <Filter className="h-4 w-4" />
             Evento
             {selectedEventTypes.length > 0 && (
-              <Badge variant="secondary" className="ml-1 bg-blue-500/15 text-blue-400 border-blue-500/30">
+              <Badge variant="secondary" className="ml-1 bg-violet-500/15 text-violet-400 border-violet-500/30">
                 {selectedEventTypes.length}
               </Badge>
             )}
@@ -169,7 +163,7 @@ export function LogFilters({
                   onClick={() => toggleEventType(et)}
                   className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all duration-200 cursor-pointer ${
                     selectedEventTypes.includes(et)
-                      ? "bg-blue-500/10 text-blue-400"
+                      ? "bg-violet-500/10 text-violet-400"
                       : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
                   }`}
                 >
@@ -186,19 +180,16 @@ export function LogFilters({
         </Popover>
 
         {/* Route select */}
-        <Select value={selectedRouteId} onValueChange={(v) => setSelectedRouteId(v ?? "")}>
-          <SelectTrigger className="w-[180px] h-9 bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
-            <SelectValue placeholder="Rota" />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-900 border-zinc-700">
-            <SelectItem value="">Todas as rotas</SelectItem>
-            {routes.map((r) => (
-              <SelectItem key={r.id} value={r.id}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <CustomSelect
+          value={selectedRouteId || "_all"}
+          onChange={(v) => setSelectedRouteId(v === "_all" ? "" : v)}
+          placeholder="Rota"
+          triggerClassName="w-[180px] h-9"
+          options={[
+            { value: "_all", label: "Todas as rotas", description: "Exibir logs de todas" },
+            ...routes.map((r) => ({ value: r.id, label: r.name })),
+          ]}
+        />
 
         {/* Date range */}
         <Popover>
@@ -246,7 +237,7 @@ export function LogFilters({
           size="sm"
           onClick={applyFilters}
           disabled={isPending}
-          className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+          className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
         >
           Filtrar
         </Button>

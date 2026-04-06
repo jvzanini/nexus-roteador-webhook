@@ -45,8 +45,8 @@ import {
   Users as UsersIcon,
   Loader2,
   AlertTriangle,
-  ChevronDown,
 } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
 import {
   getUsers,
@@ -198,56 +198,6 @@ function PasswordInput({
       >
         {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
-    </div>
-  );
-}
-
-function RoleSelect({
-  value,
-  onChange,
-  availableRoles,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  availableRoles: RoleOption[];
-}) {
-  const [open, setOpen] = useState(false);
-  const selected = availableRoles.find((r) => r.value === value);
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between rounded-md border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 cursor-pointer transition-all duration-200 hover:border-zinc-600"
-      >
-        <span>{selected?.label ?? "Selecionar nível"}</span>
-        <ChevronDown
-          className={`h-4 w-4 text-zinc-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 shadow-xl shadow-black/30 overflow-hidden">
-          {availableRoles.map((role) => (
-            <button
-              key={role.value}
-              type="button"
-              onClick={() => {
-                onChange(role.value);
-                setOpen(false);
-              }}
-              className={`flex w-full flex-col items-start px-3 py-2.5 text-left cursor-pointer transition-all duration-200 hover:bg-zinc-700/50 ${
-                value === role.value ? "bg-zinc-700/30" : ""
-              }`}
-            >
-              <span className="text-sm font-medium text-zinc-100">
-                {role.label}
-              </span>
-              <span className="text-xs text-zinc-500">{role.description}</span>
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -503,10 +453,15 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
           <label className="block text-sm font-medium text-zinc-300 mb-1.5">
             Nível de acesso
           </label>
-          <RoleSelect
+          <CustomSelect
             value={form.role}
             onChange={(value) => setForm((f) => ({ ...f, role: value }))}
-            availableRoles={availableRoles}
+            placeholder="Selecionar nível"
+            options={availableRoles.map((r) => ({
+              value: r.value,
+              label: r.label,
+              description: r.description,
+            }))}
           />
         </div>
 
@@ -548,8 +503,8 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
         className="flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600/10 border border-blue-500/20">
-            <UsersIcon className="h-5 w-5 text-blue-400" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600/10 border border-violet-500/20">
+            <UsersIcon className="h-5 w-5 text-violet-400" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-zinc-100">Usuários</h1>
@@ -560,7 +515,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
         </div>
         <Button
           onClick={openCreate}
-          className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+          className="gap-2 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
         >
           <Plus className="h-4 w-4" />
           Novo Usuário
@@ -709,7 +664,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
             <Button
               onClick={handleSubmitCreate}
               disabled={saving}
-              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+              className="gap-2 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Criar Usuário
@@ -738,7 +693,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
             <Button
               onClick={handleSubmitEdit}
               disabled={saving}
-              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+              className="gap-2 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Salvar Alterações

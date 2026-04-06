@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="flex min-h-screen bg-[#09090b]">
+    <div className="flex min-h-screen bg-background">
       <div className="hidden w-1/2 lg:block">
         <LoginBranding />
       </div>

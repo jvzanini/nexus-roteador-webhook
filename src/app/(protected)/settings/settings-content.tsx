@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { RotateCcw, Archive, Bell, Save, Loader2, Settings } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -176,8 +170,8 @@ export function SettingsContent() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/10 border border-blue-600/20">
-            <Settings className="h-5 w-5 text-blue-500" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-600/10 border border-violet-600/20">
+            <Settings className="h-5 w-5 text-violet-500" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">
@@ -204,7 +198,7 @@ export function SettingsContent() {
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-zinc-100">
-                  <RotateCcw className="h-4 w-4 text-blue-500" />
+                  <RotateCcw className="h-4 w-4 text-violet-500" />
                   Retentativas de Webhook
                 </CardTitle>
               </CardHeader>
@@ -241,20 +235,14 @@ export function SettingsContent() {
 
                   <div>
                     <FieldLabel>Estrategia</FieldLabel>
-                    <Select
+                    <CustomSelect
                       value={retryStrategy}
-                      onValueChange={(val: string | null) =>
-                        val && setRetryStrategy(val as "exponential" | "fixed")
-                      }
-                    >
-                      <SelectTrigger className="w-full bg-zinc-800/50 border-zinc-700 text-zinc-200 cursor-pointer transition-all duration-200 hover:border-zinc-600">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-zinc-900 border-zinc-700">
-                        <SelectItem value="exponential">Exponencial</SelectItem>
-                        <SelectItem value="fixed">Fixo</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      onChange={(val) => setRetryStrategy(val as "exponential" | "fixed")}
+                      options={[
+                        { value: "exponential", label: "Exponencial", description: "Backoff exponencial entre tentativas" },
+                        { value: "fixed", label: "Fixo", description: "Intervalo fixo entre tentativas" },
+                      ]}
+                    />
                     <FieldHint>
                       {retryStrategy === "exponential"
                         ? "Multiplica os intervalos progressivamente (ex: 10s → 20s → 40s). Ignora os intervalos fixos definidos acima"
@@ -280,7 +268,7 @@ export function SettingsContent() {
                   <Button
                     onClick={handleSaveRetry}
                     disabled={savingRetry}
-                    className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+                    className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
                   >
                     {savingRetry ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -299,7 +287,7 @@ export function SettingsContent() {
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-zinc-100">
-                  <Archive className="h-4 w-4 text-blue-500" />
+                  <Archive className="h-4 w-4 text-violet-500" />
                   Retencao de Logs
                 </CardTitle>
               </CardHeader>
@@ -354,7 +342,7 @@ export function SettingsContent() {
                   <Button
                     onClick={handleSaveLogs}
                     disabled={savingLogs}
-                    className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+                    className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
                   >
                     {savingLogs ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -373,7 +361,7 @@ export function SettingsContent() {
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-zinc-100">
-                  <Bell className="h-4 w-4 text-blue-500" />
+                  <Bell className="h-4 w-4 text-violet-500" />
                   Notificacoes
                 </CardTitle>
               </CardHeader>
@@ -479,7 +467,7 @@ export function SettingsContent() {
                   <Button
                     onClick={handleSaveNotify}
                     disabled={savingNotify}
-                    className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-all duration-200"
+                    className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
                   >
                     {savingNotify ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
