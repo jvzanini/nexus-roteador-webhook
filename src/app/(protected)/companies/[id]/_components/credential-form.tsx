@@ -27,9 +27,16 @@ interface SensitiveInputProps {
   className: string;
   disabled?: boolean;
   hideToggle?: boolean;
+  /** Para campos armazenados em texto puro — mascara no frontend */
+  plaintextMasking?: boolean;
 }
 
-function SensitiveInput({ id, name, label, description, placeholder, defaultValue, required = true, visible, revealing, onToggle, inputRef, className, disabled = false, hideToggle = false }: SensitiveInputProps) {
+function SensitiveInput({ id, name, label, description, placeholder, defaultValue, required = true, visible, revealing, onToggle, inputRef, className, disabled = false, hideToggle = false, plaintextMasking = false }: SensitiveInputProps) {
+  // Para campos de texto puro, mascara no frontend: mostra apenas ultimos 5 chars
+  const displayValue = plaintextMasking && !visible && defaultValue
+    ? (defaultValue.length > 5 ? "••••••••" + defaultValue.slice(-5) : defaultValue)
+    : defaultValue;
+
   return (
     <div className="space-y-2">
       <div>
@@ -43,11 +50,12 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
           ref={inputRef}
           id={id}
           name={name}
-          type={visible ? "text" : "password"}
+          type={visible || plaintextMasking ? "text" : "password"}
           placeholder={placeholder}
-          defaultValue={defaultValue}
+          defaultValue={displayValue}
           required={required}
           disabled={disabled}
+          readOnly={plaintextMasking && !visible}
           className={`${className} ${hideToggle ? "" : "pr-10"}`}
         />
         {!hideToggle && (
@@ -98,18 +106,35 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
   const [revealing, setRevealing] = useState<Record<string, boolean>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  // Campos armazenados em texto puro (nao criptografados)
+  const plaintextFields = ["metaAppId", "phoneNumberId", "wabaId"];
+
   async function toggleField(field: string) {
     if (visible[field]) {
       // Esconder — restaurar valor mascarado original
       setVisible((prev) => ({ ...prev, [field]: false }));
       const input = inputRefs.current[field];
       if (input && existingCredential) {
-        const maskedValue = existingCredential[field as keyof typeof existingCredential] as string;
-        if (maskedValue && revealedValues[field]) {
-          input.value = maskedValue;
+        const rawValue = existingCredential[field as keyof typeof existingCredential] as string;
+        if (plaintextFields.includes(field) && rawValue) {
+          // Para campos plaintext, restaura a mascara frontend
+          input.value = rawValue.length > 5 ? "••••••••" + rawValue.slice(-5) : rawValue;
+        } else if (rawValue && revealedValues[field]) {
+          input.value = rawValue;
         }
       }
       return;
+    }
+
+    // Campos de texto puro — ja temos o valor original, basta revelar
+    if (plaintextFields.includes(field) && existingCredential) {
+      const rawValue = existingCredential[field as keyof typeof existingCredential] as string;
+      if (rawValue) {
+        setVisible((prev) => ({ ...prev, [field]: true }));
+        const input = inputRefs.current[field];
+        if (input) input.value = rawValue;
+        return;
+      }
     }
 
     // Se ja revelou antes, reutiliza
@@ -152,18 +177,28 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
     toast.success("URL copiada");
   }
 
+  /** Retorna o valor real de um campo plaintext — se esta mascarado, usa o original */
+  function getPlaintextValue(formData: FormData, fieldName: string): string {
+    const formValue = formData.get(fieldName) as string;
+    if (formValue && formValue.startsWith("••••••••") && existingCredential) {
+      const original = existingCredential[fieldName as keyof typeof existingCredential] as string;
+      if (original) return original;
+    }
+    return formValue;
+  }
+
   function handleSubmit(formData: FormData) {
     setError(null);
     setSuccess(false);
 
     startTransition(async () => {
       const result = await upsertCredential(companyId, {
-        metaAppId: formData.get("metaAppId") as string,
+        metaAppId: getPlaintextValue(formData, "metaAppId"),
         metaAppSecret: formData.get("metaAppSecret") as string,
         verifyToken: formData.get("verifyToken") as string,
         accessToken: formData.get("accessToken") as string,
-        phoneNumberId: formData.get("phoneNumberId") as string,
-        wabaId: formData.get("wabaId") as string,
+        phoneNumberId: getPlaintextValue(formData, "phoneNumberId"),
+        wabaId: getPlaintextValue(formData, "wabaId"),
       });
 
       if (result.success) {
@@ -198,12 +233,12 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
 
   return (
     <form action={handleSubmit} className="space-y-6">
-      {/* URL do Webhook + Slug unificado */}
+      {/* Configurações do Webhook */}
       <Card className="bg-card border border-border rounded-xl">
         <CardContent className="py-4 px-5 space-y-3">
           <div className="flex items-center gap-2">
             <Globe className="h-4 w-4 text-violet-400" />
-            <h3 className="text-sm font-medium text-foreground">URL do Webhook</h3>
+            <h3 className="text-sm font-medium text-foreground">Configurações do Webhook</h3>
           </div>
 
           {/* URL display com botao de copiar */}
@@ -227,7 +262,9 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
           <div className="pt-3 border-t border-border space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-medium text-foreground">Slug da Empresa</h4>
+                <h4 className="text-sm font-medium text-foreground">
+                  Slug da Empresa <span className="text-red-400">*</span>
+                </h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Identificador unico usado na URL do webhook. Ex: /api/webhook/<span className="font-mono">minha-empresa</span>
                 </p>
@@ -277,28 +314,46 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
               </div>
             )}
           </div>
+
+          {/* Token de Verificação — dentro do card de webhook */}
+          <div className="pt-3 border-t border-border">
+            <SensitiveInput
+              id="verifyToken"
+              name="verifyToken"
+              label="Token de Verificação"
+              description="Token usado pela Meta para validar o endpoint do webhook"
+              placeholder="Token de verificação para webhook"
+              defaultValue={existingCredential?.verifyToken}
+              visible={!!visible["verifyToken"]}
+              revealing={!!revealing["verifyToken"]}
+              onToggle={() => toggleField("verifyToken")}
+              inputRef={(el) => { inputRefs.current["verifyToken"] = el; }}
+              className={inputClasses}
+              disabled={!canEdit}
+              hideToggle={!canEdit}
+            />
+          </div>
         </CardContent>
       </Card>
 
       {/* Credenciais */}
       <div className="space-y-4">
-        <div className="space-y-2">
-          <div>
-            <Label htmlFor="metaAppId" className="text-sm font-medium text-foreground/80">
-              Meta App ID <span className="text-red-400">*</span>
-            </Label>
-            <p className="text-xs text-muted-foreground mt-0.5">Identificador do aplicativo no painel Meta for Developers</p>
-          </div>
-          <Input
-            id="metaAppId"
-            name="metaAppId"
-            placeholder="123456789"
-            defaultValue={existingCredential?.metaAppId}
-            required
-            disabled={!canEdit}
-            className={inputClasses}
-          />
-        </div>
+        <SensitiveInput
+          id="metaAppId"
+          name="metaAppId"
+          label="Meta App ID"
+          description="Identificador do aplicativo no painel Meta for Developers"
+          placeholder="123456789"
+          defaultValue={existingCredential?.metaAppId}
+          visible={!!visible["metaAppId"]}
+          revealing={!!revealing["metaAppId"]}
+          onToggle={() => toggleField("metaAppId")}
+          inputRef={(el) => { inputRefs.current["metaAppId"] = el; }}
+          className={inputClasses}
+          disabled={!canEdit}
+          hideToggle={!canEdit}
+          plaintextMasking={!!existingCredential?.metaAppId}
+        />
 
         <SensitiveInput
           id="metaAppSecret"
@@ -317,26 +372,10 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
         />
 
         <SensitiveInput
-          id="verifyToken"
-          name="verifyToken"
-          label="Token de Verificação"
-          description="Token usado pela Meta para validar o endpoint do webhook"
-          placeholder="Token de verificação para webhook"
-          defaultValue={existingCredential?.verifyToken}
-          visible={!!visible["verifyToken"]}
-          revealing={!!revealing["verifyToken"]}
-          onToggle={() => toggleField("verifyToken")}
-          inputRef={(el) => { inputRefs.current["verifyToken"] = el; }}
-          className={inputClasses}
-          disabled={!canEdit}
-          hideToggle={!canEdit}
-        />
-
-        <SensitiveInput
           id="accessToken"
           name="accessToken"
           label="Token de Acesso"
-          description="Token de autorização para enviar mensagens via WhatsApp API"
+          description="Token do portfólio empresarial da Meta. Permite o envio de mensagens pelo WhatsApp Cloud e acesso às configurações da conta Business."
           placeholder="EAAxxxxxxxx"
           defaultValue={existingCredential?.accessToken}
           visible={!!visible["accessToken"]}
@@ -349,41 +388,39 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div>
-              <Label htmlFor="phoneNumberId" className="text-sm font-medium text-foreground/80">
-                Phone Number ID <span className="text-red-400">*</span>
-              </Label>
-              <p className="text-xs text-muted-foreground mt-0.5">ID do número de telefone na API do WhatsApp Business</p>
-            </div>
-            <Input
-              id="phoneNumberId"
-              name="phoneNumberId"
-              placeholder="109876543"
-              defaultValue={existingCredential?.phoneNumberId ?? ""}
-              required
-              disabled={!canEdit}
-              className={inputClasses}
-            />
-          </div>
+          <SensitiveInput
+            id="phoneNumberId"
+            name="phoneNumberId"
+            label="Phone Number ID"
+            description="ID do número de telefone na API do WhatsApp Cloud"
+            placeholder="109876543"
+            defaultValue={existingCredential?.phoneNumberId ?? ""}
+            visible={!!visible["phoneNumberId"]}
+            revealing={!!revealing["phoneNumberId"]}
+            onToggle={() => toggleField("phoneNumberId")}
+            inputRef={(el) => { inputRefs.current["phoneNumberId"] = el; }}
+            className={inputClasses}
+            disabled={!canEdit}
+            hideToggle={!canEdit}
+            plaintextMasking={!!existingCredential?.phoneNumberId}
+          />
 
-          <div className="space-y-2">
-            <div>
-              <Label htmlFor="wabaId" className="text-sm font-medium text-foreground/80">
-                WABA ID <span className="text-red-400">*</span>
-              </Label>
-              <p className="text-xs text-muted-foreground mt-0.5">ID da conta comercial do WhatsApp (WhatsApp Business Account)</p>
-            </div>
-            <Input
-              id="wabaId"
-              name="wabaId"
-              placeholder="112233445566"
-              defaultValue={existingCredential?.wabaId ?? ""}
-              required
-              disabled={!canEdit}
-              className={inputClasses}
-            />
-          </div>
+          <SensitiveInput
+            id="wabaId"
+            name="wabaId"
+            label="WABA ID"
+            description="ID da conta comercial do WhatsApp (WhatsApp Business Account)"
+            placeholder="112233445566"
+            defaultValue={existingCredential?.wabaId ?? ""}
+            visible={!!visible["wabaId"]}
+            revealing={!!revealing["wabaId"]}
+            onToggle={() => toggleField("wabaId")}
+            inputRef={(el) => { inputRefs.current["wabaId"] = el; }}
+            className={inputClasses}
+            disabled={!canEdit}
+            hideToggle={!canEdit}
+            plaintextMasking={!!existingCredential?.wabaId}
+          />
         </div>
       </div>
 

@@ -119,6 +119,31 @@
   --sidebar-ring: #7c3aed;
 }
 
+/* Force toast close button visible */
+[data-sonner-toast] [data-close-button] {
+  opacity: 1 !important;
+  position: relative !important;
+  right: auto !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  border: none !important;
+  color: var(--muted-foreground) !important;
+  cursor: pointer;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  color: var(--foreground) !important;
+}
+
 /* Toast — container precisa de position relative para a barra */
 [data-sonner-toast] {
   position: relative !important;

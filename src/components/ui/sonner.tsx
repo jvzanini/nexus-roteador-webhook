@@ -39,8 +39,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast !rounded-xl !shadow-lg",
-          closeButton: "!bg-muted/80 !border-border !text-muted-foreground hover:!text-foreground !h-6 !w-6 !min-h-[24px] !min-w-[24px] !rounded-full !-top-2 !-right-2 !absolute !z-10",
+          toast: "cn-toast !rounded-xl !shadow-lg !relative !overflow-hidden",
+          closeButton: "!static !ml-auto !shrink-0 !bg-transparent !border-0 !text-muted-foreground hover:!text-foreground !h-5 !w-5 !opacity-100",
           title: "!text-sm !font-medium",
           description: "!text-xs !text-muted-foreground",
         },

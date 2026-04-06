@@ -217,7 +217,6 @@ function BadgeSelect({
   getBadgeStyle: (value: string) => { bg: string; icon: React.ComponentType<{ className?: string }> };
 }) {
   const [open, setOpen] = useState(false);
-  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const ref = useRef<HTMLDivElement>(null);
   const current = getBadgeStyle(value);
   const CurrentIcon = current.icon;
@@ -232,22 +231,13 @@ function BadgeSelect({
   }, []);
 
   function handleToggle() {
-    if (!open && ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      setDropdownStyle({
-        position: "fixed" as const,
-        top: rect.bottom + 4,
-        left: rect.left,
-        width: Math.max(rect.width, 240),
-        zIndex: 100,
-      });
-    }
     setOpen(!open);
   }
 
   return (
     <div ref={ref} className="relative inline-flex">
       <button
+        type="button"
         onClick={handleToggle}
         className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium cursor-pointer transition-all hover:opacity-80 ${current.bg}`}
       >
@@ -262,8 +252,7 @@ function BadgeSelect({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            style={dropdownStyle}
-            className="rounded-lg border border-border bg-popover shadow-xl overflow-hidden"
+            className="absolute left-0 top-full mt-1 z-[200] min-w-[240px] rounded-lg border border-border bg-popover shadow-xl overflow-hidden"
           >
             {options.map((option) => {
               const OptionIcon = option.icon;
@@ -847,7 +836,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
 
       {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md overflow-visible">
           <DialogHeader>
             <DialogTitle>Novo Usuário</DialogTitle>
             <DialogDescription>
@@ -876,7 +865,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
           if (!open) setEditingUser(null);
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md overflow-visible">
           <DialogHeader>
             <DialogTitle>Editar Usuário</DialogTitle>
             <DialogDescription>
