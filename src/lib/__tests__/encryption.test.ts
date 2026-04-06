@@ -35,8 +35,8 @@ describe("encryption", () => {
   });
 
   it("masks values correctly", () => {
-    expect(mask("abcdefghijklmnop")).toBe("****...mnop");
-    expect(mask("abc")).toBe("****");
-    expect(mask("abcdefgh", 6)).toBe("****...cdefgh");
+    expect(mask("abcdefghijklmnop")).toBe("••••••••lmnop");
+    expect(mask("abc")).toBe("••••••••");
+    expect(mask("abcdefgh", 6)).toBe("••••••••cdefgh");
   });
 });

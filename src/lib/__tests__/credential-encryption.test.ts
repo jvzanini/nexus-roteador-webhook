@@ -35,11 +35,11 @@ describe("credential encryption flow", () => {
   });
 
   it("masks sensitive fields correctly for API response", () => {
-    expect(mask("abc123secret456def")).toBe("****...6def");
-    expect(mask("EAAGxxxxxxxxxxxxxxxxxxxxxxZBZBZB")).toBe("****...ZBZB");
-    expect(mask("ab")).toBe("****");
-    expect(mask("abcd")).toBe("****");
-    expect(mask("abcde")).toBe("****...bcde");
+    expect(mask("abc123secret456def")).toBe("••••••••56def");
+    expect(mask("EAAGxxxxxxxxxxxxxxxxxxxxxxZBZBZB")).toBe("••••••••BZBZB");
+    expect(mask("ab")).toBe("••••••••");
+    expect(mask("abcd")).toBe("••••••••");
+    expect(mask("abcde")).toBe("••••••••");
   });
 
   it("simulates full save-and-read cycle", () => {
@@ -63,9 +63,9 @@ describe("credential encryption flow", () => {
       wabaId: toSave.wabaId,
     };
 
-    expect(apiResponse.metaAppSecret).toBe("****...6def");
-    expect(apiResponse.verifyToken).toBe("****...2024");
-    expect(apiResponse.accessToken).toBe("****...ZBZB");
+    expect(apiResponse.metaAppSecret).toBe("••••••••56def");
+    expect(apiResponse.verifyToken).toBe("••••••••-2024");
+    expect(apiResponse.accessToken).toBe("••••••••BZBZB");
     expect(apiResponse.metaAppId).toBe("123456789");
   });
 });
