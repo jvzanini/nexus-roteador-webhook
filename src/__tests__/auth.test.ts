@@ -58,6 +58,7 @@ describe('authorizeCredentials', () => {
         name: true,
         password: true,
         isSuperAdmin: true,
+        platformRole: true,
         isActive: true,
         avatarUrl: true,
         theme: true,
