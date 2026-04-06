@@ -42,7 +42,7 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
   return (
     <div className="space-y-6">
       <CompanyHeader company={company} canEdit={canEdit} canDelete={canDelete} />
-      <CompanyTabs company={company} canEdit={canEdit} canManageRoutes={canManageRoutes} canDelete={canDelete} currentUserId={userId} />
+      <CompanyTabs company={company} canEdit={canEdit} canManageRoutes={canManageRoutes} canDelete={canDelete} currentUserId={userId} currentUserIsSuperAdmin={isSuperAdmin} />
     </div>
   );
 }

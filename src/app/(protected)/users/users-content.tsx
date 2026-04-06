@@ -477,12 +477,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
     startSaving(async () => {
       const result = await updateUser(userId, { platformRole: role as "super_admin" | "admin" | "manager" | "viewer" });
       if (result.success) {
-        const warning = (result as any).warning;
-        if (warning) {
-          toast.warning(warning);
-        } else {
-          toast.success("Nível atualizado");
-        }
+        toast.success("Nível atualizado");
         await loadUsers();
       } else {
         toast.error(result.error || "Erro ao atualizar nível");
@@ -769,7 +764,11 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                       })()}
                     </TableCell>
                     <TableCell className="text-center">
-                      {user.id === currentUserId ? (
+                      {user.platformRole === "super_admin" ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+                          <UserCheck className="h-3 w-3" /> Ativo
+                        </span>
+                      ) : user.id === currentUserId ? (
                         user.isActive ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
                             <UserCheck className="h-3 w-3" />

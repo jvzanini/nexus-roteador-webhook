@@ -437,13 +437,6 @@ export async function updateUser(
       return { membershipsUpdated };
     });
 
-    if (effectivePlatformRole !== undefined && result.membershipsUpdated === 0 && effectivePlatformRole !== "super_admin") {
-      return {
-        success: true,
-        warning: "Nível atualizado, mas o usuário não está vinculado a nenhuma empresa. Vincule-o a uma empresa para que o nível tenha efeito.",
-      } as any;
-    }
-
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError)

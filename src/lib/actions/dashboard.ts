@@ -475,9 +475,13 @@ export async function getDashboardData(
       await assertCompanyAccess(user, companyId);
     }
 
-    // Buscar lista de empresas para dropdown (incluindo inativas para super admin)
+    // Buscar lista de empresas para dropdown
+    // tenantFilter usa companyId, mas Company model usa id — converter
+    const companyFilter = accessibleCompanyIds === undefined
+      ? {}
+      : { id: { in: accessibleCompanyIds } };
     const companies = await prisma.company.findMany({
-      where: { ...tenantFilter },
+      where: companyFilter,
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     });

@@ -139,7 +139,7 @@ export function RouteFormDialog({
     ]
   );
 
-  const inputClasses = "bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200";
+  const inputClasses = "bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200";
 
   return (
     <Dialog
@@ -157,7 +157,7 @@ export function RouteFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <ScrollArea className="h-[60vh] px-5 pr-6">
+          <ScrollArea className="h-[60vh] px-6 pr-7">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

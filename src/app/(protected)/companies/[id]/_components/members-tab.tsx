@@ -37,23 +37,24 @@ interface MembersTabProps {
   companyId: string;
   canEdit?: boolean;
   currentUserId?: string;
+  currentUserIsSuperAdmin?: boolean;
 }
 
 const roleLabels: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
   company_admin: {
     label: "Admin",
-    icon: <Shield className="size-3" />,
-    className: "bg-violet-500/15 text-violet-400 border-violet-500/30",
+    icon: <ShieldCheck className="size-3" />,
+    className: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   },
   manager: {
     label: "Gerente",
-    icon: <Briefcase className="size-3" />,
-    className: "bg-violet-500/15 text-violet-400 border-violet-500/30",
+    icon: <Shield className="size-3" />,
+    className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
   },
   viewer: {
     label: "Visualizador",
     icon: <Eye className="size-3" />,
-    className: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
+    className: "bg-zinc-800 text-zinc-400 border-zinc-700",
   },
 };
 
@@ -163,7 +164,7 @@ function MemberBadgeSelect({
   );
 }
 
-export function MembersTab({ companyId, canEdit = true, currentUserId }: MembersTabProps) {
+export function MembersTab({ companyId, canEdit = true, currentUserId, currentUserIsSuperAdmin = false }: MembersTabProps) {
   const [members, setMembers] = useState<MemberItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -406,11 +407,18 @@ export function MembersTab({ companyId, canEdit = true, currentUserId }: Members
                     {member.userEmail}
                   </TableCell>
                   <TableCell className="px-4 py-2">
-                    {member.isSuperAdmin ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-purple-500/10 text-purple-400 border-purple-500/20">
-                        <Crown className="size-3" />
-                        Super Admin
-                      </span>
+                    {member.isSuperAdmin || member.userId === currentUserId ? (
+                      member.isSuperAdmin ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-purple-500/10 text-purple-400 border-purple-500/20">
+                          <Crown className="size-3" />
+                          Super Admin
+                        </span>
+                      ) : (
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${roleLabels[member.role]?.className ?? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30"}`}>
+                          {roleLabels[member.role]?.icon}
+                          {roleLabels[member.role]?.label ?? member.role}
+                        </span>
+                      )
                     ) : canEdit ? (
                       <MemberBadgeSelect
                         value={member.role}
@@ -441,7 +449,7 @@ export function MembersTab({ companyId, canEdit = true, currentUserId }: Members
                   </TableCell>
                   {canEdit && (
                     <TableCell className="text-right px-4 py-2">
-                      {(member.isSuperAdmin ? member.userId !== currentUserId : true) && (
+                      {member.userId !== currentUserId && (!member.isSuperAdmin || currentUserIsSuperAdmin) && (
                         <Button
                           variant="ghost"
                           size="icon-sm"

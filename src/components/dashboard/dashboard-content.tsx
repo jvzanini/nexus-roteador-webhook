@@ -113,12 +113,14 @@ export function DashboardContent({ userName }: DashboardContentProps) {
     // Não reinicia timer, busca dados imediatamente via useEffect
   }
 
-  const today = new Date().toLocaleDateString("pt-BR", {
+  const todayRaw = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+  // Normalizar: primeira letra maiúscula, corrigir "De" → "de"
+  const today = (todayRaw.charAt(0).toUpperCase() + todayRaw.slice(1)).replace(/ De /g, " de ");
 
   // Skeleton loading no primeiro carregamento
   if (isInitialLoad && !data) {
