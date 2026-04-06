@@ -331,14 +331,21 @@ export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
 
             <div className="w-44 space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Papel</label>
-              <CustomSelect
+              <MemberBadgeSelect
                 value={selectedRole}
                 onChange={(v) => setSelectedRole(v)}
                 options={[
-                  { value: "company_admin", label: "Admin", description: "Gerencia a empresa" },
-                  { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks" },
-                  { value: "viewer", label: "Visualizador", description: "Apenas visualização" },
+                  { value: "company_admin", label: "Admin", description: "Gerencia a empresa", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck },
+                  { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks", bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield },
+                  { value: "viewer", label: "Visualizador", description: "Apenas visualização", bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye },
                 ]}
+                getBadgeStyle={(val) => {
+                  switch (val) {
+                    case "company_admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
+                    case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
+                    default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
+                  }
+                }}
               />
             </div>
 

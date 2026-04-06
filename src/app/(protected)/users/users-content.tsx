@@ -48,7 +48,6 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
 import {
   getUsers,
@@ -542,9 +541,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
         {/* Senha */}
         <div>
           <label className="block text-sm font-medium text-foreground/80 mb-1.5">
-            {mode === "edit"
-              ? "Nova senha (deixe vazio para manter)"
-              : "Senha"}
+            Senha
           </label>
           <PasswordInput
             value={form.password}
@@ -553,9 +550,14 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
               setPasswordError("");
             }}
             placeholder={
-              mode === "edit" ? "Nova senha (opcional)" : "Mínimo 8 caracteres"
+              mode === "edit" ? "••••••••" : "Mínimo 8 caracteres"
             }
           />
+          {mode === "edit" && (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Deixe vazio para manter a senha atual
+            </p>
+          )}
         </div>
 
         {/* Confirmar senha */}
@@ -583,15 +585,30 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
           <label className="block text-sm font-medium text-foreground/80 mb-1.5">
             Nível de acesso
           </label>
-          <CustomSelect
+          <BadgeSelect
             value={form.role}
-            onChange={(value) => setForm((f) => ({ ...f, role: value }))}
-            placeholder="Selecionar nível"
+            onChange={(val) => setForm((f) => ({ ...f, role: val }))}
             options={availableRoles.map((r) => ({
               value: r.value,
               label: r.label,
               description: r.description,
+              bg: r.value === "super_admin" ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
+                : r.value === "company_admin" ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                : r.value === "manager" ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                : "bg-zinc-800 border-zinc-700 text-zinc-400",
+              icon: r.value === "super_admin" ? Crown
+                : r.value === "company_admin" ? ShieldCheck
+                : r.value === "manager" ? Shield
+                : Eye,
             }))}
+            getBadgeStyle={(val) => {
+              switch (val) {
+                case "super_admin": return { bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", icon: Crown };
+                case "company_admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
+                case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
+                default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
+              }
+            }}
           />
         </div>
 

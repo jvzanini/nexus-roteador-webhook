@@ -223,54 +223,60 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
             Configure esta URL no painel do Meta App como Webhook Callback URL.
           </p>
 
-          {/* Edicao inline do slug */}
-          {canEdit && (
-            <div className="pt-2 border-t border-border">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-muted-foreground">Slug:</span>
-                {editingSlug ? (
-                  <div className="flex items-center gap-2 flex-1">
-                    <span className="text-xs text-muted-foreground font-mono">/</span>
-                    <Input
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
-                      placeholder="minha-empresa"
-                      className="h-7 text-xs flex-1 min-w-[120px]"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleSaveSlug}
-                      disabled={slugSaving || !slug.trim()}
-                      className="h-7 text-xs bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
-                    >
-                      Salvar
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => { setEditingSlug(false); setSlug(webhookKey); }}
-                      className="h-7 text-xs text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <code className="text-xs text-foreground font-mono">/{webhookKey}</code>
-                    <button
-                      type="button"
-                      onClick={() => { setSlug(webhookKey); setEditingSlug(true); }}
-                      className="text-violet-400 hover:text-violet-300 cursor-pointer"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
+          {/* Slug da empresa */}
+          <div className="pt-3 border-t border-border space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-foreground">Slug da Empresa</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Identificador unico usado na URL do webhook. Ex: /api/webhook/<span className="font-mono">minha-empresa</span>
+                </p>
               </div>
+              {canEdit && !editingSlug && (
+                <button
+                  type="button"
+                  onClick={() => { setSlug(webhookKey); setEditingSlug(true); }}
+                  className="text-violet-400 hover:text-violet-300 cursor-pointer transition-colors"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+              )}
             </div>
-          )}
+
+            {editingSlug && canEdit ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground font-mono">/</span>
+                <Input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder="minha-empresa"
+                  className="h-9 text-sm flex-1 min-w-[120px]"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSaveSlug}
+                  disabled={slugSaving || !slug.trim()}
+                  className="h-9 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
+                >
+                  Salvar
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => { setEditingSlug(false); setSlug(webhookKey); }}
+                  className="h-9 text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-2">
+                <code className="text-sm text-foreground font-mono">/{webhookKey}</code>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

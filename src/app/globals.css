@@ -139,6 +139,11 @@
   transform-origin: left;
 }
 
+/* PAUSA a barra ao hover — nao some, apenas pausa */
+[data-sonner-toast]:hover::after {
+  animation-play-state: paused;
+}
+
 @keyframes toast-progress {
   from { transform: scaleX(1); }
   to { transform: scaleX(0); }
