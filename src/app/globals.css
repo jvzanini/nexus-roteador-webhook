@@ -121,8 +121,14 @@
 
 /* ===== TOAST NOTIFICATIONS ===== */
 
-/* Toast — barra de progresso no rodape */
-[data-sonner-toast]::after {
+/* Toast — container com overflow hidden para clipar a barra */
+[data-sonner-toaster] [data-sonner-toast] {
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Progress bar no rodapé absoluto */
+[data-sonner-toaster] [data-sonner-toast]::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -132,9 +138,10 @@
   background: linear-gradient(90deg, rgba(124, 58, 237, 0.5), rgba(168, 85, 247, 0.5));
   border-radius: 0 0 12px 12px;
   animation: toast-shrink 4s linear forwards;
+  pointer-events: none;
 }
 
-[data-sonner-toast]:hover::after {
+[data-sonner-toaster] [data-sonner-toast]:hover::after {
   animation-play-state: paused;
 }
 
@@ -143,46 +150,40 @@
   to { width: 0%; }
 }
 
-/* Toast close button — canto superior esquerdo, visivel so no hover */
-[data-sonner-toast] [data-close-button] {
+/* Close button dentro do toast (top-right) */
+[data-sonner-toaster] [data-sonner-toast] [data-close-button] {
   position: absolute !important;
-  top: -6px !important;
-  left: -6px !important;
-  right: auto !important;
+  top: 4px !important;
+  right: 4px !important;
+  left: auto !important;
   bottom: auto !important;
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px !important;
-  min-height: 18px !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
   padding: 0 !important;
   margin: 0 !important;
   border-radius: 50% !important;
-  background: var(--card) !important;
-  border: 1px solid var(--border) !important;
+  background: transparent !important;
+  border: none !important;
   color: var(--muted-foreground) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  opacity: 0 !important;
+  opacity: 0.5 !important;
   cursor: pointer !important;
   z-index: 50 !important;
   transform: none !important;
   inset: auto !important;
-  top: -6px !important;
-  left: -6px !important;
-  transition: opacity 0.15s !important;
+  top: 4px !important;
+  right: 4px !important;
 }
 
-[data-sonner-toast]:hover [data-close-button] {
+[data-sonner-toaster] [data-sonner-toast]:hover [data-close-button] {
   opacity: 1 !important;
 }
 
-[data-sonner-toast] [data-close-button]:hover {
-  color: var(--foreground) !important;
-  background: var(--accent) !important;
-}
-
-[data-sonner-toast] [data-close-button] svg {
+[data-sonner-toaster] [data-sonner-toast] [data-close-button] svg {
   width: 10px !important;
   height: 10px !important;
 }

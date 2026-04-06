@@ -31,7 +31,8 @@ export async function getCompanies(options?: {
 
     const where: Record<string, unknown> = {};
 
-    // Tenant scoping — quando nao for super_admin, filtrar por membership
+    // Tenant scoping — quando nao for super_admin, filtrar por membership ativa
+    // Usuários vêem todas as empresas onde têm membership, incluindo inativas
     if (!user.isSuperAdmin) {
       where.memberships = {
         some: {
@@ -39,10 +40,6 @@ export async function getCompanies(options?: {
           isActive: true,
         },
       };
-      // Non-admins only see active companies
-      if (!options?.includeInactive) {
-        where.isActive = true;
-      }
     }
     // Super admin sees ALL companies (active + inactive) by default
 

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { Sidebar } from '@/components/layout/sidebar';
 import { ThemeInitializer } from '@/components/providers/theme-initializer';
+import { prisma } from '@/lib/prisma';
 
 export default async function ProtectedLayout({
   children,
@@ -16,10 +17,31 @@ export default async function ProtectedLayout({
 
   const isSuperAdmin = (session.user as any)?.isSuperAdmin ?? false;
   const avatarUrl = (session.user as any)?.avatarUrl ?? null;
+  const userId = (session.user as any)?.id;
+
+  let roleLabel = 'Usuário';
+  if (isSuperAdmin) {
+    roleLabel = 'Super Admin';
+  } else if (userId) {
+    const membership = await prisma.userCompanyMembership.findFirst({
+      where: { userId, isActive: true },
+      select: { role: true },
+      orderBy: { role: 'asc' },
+    });
+    if (membership) {
+      const labels: Record<string, string> = {
+        company_admin: 'Admin',
+        manager: 'Gerente',
+        viewer: 'Visualizador',
+      };
+      roleLabel = labels[membership.role] || 'Usuário';
+    }
+  }
+
   const user = {
     name: session.user.name || session.user.email || 'Usuário',
     email: session.user.email || '',
-    role: isSuperAdmin ? 'Super Admin' : 'Usuário',
+    role: roleLabel,
     isSuperAdmin,
     avatarUrl,
   };

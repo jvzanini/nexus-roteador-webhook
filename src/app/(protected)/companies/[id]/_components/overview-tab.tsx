@@ -76,11 +76,11 @@ export function OverviewTab({ company }: OverviewTabProps) {
           <OverviewStats stats={overviewData.stats} />
 
           {/* Bloco 2 — Gráfico + Rotas ativas */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+            <div className="lg:col-span-2 h-full">
               <OverviewChart chart={overviewData.chart} />
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 h-full">
               <OverviewRoutes
                 routes={overviewData.routes}
                 activeRoutes={overviewData.activeRoutes}

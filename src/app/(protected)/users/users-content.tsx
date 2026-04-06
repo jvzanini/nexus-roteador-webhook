@@ -817,23 +817,16 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => user.canEdit && openEdit(user)}
-                          disabled={!user.canEdit}
-                          title={
-                            user.canEdit
-                              ? "Editar usuário"
-                              : "Sem permissão para editar"
-                          }
-                          className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-all duration-200 ${
-                            user.canEdit
-                              ? "text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer"
-                              : "text-muted-foreground/40 cursor-not-allowed"
-                          }`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
+                        {user.canEdit && user.id !== currentUserId && (
+                          <button
+                            type="button"
+                            onClick={() => openEdit(user)}
+                            title="Editar usuário"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer transition-all duration-200"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        )}
                         {user.canDelete && (
                           <button
                             type="button"

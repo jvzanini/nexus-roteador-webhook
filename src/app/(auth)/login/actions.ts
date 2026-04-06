@@ -2,14 +2,26 @@
 
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
+import { prisma } from '@/lib/prisma';
 
 export async function loginAction(
   formData: FormData,
   callbackUrl: string
 ): Promise<{ error: string } | undefined> {
   try {
+    const email = formData.get('email') as string;
+
+    // Verificar se o usuário está inativo antes de tentar login
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { isActive: true },
+    });
+    if (existingUser && !existingUser.isActive) {
+      return { error: 'Sua conta está inativa. Entre em contato com o administrador.' };
+    }
+
     await signIn('credentials', {
-      email: formData.get('email') as string,
+      email,
       password: formData.get('password') as string,
       redirectTo: callbackUrl,
     });
