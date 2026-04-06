@@ -19,9 +19,10 @@ interface MaskedCredential {
 interface CredentialsTabProps {
   companyId: string;
   webhookKey: string;
+  canEdit?: boolean;
 }
 
-export async function CredentialsTab({ companyId, webhookKey }: CredentialsTabProps) {
+export async function CredentialsTab({ companyId, webhookKey, canEdit = true }: CredentialsTabProps) {
   const result = await getCredential(companyId);
   const credential = result.success ? (result.data as MaskedCredential | null) : null;
 
@@ -46,6 +47,7 @@ export async function CredentialsTab({ companyId, webhookKey }: CredentialsTabPr
       <CredentialForm
         companyId={companyId}
         webhookKey={webhookKey}
+        canEdit={canEdit}
         existingCredential={credential ? {
           metaAppId: credential.metaAppId,
           metaAppSecret: credential.metaAppSecret,

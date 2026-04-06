@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { Save, Loader2, Eye, EyeOff, Globe, Copy, Check } from "lucide-react";
+import { Save, Loader2, Eye, EyeOff, Globe, Copy, Check, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { upsertCredential, revealCredentialField } from "@/lib/actions/credential";
+import { updateCompany } from "@/lib/actions/company";
+import { toast } from "sonner";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://roteadorwebhook.nexusai360.com";
 
@@ -23,9 +25,11 @@ interface SensitiveInputProps {
   onToggle: () => void;
   inputRef: (el: HTMLInputElement | null) => void;
   className: string;
+  disabled?: boolean;
+  hideToggle?: boolean;
 }
 
-function SensitiveInput({ id, name, label, description, placeholder, defaultValue, required = true, visible, revealing, onToggle, inputRef, className }: SensitiveInputProps) {
+function SensitiveInput({ id, name, label, description, placeholder, defaultValue, required = true, visible, revealing, onToggle, inputRef, className, disabled = false, hideToggle = false }: SensitiveInputProps) {
   return (
     <div className="space-y-2">
       <div>
@@ -43,22 +47,25 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
           placeholder={placeholder}
           defaultValue={defaultValue}
           required={required}
-          className={`${className} pr-10`}
+          disabled={disabled}
+          className={`${className} ${hideToggle ? "" : "pr-10"}`}
         />
-        <button
-          type="button"
-          onClick={onToggle}
-          disabled={revealing}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-50"
-        >
-          {revealing ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : visible ? (
-            <EyeOff className="h-4 w-4" />
-          ) : (
-            <Eye className="h-4 w-4" />
-          )}
-        </button>
+        {!hideToggle && (
+          <button
+            type="button"
+            onClick={onToggle}
+            disabled={revealing}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {revealing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : visible ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -67,6 +74,7 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
 interface CredentialFormProps {
   companyId: string;
   webhookKey: string;
+  canEdit?: boolean;
   existingCredential?: {
     metaAppId: string;
     metaAppSecret: string;
@@ -78,7 +86,7 @@ interface CredentialFormProps {
   onSuccess?: () => void;
 }
 
-export function CredentialForm({ companyId, webhookKey, existingCredential, onSuccess }: CredentialFormProps) {
+export function CredentialForm({ companyId, webhookKey, canEdit = true, existingCredential, onSuccess }: CredentialFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -167,10 +175,80 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
     });
   }
 
+  // Slug state
+  const [slug, setSlug] = useState("");
+  const [editingSlug, setEditingSlug] = useState(false);
+  const [slugSaving, setSlugSaving] = useState(false);
+
+  async function handleSaveSlug() {
+    if (!slug.trim()) return;
+    setSlugSaving(true);
+    const result = await updateCompany(companyId, { slug: slug.trim() });
+    setSlugSaving(false);
+    if (result.success) {
+      toast.success("Slug atualizado");
+      setEditingSlug(false);
+    } else {
+      toast.error(result.error || "Erro ao atualizar slug");
+    }
+  }
+
   const inputClasses = "h-11 bg-muted/50 border-border/50 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200 rounded-lg";
 
   return (
     <form action={handleSubmit} className="space-y-6">
+      {/* Slug da empresa */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-sm font-medium text-foreground/80">Slug da Empresa</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">Identificador único usado na URL do webhook</p>
+          </div>
+          {canEdit && !editingSlug && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => { setSlug(webhookKey ? "" : ""); setEditingSlug(true); }}
+              className="text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
+            >
+              <Pencil className="h-3.5 w-3.5 mr-1" />
+              Editar
+            </Button>
+          )}
+        </div>
+        {editingSlug ? (
+          <div className="flex items-center gap-2">
+            <Input
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder="minha-empresa"
+              className={inputClasses}
+            />
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleSaveSlug}
+              disabled={slugSaving || !slug.trim()}
+              className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200 shrink-0"
+            >
+              {slugSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditingSlug(false)}
+              className="text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200 shrink-0"
+            >
+              Cancelar
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-foreground/80 font-mono py-2">/{webhookKey}</p>
+        )}
+      </div>
+
       {/* Webhook URL card */}
       <Card className="bg-muted/30 border border-border/40 rounded-xl">
         <CardContent className="p-4">
@@ -207,6 +285,7 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
             placeholder="123456789"
             defaultValue={existingCredential?.metaAppId}
             required
+            disabled={!canEdit}
             className={inputClasses}
           />
         </div>
@@ -223,6 +302,8 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
           onToggle={() => toggleField("metaAppSecret")}
           inputRef={(el) => { inputRefs.current["metaAppSecret"] = el; }}
           className={inputClasses}
+          disabled={!canEdit}
+          hideToggle={!canEdit}
         />
 
         <SensitiveInput
@@ -237,6 +318,8 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
           onToggle={() => toggleField("verifyToken")}
           inputRef={(el) => { inputRefs.current["verifyToken"] = el; }}
           className={inputClasses}
+          disabled={!canEdit}
+          hideToggle={!canEdit}
         />
 
         <SensitiveInput
@@ -251,6 +334,8 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
           onToggle={() => toggleField("accessToken")}
           inputRef={(el) => { inputRefs.current["accessToken"] = el; }}
           className={inputClasses}
+          disabled={!canEdit}
+          hideToggle={!canEdit}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -267,6 +352,7 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
               placeholder="109876543"
               defaultValue={existingCredential?.phoneNumberId ?? ""}
               required
+              disabled={!canEdit}
               className={inputClasses}
             />
           </div>
@@ -284,6 +370,7 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
               placeholder="112233445566"
               defaultValue={existingCredential?.wabaId ?? ""}
               required
+              disabled={!canEdit}
               className={inputClasses}
             />
           </div>
@@ -293,23 +380,25 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
       {error && <p className="text-sm text-red-400">{error}</p>}
       {success && <p className="text-sm text-emerald-400">Credenciais salvas com sucesso!</p>}
 
-      <Button
-        type="submit"
-        disabled={isPending}
-        className="gap-2 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
-      >
-        {isPending ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Salvando...
-          </>
-        ) : (
-          <>
-            <Save className="h-4 w-4" />
-            Salvar Credenciais
-          </>
-        )}
-      </Button>
+      {canEdit && (
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="gap-2 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              Salvar Credenciais
+            </>
+          )}
+        </Button>
+      )}
     </form>
   );
 }

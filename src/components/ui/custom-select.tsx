@@ -34,6 +34,7 @@ export function CustomSelect({
   disabled = false,
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const ref = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => o.value === value);
 
@@ -47,11 +48,24 @@ export function CustomSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  function handleToggle() {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed' as const,
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+    if (!disabled) setOpen(!open);
+  }
+
   return (
     <div ref={ref} className={cn("relative", className)}>
       <button
         type="button"
-        onClick={() => !disabled && setOpen(!open)}
+        onClick={handleToggle}
         disabled={disabled}
         className={cn(
           "flex w-full items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground cursor-pointer transition-all duration-200 hover:border-muted-foreground/30 disabled:opacity-50 disabled:cursor-not-allowed",
@@ -77,7 +91,8 @@ export function CustomSelect({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-xl shadow-black/20 overflow-hidden"
+            style={dropdownStyle}
+            className="z-[100] rounded-lg border border-border bg-popover shadow-xl shadow-black/20 overflow-hidden"
           >
             {options.map((option) => (
               <button

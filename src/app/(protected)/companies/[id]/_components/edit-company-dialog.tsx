@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Settings, Loader2 } from "lucide-react";
+import { Settings, Loader2, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { updateCompany } from "@/lib/actions/company";
+import { updateCompany, deleteCompany } from "@/lib/actions/company";
+import { toast } from "sonner";
 
 interface EditCompanyDialogProps {
   company: {
@@ -23,10 +34,12 @@ interface EditCompanyDialogProps {
     logoUrl: string | null;
     isActive: boolean;
   };
+  canDelete?: boolean;
 }
 
-export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
+export function EditCompanyDialog({ company, canDelete = false }: EditCompanyDialogProps) {
   const [open, setOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +59,18 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
         setOpen(false);
       } else {
         setError(result.error ?? "Erro desconhecido");
+      }
+    });
+  }
+
+  async function handleDelete() {
+    startTransition(async () => {
+      const result = await deleteCompany(company.id);
+      if (result.success) {
+        toast.success("Empresa excluída");
+        window.location.href = "/companies";
+      } else {
+        toast.error(result.error || "Erro ao excluir");
       }
     });
   }
@@ -113,15 +138,29 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleToggleActive}
-              disabled={isPending}
-              className="sm:mr-auto cursor-pointer transition-all duration-200"
-            >
-              {company.isActive ? "Desativar Empresa" : "Reativar Empresa"}
-            </Button>
+            <div className="flex gap-2 sm:mr-auto">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleToggleActive}
+                disabled={isPending}
+                className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 cursor-pointer transition-all duration-200"
+              >
+                {company.isActive ? "Desativar Empresa" : "Reativar Empresa"}
+              </Button>
+              {canDelete && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setDeleteOpen(true)}
+                  disabled={isPending}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir
+                </Button>
+              )}
+            </div>
             <Button
               type="button"
               variant="ghost"
@@ -147,6 +186,30 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent className="bg-card border border-border rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Excluir empresa permanentemente?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Esta ação não pode ser desfeita. Todos os dados serão removidos: credenciais, rotas, logs, membros e configurações.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-border text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isPending}
+              className="bg-red-600 hover:bg-red-700 text-white cursor-pointer transition-all duration-200"
+            >
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Excluir permanentemente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

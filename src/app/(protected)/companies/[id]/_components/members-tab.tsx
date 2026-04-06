@@ -11,7 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CustomSelect } from "@/components/ui/custom-select";
 import {
   AlertDialog,
@@ -36,6 +35,7 @@ import type { MemberItem, UserItem } from "@/lib/actions/users";
 
 interface MembersTabProps {
   companyId: string;
+  canEdit?: boolean;
 }
 
 const roleLabels: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
@@ -76,7 +76,7 @@ const itemVariants = {
   },
 } as const;
 
-export function MembersTab({ companyId }: MembersTabProps) {
+export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
   const [members, setMembers] = useState<MemberItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -199,7 +199,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
             {members.length} {members.length === 1 ? "membro" : "membros"}
           </h3>
         </div>
-        {!showAddForm && (
+        {canEdit && !showAddForm && (
           <Button
             variant="outline"
             size="sm"
@@ -294,10 +294,11 @@ export function MembersTab({ companyId }: MembersTabProps) {
                 <TableHead className="text-muted-foreground px-4 py-2">Nome</TableHead>
                 <TableHead className="text-muted-foreground px-4 py-2">Email</TableHead>
                 <TableHead className="text-muted-foreground px-4 py-2">Papel</TableHead>
-                <TableHead className="text-muted-foreground px-4 py-2">Status</TableHead>
-                <TableHead className="text-muted-foreground text-right px-4 py-2">
-                  Ações
-                </TableHead>
+                {canEdit && (
+                  <TableHead className="text-muted-foreground text-right px-4 py-2">
+                    Ações
+                  </TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -318,7 +319,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
                         <Shield className="size-3" />
                         Admin
                       </span>
-                    ) : (
+                    ) : canEdit ? (
                       <CustomSelect
                         value={member.role}
                         onChange={(v) => {
@@ -333,31 +334,27 @@ export function MembersTab({ companyId }: MembersTabProps) {
                           { value: "viewer", label: "Visualizador", description: "Apenas visualização" },
                         ]}
                       />
+                    ) : (
+                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${roleLabels[member.role]?.className ?? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30"}`}>
+                        {roleLabels[member.role]?.icon}
+                        {roleLabels[member.role]?.label ?? member.role}
+                      </span>
                     )}
                   </TableCell>
-                  <TableCell className="px-4 py-2">
-                    <Badge
-                      className={
-                        member.isActive
-                          ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                          : "bg-red-500/15 text-red-400 border border-red-500/30"
-                      }
-                    >
-                      {member.isActive ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right px-4 py-2">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => setDeletingMember(member)}
-                      disabled={isPending}
-                      className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
-                      title="Remover membro"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell className="text-right px-4 py-2">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setDeletingMember(member)}
+                        disabled={isPending}
+                        className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+                        title="Remover membro"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

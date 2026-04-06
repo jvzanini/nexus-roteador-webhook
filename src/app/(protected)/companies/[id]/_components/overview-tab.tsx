@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { OverviewStats } from "./overview/overview-stats";
 import { OverviewChart } from "./overview/overview-chart";
 import { OverviewRoutes } from "./overview/overview-routes";
@@ -63,7 +63,7 @@ export function OverviewTab({ company }: OverviewTabProps) {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
+      className="space-y-4"
     >
       {/* Mini Dashboard — Métricas e gráfico */}
       {isPending && !overviewData ? (
@@ -94,27 +94,26 @@ export function OverviewTab({ company }: OverviewTabProps) {
       {/* Info */}
       <motion.div variants={itemVariants}>
         <Card className="bg-card border border-border rounded-xl">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-foreground/80">Informações</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Slug</span>
-              <span className="text-foreground/80 font-mono">/{company.slug}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Webhook Key</span>
-              <span className="text-foreground/80 font-mono">{company.webhookKey}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Criada em</span>
-              <span className="text-foreground/80">
-                {new Date(company.createdAt).toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
+          <CardContent className="py-4 px-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Slug</p>
+                <p className="text-sm text-foreground font-mono">/{company.slug}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Webhook Key</p>
+                <p className="text-sm text-foreground font-mono truncate">{company.webhookKey}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Criada em</p>
+                <p className="text-sm text-foreground">
+                  {new Date(company.createdAt).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

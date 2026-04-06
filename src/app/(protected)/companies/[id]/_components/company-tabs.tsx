@@ -19,9 +19,12 @@ interface CompanyTabsProps {
       routes: number;
     };
   };
+  canEdit?: boolean;
+  canManageRoutes?: boolean;
+  canDelete?: boolean;
 }
 
-export function CompanyTabs({ company }: CompanyTabsProps) {
+export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, canDelete = false }: CompanyTabsProps) {
   return (
     <Tabs defaultValue="overview" className="space-y-6">
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -64,11 +67,11 @@ export function CompanyTabs({ company }: CompanyTabsProps) {
       </TabsContent>
 
       <TabsContent value="credentials">
-        <CredentialsTab companyId={company.id} webhookKey={company.webhookKey} />
+        <CredentialsTab companyId={company.id} webhookKey={company.webhookKey} canEdit={canEdit} />
       </TabsContent>
 
       <TabsContent value="routes">
-        <RouteList companyId={company.id} />
+        <RouteList companyId={company.id} canManageRoutes={canManageRoutes} />
       </TabsContent>
 
       <TabsContent value="logs">
@@ -76,7 +79,7 @@ export function CompanyTabs({ company }: CompanyTabsProps) {
       </TabsContent>
 
       <TabsContent value="members">
-        <MembersTab companyId={company.id} />
+        <MembersTab companyId={company.id} canEdit={canEdit} />
       </TabsContent>
     </Tabs>
   );

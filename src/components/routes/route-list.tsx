@@ -25,9 +25,10 @@ interface RouteData {
 
 interface RouteListProps {
   companyId: string;
+  canManageRoutes?: boolean;
 }
 
-export function RouteList({ companyId }: RouteListProps) {
+export function RouteList({ companyId, canManageRoutes = true }: RouteListProps) {
   const [routes, setRoutes] = useState<RouteData[]>([]);
   const [isLoading, startLoading] = useTransition();
 
@@ -85,14 +86,16 @@ export function RouteList({ companyId }: RouteListProps) {
             Configure para onde os eventos WhatsApp serão encaminhados
           </p>
         </div>
-        <Button
-          onClick={handleCreate}
-          size="sm"
-          className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200 hover:shadow-[0_0_16px_rgba(124,58,237,0.3)]"
-        >
-          <Plus className="mr-1.5 h-4 w-4" />
-          Nova Rota
-        </Button>
+        {canManageRoutes && (
+          <Button
+            onClick={handleCreate}
+            size="sm"
+            className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200 hover:shadow-[0_0_16px_rgba(124,58,237,0.3)]"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            Nova Rota
+          </Button>
+        )}
       </div>
 
       {/* Loading */}
@@ -119,14 +122,16 @@ export function RouteList({ companyId }: RouteListProps) {
             Crie sua primeira rota para comecar a receber eventos WhatsApp em
             seus sistemas.
           </p>
-          <Button
-            onClick={handleCreate}
-            size="sm"
-            className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
-          >
-            <Plus className="mr-1.5 h-4 w-4" />
-            Criar primeira rota
-          </Button>
+          {canManageRoutes && (
+            <Button
+              onClick={handleCreate}
+              size="sm"
+              className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Criar primeira rota
+            </Button>
+          )}
         </motion.div>
       )}
 
@@ -139,6 +144,7 @@ export function RouteList({ companyId }: RouteListProps) {
             onEdit={() => handleEdit(route)}
             onDelete={() => setDeleteRoute(route)}
             onToggle={() => handleToggle(route.id)}
+            canManageRoutes={canManageRoutes}
           />
         ))}
       </AnimatePresence>

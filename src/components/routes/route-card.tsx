@@ -25,6 +25,7 @@ interface RouteCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggle: () => void;
+  canManageRoutes?: boolean;
 }
 
 function maskUrl(url: string): string {
@@ -40,7 +41,7 @@ function maskUrl(url: string): string {
   }
 }
 
-export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps) {
+export function RouteCard({ route, onEdit, onDelete, onToggle, canManageRoutes = true }: RouteCardProps) {
   const Icon = useMemo(() => {
     const icon = (LucideIcons as unknown as Record<string, LucideIcon>)[route.icon];
     return icon ?? LucideIcons.Webhook;
@@ -72,11 +73,13 @@ export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps)
               <h3 className="text-sm font-medium text-foreground truncate">
                 {route.name}
               </h3>
-              <Switch
-                checked={route.isActive}
-                onCheckedChange={onToggle}
-                className="cursor-pointer transition-all duration-200 data-checked:bg-emerald-500 data-unchecked:bg-muted"
-              />
+              {canManageRoutes ? (
+                <Switch
+                  checked={route.isActive}
+                  onCheckedChange={onToggle}
+                  className="cursor-pointer transition-all duration-200 data-checked:bg-emerald-500 data-unchecked:bg-muted"
+                />
+              ) : null}
               <span className={`text-xs shrink-0 ${route.isActive ? "text-emerald-400" : "text-muted-foreground"}`}>
                 {route.isActive ? "Ativa" : "Inativa"}
               </span>
@@ -103,26 +106,28 @@ export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps)
           </div>
 
           {/* Acoes */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onEdit}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer transition-all duration-200"
-              title="Editar rota"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onDelete}
-              className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
-              title="Excluir rota"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          {canManageRoutes && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onEdit}
+                className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer transition-all duration-200"
+                title="Editar rota"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onDelete}
+                className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+                title="Excluir rota"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>

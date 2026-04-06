@@ -15,9 +15,11 @@ interface CompanyHeaderProps {
     logoUrl: string | null;
     isActive: boolean;
   };
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
-export function CompanyHeader({ company }: CompanyHeaderProps) {
+export function CompanyHeader({ company, canEdit = true, canDelete = false }: CompanyHeaderProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -59,7 +61,7 @@ export function CompanyHeader({ company }: CompanyHeaderProps) {
           </div>
         </div>
 
-        <EditCompanyDialog company={company} />
+        {canEdit && <EditCompanyDialog company={company} canDelete={canDelete} />}
       </div>
     </motion.div>
   );
