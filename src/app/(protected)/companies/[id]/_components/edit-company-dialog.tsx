@@ -144,7 +144,10 @@ export function EditCompanyDialog({ company, canDelete = false }: EditCompanyDia
                 variant="ghost"
                 onClick={handleToggleActive}
                 disabled={isPending}
-                className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 cursor-pointer transition-all duration-200"
+                className={company.isActive
+                  ? "text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 cursor-pointer transition-all duration-200"
+                  : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer transition-all duration-200"
+                }
               >
                 {company.isActive ? "Desativar Empresa" : "Reativar Empresa"}
               </Button>

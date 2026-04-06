@@ -779,7 +779,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                       })()}
                     </TableCell>
                     <TableCell className="text-center">
-                      {user.highestRole === "Super Admin" || user.id === currentUserId ? (
+                      {user.id === currentUserId ? (
                         user.isActive ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
                             <UserCheck className="h-3 w-3" />

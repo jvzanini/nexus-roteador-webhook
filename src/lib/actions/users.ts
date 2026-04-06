@@ -169,8 +169,8 @@ export async function getUsers(): Promise<ActionResult<UserItem[]>> {
       if (isSuperAdmin) {
         // Super admin edita todos
         canEdit = true;
-        // Super admin deleta todos EXCETO super admins
-        canDelete = !targetIsSuperAdmin;
+        // Super admin deleta todos EXCETO a si mesmo
+        canDelete = u.id !== currentUser.id;
       } else if (isAdmin) {
         // Admin edita apenas manager e viewer
         canEdit = !targetIsSuperAdmin && !targetIsAdmin;
@@ -432,21 +432,20 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
 
     if (!targetUser) return { success: false, error: "Usuário não encontrado" };
 
-    // Super admin nunca pode ser deletado
-    if (targetUser.isSuperAdmin) {
-      return { success: false, error: "Super Admin não pode ser excluído" };
-    }
-
-    // Admin so pode deletar manager e viewer
-    if (!isSuperAdmin) {
-      if (targetUser.memberships.some((m) => m.role === "company_admin")) {
-        return { success: false, error: "Sem permissão para excluir Admin" };
-      }
-    }
-
     // Nao pode deletar a si mesmo
     if (userId === currentUser.id) {
       return { success: false, error: "Você não pode excluir a si mesmo" };
+    }
+
+    // Super admin pode deletar qualquer um (exceto a si mesmo, ja tratado acima)
+    // Admin nao pode deletar super admin nem outro admin
+    if (!isSuperAdmin) {
+      if (targetUser.isSuperAdmin) {
+        return { success: false, error: "Sem permissão para excluir Super Admin" };
+      }
+      if (targetUser.memberships.some((m) => m.role === "company_admin")) {
+        return { success: false, error: "Sem permissão para excluir Admin" };
+      }
     }
 
     // Remover memberships primeiro, depois o user

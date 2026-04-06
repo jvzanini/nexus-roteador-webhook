@@ -31,10 +31,6 @@ export async function getCompanies(options?: {
 
     const where: Record<string, unknown> = {};
 
-    if (!options?.includeInactive) {
-      where.isActive = true;
-    }
-
     // Tenant scoping — quando nao for super_admin, filtrar por membership
     if (!user.isSuperAdmin) {
       where.memberships = {
@@ -43,7 +39,12 @@ export async function getCompanies(options?: {
           isActive: true,
         },
       };
+      // Non-admins only see active companies
+      if (!options?.includeInactive) {
+        where.isActive = true;
+      }
     }
+    // Super admin sees ALL companies (active + inactive) by default
 
     const companies = await prisma.company.findMany({
       where,

@@ -22,9 +22,10 @@ interface CompanyTabsProps {
   canEdit?: boolean;
   canManageRoutes?: boolean;
   canDelete?: boolean;
+  currentUserId?: string;
 }
 
-export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, canDelete = false }: CompanyTabsProps) {
+export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, canDelete = false, currentUserId }: CompanyTabsProps) {
   return (
     <Tabs defaultValue="overview" className="space-y-6">
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -79,7 +80,7 @@ export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, c
       </TabsContent>
 
       <TabsContent value="members">
-        <MembersTab companyId={company.id} canEdit={canEdit} />
+        <MembersTab companyId={company.id} canEdit={canEdit} currentUserId={currentUserId} />
       </TabsContent>
     </Tabs>
   );

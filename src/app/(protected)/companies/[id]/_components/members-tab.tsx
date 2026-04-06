@@ -36,6 +36,7 @@ import type { MemberItem, UserItem } from "@/lib/actions/users";
 interface MembersTabProps {
   companyId: string;
   canEdit?: boolean;
+  currentUserId?: string;
 }
 
 const roleLabels: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
@@ -162,7 +163,7 @@ function MemberBadgeSelect({
   );
 }
 
-export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
+export function MembersTab({ companyId, canEdit = true, currentUserId }: MembersTabProps) {
   const [members, setMembers] = useState<MemberItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -327,9 +328,9 @@ export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
               />
             )}
           </div>
-          <div className="flex items-end gap-3">
-            <div className="space-y-2 flex-1">
-              <label className="text-sm font-medium text-foreground/80">Papel</label>
+          <div className="flex items-end gap-4 flex-wrap">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground/80 block mb-1">Papel</label>
               <MemberBadgeSelect
                 value={selectedRole}
                 onChange={(v) => setSelectedRole(v)}
@@ -440,7 +441,7 @@ export function MembersTab({ companyId, canEdit = true }: MembersTabProps) {
                   </TableCell>
                   {canEdit && (
                     <TableCell className="text-right px-4 py-2">
-                      {!member.isSuperAdmin && (
+                      {(member.isSuperAdmin ? member.userId !== currentUserId : true) && (
                         <Button
                           variant="ghost"
                           size="icon-sm"

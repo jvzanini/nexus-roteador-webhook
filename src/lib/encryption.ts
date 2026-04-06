@@ -47,7 +47,7 @@ export function decrypt(ciphertext: string): string {
   return decrypted;
 }
 
-export function mask(value: string, visibleChars: number = 4): string {
-  if (value.length <= visibleChars) return "****";
-  return "****..." + value.slice(-visibleChars);
+export function mask(value: string, visibleChars: number = 5): string {
+  if (!value || value.length <= visibleChars) return "••••••••";
+  return "••••••••" + value.slice(-visibleChars);
 }
