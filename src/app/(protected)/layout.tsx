@@ -14,11 +14,13 @@ export default async function ProtectedLayout({
   }
 
   const isSuperAdmin = (session.user as any)?.isSuperAdmin ?? false;
+  const avatarUrl = (session.user as any)?.avatarUrl ?? null;
   const user = {
     name: session.user.name || session.user.email || 'Usuário',
     email: session.user.email || '',
     role: isSuperAdmin ? 'Super Admin' : 'Usuário',
     isSuperAdmin,
+    avatarUrl,
   };
 
   return (

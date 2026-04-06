@@ -12,6 +12,7 @@ export const authConfig = {
         nextUrl.pathname === '/login' ||
         nextUrl.pathname === '/forgot-password' ||
         nextUrl.pathname === '/reset-password' ||
+        nextUrl.pathname === '/verify-email' ||
         nextUrl.pathname.startsWith('/api/webhook/') ||
         nextUrl.pathname.startsWith('/api/auth/');
 

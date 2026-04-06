@@ -26,6 +26,7 @@ model User {
   notifications Notification[]
   auditLogs     AuditLog[]     @relation("AuditActor")
   passwordResetTokens PasswordResetToken[]
+  emailChangeTokens   EmailChangeToken[]
 
   @@map("users")
 }
@@ -272,4 +273,20 @@ model PasswordResetToken {
   @@index([token], name: "idx_reset_token")
   @@index([userId, createdAt(sort: Desc)], name: "idx_reset_user")
   @@map("password_reset_tokens")
+}
+
+model EmailChangeToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  newEmail  String   @map("new_email")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token], name: "idx_email_change_token")
+  @@index([userId, createdAt(sort: Desc)], name: "idx_email_change_user")
+  @@map("email_change_tokens")
 }

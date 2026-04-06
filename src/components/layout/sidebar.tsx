@@ -23,6 +23,7 @@ interface SidebarProps {
     email: string;
     role: string;
     isSuperAdmin: boolean;
+    avatarUrl: string | null;
   };
 }
 
@@ -98,15 +99,23 @@ export function Sidebar({ user }: SidebarProps) {
       {/* Bottom section */}
       <div className="border-t border-zinc-800 px-4 py-4 space-y-3">
         {/* User info */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-xs font-semibold text-zinc-300">
-            {user.name.charAt(0).toUpperCase()}
+        <Link
+          href="/profile"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 rounded-lg px-1 py-1.5 -mx-1 transition-all duration-200 hover:bg-zinc-800/50 cursor-pointer group"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-xs font-semibold text-zinc-300 overflow-hidden shrink-0">
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+            ) : (
+              user.name.charAt(0).toUpperCase()
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-zinc-200 truncate">{user.name}</p>
+            <p className="text-sm font-medium text-zinc-200 truncate group-hover:text-white transition-colors duration-200">{user.name}</p>
             <p className="text-[11px] text-zinc-500 truncate">{user.role}</p>
           </div>
-        </div>
+        </Link>
 
         {/* Logout */}
         <Button
