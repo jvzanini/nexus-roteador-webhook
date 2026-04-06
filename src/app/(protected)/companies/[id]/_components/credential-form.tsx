@@ -46,18 +46,31 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
       <div className="relative">
-        <Input
-          ref={inputRef}
-          id={id}
-          name={name}
-          type={visible || plaintextMasking ? "text" : "password"}
-          placeholder={placeholder}
-          defaultValue={displayValue}
-          required={required}
-          disabled={disabled}
-          readOnly={plaintextMasking && !visible}
-          className={`${className} ${hideToggle ? "" : "pr-10"} ${(plaintextMasking && !visible) ? "font-mono tracking-wider" : ""}`}
-        />
+        {visible && displayValue && displayValue.length > 40 ? (
+          <textarea
+            ref={inputRef as any}
+            id={id}
+            name={name}
+            defaultValue={displayValue}
+            required={required}
+            disabled={disabled}
+            rows={Math.min(Math.ceil((displayValue?.length || 0) / 60), 4)}
+            className={`${className} ${hideToggle ? "" : "pr-10"} resize-none w-full`}
+          />
+        ) : (
+          <Input
+            ref={inputRef}
+            id={id}
+            name={name}
+            type={visible || plaintextMasking ? "text" : "password"}
+            placeholder={placeholder}
+            defaultValue={displayValue}
+            required={required}
+            disabled={disabled}
+            readOnly={plaintextMasking && !visible}
+            className={`${className} ${hideToggle ? "" : "pr-10"} ${(plaintextMasking && !visible) ? "font-mono tracking-wider" : ""}`}
+          />
+        )}
         {!hideToggle && (
           <button
             type="button"
