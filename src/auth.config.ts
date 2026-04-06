@@ -20,7 +20,8 @@ export const authConfig = {
       if (isLoggedIn) return true;
       return false; // Redirect para /login
     },
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user }) {
+      // Login inicial: setar todos os campos do token
       if (user) {
         token.id = user.id!;
         token.isSuperAdmin = (user as any).isSuperAdmin;
@@ -28,19 +29,38 @@ export const authConfig = {
         token.theme = (user as any).theme;
         token.name = user.name;
       }
-      if (trigger === "update" && token.id) {
-        const { prisma } = await import("@/lib/prisma");
-        const freshUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { name: true, avatarUrl: true, theme: true, isSuperAdmin: true },
-        });
-        if (freshUser) {
-          token.name = freshUser.name;
-          token.avatarUrl = freshUser.avatarUrl;
-          token.theme = freshUser.theme;
-          token.isSuperAdmin = freshUser.isSuperAdmin;
+
+      // Em TODA requisição autenticada, atualizar dados críticos do DB
+      // Garante que mudanças de role/status tomam efeito imediato (não após 7 dias)
+      if (token.id) {
+        try {
+          const { prisma } = await import("@/lib/prisma");
+          const freshUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: {
+              isSuperAdmin: true,
+              isActive: true,
+              name: true,
+              avatarUrl: true,
+              theme: true,
+            },
+          });
+          if (freshUser) {
+            token.isSuperAdmin = freshUser.isSuperAdmin;
+            token.name = freshUser.name;
+            token.avatarUrl = freshUser.avatarUrl;
+            token.theme = freshUser.theme;
+
+            // Se o usuário foi desativado, invalidar a sessão
+            if (!freshUser.isActive) {
+              return null as any;
+            }
+          }
+        } catch {
+          // Se a query falhar, manter token existente (não quebrar auth)
         }
       }
+
       return token;
     },
     session({ session, token }) {

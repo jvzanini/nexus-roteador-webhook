@@ -121,19 +121,17 @@
 
 /* ===== TOAST NOTIFICATIONS ===== */
 
-/* Progress bar at bottom */
-[data-sonner-toast] [data-content] ~ div:last-child,
+/* Toast — barra de progresso no rodape */
 [data-sonner-toast]::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
-  right: 0;
   height: 2px;
-  background: linear-gradient(90deg, rgba(124, 58, 237, 0.6), rgba(168, 85, 247, 0.6));
+  width: 100%;
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.5), rgba(168, 85, 247, 0.5));
   border-radius: 0 0 12px 12px;
   animation: toast-shrink 4s linear forwards;
-  transform-origin: right;
 }
 
 [data-sonner-toast]:hover::after {
@@ -141,11 +139,11 @@
 }
 
 @keyframes toast-shrink {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
+  from { width: 100%; }
+  to { width: 0%; }
 }
 
-/* Close button — small circle on top-left corner */
+/* Toast close button — canto superior esquerdo, visivel so no hover */
 [data-sonner-toast] [data-close-button] {
   position: absolute !important;
   top: -6px !important;
@@ -168,11 +166,11 @@
   opacity: 0 !important;
   cursor: pointer !important;
   z-index: 50 !important;
-  transition: opacity 0.2s, color 0.2s, background 0.2s !important;
   transform: none !important;
   inset: auto !important;
   top: -6px !important;
   left: -6px !important;
+  transition: opacity 0.15s !important;
 }
 
 [data-sonner-toast]:hover [data-close-button] {

@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -97,11 +96,11 @@ export function EditCompanyDialog({ company, canDelete = false }: EditCompanyDia
         <Settings className="h-4 w-4" />
         Editar
       </DialogTrigger>
-      <DialogContent className="bg-card border border-border rounded-2xl overflow-hidden">
+      <DialogContent className="bg-card border border-border rounded-2xl overflow-visible">
         <DialogHeader>
           <DialogTitle className="text-foreground">Editar Empresa</DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Altere as informacoes da empresa. O slug sera regenerado se o nome mudar.
+            Altere as informações da empresa.
           </DialogDescription>
         </DialogHeader>
 
@@ -137,33 +136,7 @@ export function EditCompanyDialog({ company, canDelete = false }: EditCompanyDia
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <div className="flex gap-2 sm:mr-auto">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleToggleActive}
-                disabled={isPending}
-                className={company.isActive
-                  ? "text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 cursor-pointer transition-all duration-200"
-                  : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer transition-all duration-200"
-                }
-              >
-                {company.isActive ? "Desativar Empresa" : "Reativar Empresa"}
-              </Button>
-              {canDelete && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setDeleteOpen(true)}
-                  disabled={isPending}
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Excluir
-                </Button>
-              )}
-            </div>
+          <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"
               variant="ghost"
@@ -186,8 +159,39 @@ export function EditCompanyDialog({ company, canDelete = false }: EditCompanyDia
                 "Salvar"
               )}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
+
+        {/* Separator */}
+        <div className="border-t border-border my-2" />
+
+        {/* Empresa management actions — separate section */}
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleToggleActive}
+            disabled={isPending}
+            className={company.isActive
+              ? "text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 cursor-pointer transition-all duration-200"
+              : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer transition-all duration-200"
+            }
+          >
+            {company.isActive ? "Desativar Empresa" : "Reativar Empresa"}
+          </Button>
+          {canDelete && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setDeleteOpen(true)}
+              disabled={isPending}
+              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir Empresa
+            </Button>
+          )}
+        </div>
       </DialogContent>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

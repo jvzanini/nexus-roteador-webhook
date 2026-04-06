@@ -167,9 +167,8 @@ export async function getUsers(): Promise<ActionResult<UserItem[]>> {
       let canDelete = false;
 
       if (isSuperAdmin) {
-        // Super admin edita todos
-        canEdit = true;
-        // Super admin deleta todos EXCETO a si mesmo
+        // Super admin edita/deleta todos EXCETO a si mesmo
+        canEdit = u.id !== currentUser.id;
         canDelete = u.id !== currentUser.id;
       } else if (isAdmin) {
         // Admin edita apenas manager e viewer
