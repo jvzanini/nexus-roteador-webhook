@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { assertCompanyAccess } from "@/lib/tenant";
 import { encrypt } from "@/lib/encryption";
 import {
   createWebhookRouteSchema,
@@ -24,6 +26,21 @@ export async function createWebhookRoute(
   input: CreateWebhookRouteInput
 ): Promise<ActionResult<{ id: string }>> {
   try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Não autenticado" };
+    await assertCompanyAccess(user, companyId);
+
+    // Viewer não pode mutar rotas (manager, admin, super admin podem)
+    if (!user.isSuperAdmin) {
+      const membership = await prisma.userCompanyMembership.findUnique({
+        where: { userId_companyId: { userId: user.id, companyId } },
+        select: { role: true },
+      });
+      if (!membership || membership.role === "viewer") {
+        return { success: false, error: "Sem permissão para esta ação" };
+      }
+    }
+
     // Validar input
     const parsed = createWebhookRouteSchema.safeParse(input);
     if (!parsed.success) {
@@ -106,6 +123,21 @@ export async function updateWebhookRoute(
   input: UpdateWebhookRouteInput
 ): Promise<ActionResult> {
   try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Não autenticado" };
+    await assertCompanyAccess(user, companyId);
+
+    // Viewer não pode mutar rotas (manager, admin, super admin podem)
+    if (!user.isSuperAdmin) {
+      const membership = await prisma.userCompanyMembership.findUnique({
+        where: { userId_companyId: { userId: user.id, companyId } },
+        select: { role: true },
+      });
+      if (!membership || membership.role === "viewer") {
+        return { success: false, error: "Sem permissão para esta ação" };
+      }
+    }
+
     // Validar input
     const parsed = updateWebhookRouteSchema.safeParse(input);
     if (!parsed.success) {
@@ -191,6 +223,21 @@ export async function hardDeleteWebhookRoute(
   companyId: string
 ): Promise<ActionResult> {
   try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Não autenticado" };
+    await assertCompanyAccess(user, companyId);
+
+    // Viewer não pode mutar rotas (manager, admin, super admin podem)
+    if (!user.isSuperAdmin) {
+      const membership = await prisma.userCompanyMembership.findUnique({
+        where: { userId_companyId: { userId: user.id, companyId } },
+        select: { role: true },
+      });
+      if (!membership || membership.role === "viewer") {
+        return { success: false, error: "Sem permissão para esta ação" };
+      }
+    }
+
     // Verificar se a rota existe e pertence a empresa
     const existingRoute = await prisma.webhookRoute.findFirst({
       where: { id: routeId, companyId },
@@ -232,6 +279,21 @@ export async function toggleWebhookRouteActive(
   companyId: string
 ): Promise<ActionResult> {
   try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Não autenticado" };
+    await assertCompanyAccess(user, companyId);
+
+    // Viewer não pode mutar rotas (manager, admin, super admin podem)
+    if (!user.isSuperAdmin) {
+      const membership = await prisma.userCompanyMembership.findUnique({
+        where: { userId_companyId: { userId: user.id, companyId } },
+        select: { role: true },
+      });
+      if (!membership || membership.role === "viewer") {
+        return { success: false, error: "Sem permissão para esta ação" };
+      }
+    }
+
     const existingRoute = await prisma.webhookRoute.findFirst({
       where: { id: routeId, companyId },
     });
@@ -258,6 +320,10 @@ export async function toggleWebhookRouteActive(
 
 export async function listWebhookRoutes(companyId: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Não autenticado", data: [] };
+    await assertCompanyAccess(user, companyId);
+
     const routes = await prisma.webhookRoute.findMany({
       where: { companyId },
       orderBy: { createdAt: "desc" },
@@ -287,6 +353,10 @@ export async function listWebhookRoutes(companyId: string) {
 
 export async function getWebhookRoute(routeId: string, companyId: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Não autenticado", data: null };
+    await assertCompanyAccess(user, companyId);
+
     const route = await prisma.webhookRoute.findFirst({
       where: { id: routeId, companyId },
       select: {

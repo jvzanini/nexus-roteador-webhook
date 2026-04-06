@@ -317,6 +317,11 @@ export async function updateUser(
 
     if (!targetUser) return { success: false, error: "Usuário não encontrado" };
 
+    // Nao pode alterar a si mesmo via updateUser
+    if (userId === currentUser.id) {
+      return { success: false, error: "Não é possível alterar o próprio usuário por aqui" };
+    }
+
     // Super Admin nao pode ser inativado
     if (targetUser.isSuperAdmin && parsed.isActive === false) {
       return { success: false, error: "Super Admin não pode ser inativado" };
@@ -355,7 +360,25 @@ export async function updateUser(
     }
     if (parsed.isActive !== undefined) updateData.isActive = parsed.isActive;
 
-    await prisma.user.update({ where: { id: userId }, data: updateData });
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: userId }, data: updateData });
+
+      if (parsed.role !== undefined) {
+        if (parsed.role === "super_admin") {
+          // Super admin: todas as memberships viram company_admin
+          await tx.userCompanyMembership.updateMany({
+            where: { userId },
+            data: { role: "company_admin" },
+          });
+        } else {
+          // Qualquer outro role: propagar para todas as memberships
+          await tx.userCompanyMembership.updateMany({
+            where: { userId },
+            data: { role: parsed.role as "company_admin" | "manager" | "viewer" },
+          });
+        }
+      }
+    });
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError)

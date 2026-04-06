@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { assertCompanyAccess } from "@/lib/tenant";
 import type { DeliveryStatus } from "@/generated/prisma/client";
 import { z } from "zod";
 
@@ -85,6 +87,10 @@ export interface LogsPage {
 // --- Actions ---
 
 export async function getWebhookLogs(filters: LogFilters): Promise<LogsPage> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Não autenticado");
+  await assertCompanyAccess(user, filters.companyId);
+
   const parsed = LogFiltersSchema.parse(filters);
 
   // Monta WHERE clause dinamicamente
@@ -195,6 +201,10 @@ export async function getWebhookLogDetail(
   companyId: string,
   inboundWebhookId: string
 ): Promise<LogDetailEntry | null> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Não autenticado");
+  await assertCompanyAccess(user, companyId);
+
   const entry = await prisma.inboundWebhook.findFirst({
     where: {
       id: inboundWebhookId,
@@ -261,6 +271,10 @@ export async function getWebhookLogDetail(
 export async function getAvailableEventTypes(
   companyId: string
 ): Promise<string[]> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Não autenticado");
+  await assertCompanyAccess(user, companyId);
+
   const result = await prisma.inboundWebhook.findMany({
     where: { companyId },
     select: { eventType: true },
@@ -274,6 +288,10 @@ export async function getAvailableEventTypes(
 export async function getAvailableRoutes(
   companyId: string
 ): Promise<{ id: string; name: string }[]> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Não autenticado");
+  await assertCompanyAccess(user, companyId);
+
   return prisma.webhookRoute.findMany({
     where: { companyId },
     select: { id: true, name: true },
