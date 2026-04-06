@@ -72,7 +72,7 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
         <Settings className="h-4 w-4" />
         Editar
       </DialogTrigger>
-      <DialogContent className="bg-card border border-border rounded-2xl">
+      <DialogContent className="bg-card border border-border rounded-2xl overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-foreground">Editar Empresa</DialogTitle>
           <DialogDescription className="text-muted-foreground">

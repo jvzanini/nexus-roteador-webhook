@@ -45,6 +45,7 @@ export interface MemberItem {
   userId: string;
   userName: string;
   userEmail: string;
+  isSuperAdmin: boolean;
   role: CompanyRole;
   isActive: boolean;
   createdAt: Date;
@@ -316,6 +317,11 @@ export async function updateUser(
 
     if (!targetUser) return { success: false, error: "Usuário não encontrado" };
 
+    // Super Admin nao pode ser inativado
+    if (targetUser.isSuperAdmin && parsed.isActive === false) {
+      return { success: false, error: "Super Admin não pode ser inativado" };
+    }
+
     // Validar hierarquia
     if (!isSuperAdmin) {
       // Admin nao pode editar super admin
@@ -437,7 +443,7 @@ export async function getCompanyMembers(
       role: true,
       isActive: true,
       createdAt: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true, email: true, isSuperAdmin: true } },
     },
   });
 
@@ -448,6 +454,7 @@ export async function getCompanyMembers(
       userId: m.userId,
       userName: m.user.name,
       userEmail: m.user.email,
+      isSuperAdmin: m.user.isSuperAdmin,
       role: m.role,
       isActive: m.isActive,
       createdAt: m.createdAt,

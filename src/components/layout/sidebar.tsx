@@ -55,7 +55,7 @@ export function Sidebar({ user }: SidebarProps) {
     <div className="flex h-full flex-col bg-background border-r border-border overflow-y-auto">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6">
-        <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={36} height={36} className="rounded-lg" />
+        <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-xl shadow-[0_0_12px_rgba(124,58,237,0.3)]" />
         <div>
           <h1 className="text-base font-bold text-foreground tracking-tight">Nexus AI</h1>
           <p className="text-[11px] text-muted-foreground leading-none">Roteador Webhook</p>
@@ -142,9 +142,9 @@ export function Sidebar({ user }: SidebarProps) {
           variant="ghost"
           size="icon"
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="bg-card border border-border text-foreground hover:text-foreground cursor-pointer"
+          className="h-11 w-11 bg-card border border-border text-foreground hover:text-foreground cursor-pointer"
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>
       </div>
 

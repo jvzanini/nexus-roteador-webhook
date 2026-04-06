@@ -121,8 +121,8 @@
 
 /* Toast progress bar */
 [data-sonner-toast] [data-progress] {
-  height: 2px;
-  background: rgba(124, 58, 237, 0.5);
+  height: 3px;
+  background: linear-gradient(to right, rgba(124, 58, 237, 0.6), rgba(147, 51, 234, 0.6));
 }
 
 @layer base {

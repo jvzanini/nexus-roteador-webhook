@@ -49,7 +49,7 @@ export function CreateCompanyDialog() {
         <Plus className="h-4 w-4" />
         Nova Empresa
       </DialogTrigger>
-      <DialogContent className="bg-card border border-border rounded-2xl">
+      <DialogContent className="bg-card border border-border rounded-2xl overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-foreground">Criar Empresa</DialogTitle>
           <DialogDescription className="text-muted-foreground">

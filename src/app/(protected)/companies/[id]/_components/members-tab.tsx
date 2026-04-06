@@ -313,20 +313,27 @@ export function MembersTab({ companyId }: MembersTabProps) {
                     {member.userEmail}
                   </TableCell>
                   <TableCell className="px-4 py-2">
-                    <CustomSelect
-                      value={member.role}
-                      onChange={(v) => {
-                        if (v !== member.role) {
-                          handleRoleChange(member.id, v);
-                        }
-                      }}
-                      triggerClassName="w-36 h-7 text-xs"
-                      options={[
-                        { value: "company_admin", label: "Admin", description: "Gerencia a empresa" },
-                        { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks" },
-                        { value: "viewer", label: "Visualizador", description: "Apenas visualização" },
-                      ]}
-                    />
+                    {member.isSuperAdmin ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-purple-500/15 text-purple-400 border-purple-500/30">
+                        <Shield className="size-3" />
+                        Admin
+                      </span>
+                    ) : (
+                      <CustomSelect
+                        value={member.role}
+                        onChange={(v) => {
+                          if (v !== member.role) {
+                            handleRoleChange(member.id, v);
+                          }
+                        }}
+                        triggerClassName="w-36 h-7 text-xs"
+                        options={[
+                          { value: "company_admin", label: "Admin", description: "Gerencia a empresa" },
+                          { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks" },
+                          { value: "viewer", label: "Visualizador", description: "Apenas visualização" },
+                        ]}
+                      />
+                    )}
                   </TableCell>
                   <TableCell className="px-4 py-2">
                     <Badge

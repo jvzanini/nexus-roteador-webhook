@@ -465,8 +465,8 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
           />
         </div>
 
-        {/* Ativo/Inativo (apenas na edicao) */}
-        {mode === "edit" && (
+        {/* Ativo/Inativo (apenas na edicao, exceto super admin) */}
+        {mode === "edit" && editingUser && editingUser.highestRole !== "Super Admin" && (
           <div className="flex items-center justify-between rounded-lg bg-muted/30 border border-border px-4 py-3">
             <div className="flex items-center gap-2">
               {form.isActive ? (

@@ -185,7 +185,7 @@ export function NotificationBell() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute right-0 top-full mt-2 w-96 rounded-xl border border-border bg-card shadow-xl z-50"
+            className="absolute right-0 top-full mt-2 w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-card shadow-xl z-50"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-4 py-3">

@@ -2,15 +2,15 @@
 
 import { useState, useTransition } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { loginAction } from '@/app/(auth)/login/actions';
 
-export function LoginForm() {
+export function LoginContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
@@ -30,34 +30,62 @@ export function LoginForm() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: 'easeOut' as const }}
-      className="w-full max-w-[420px] mx-auto"
+      transition={{ duration: 0.6, ease: 'easeOut' as const }}
+      className="flex flex-col items-center"
     >
-      {/* Logo mobile */}
+      {/* Logo grande */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="mb-6"
+      >
+        <motion.div
+          animate={{
+            boxShadow: [
+              '0 0 40px rgba(124, 58, 237, 0.15)',
+              '0 0 60px rgba(124, 58, 237, 0.25)',
+              '0 0 40px rgba(124, 58, 237, 0.15)',
+            ],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          className="rounded-2xl"
+        >
+          <Image
+            src="/logo-nexus-ai.png"
+            alt="Nexus AI"
+            width={100}
+            height={100}
+            className="rounded-2xl"
+            priority
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Marca */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
+        transition={{ delay: 0.2 }}
+        className="text-center mb-8"
       >
-        <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-xl" />
-        <span className="text-lg font-bold text-foreground tracking-tight">Nexus AI</span>
+        <h1 className="text-2xl font-bold text-white tracking-tight">Nexus AI</h1>
+        <p className="text-sm text-zinc-500 mt-1">Roteador de Webhooks</p>
       </motion.div>
 
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground tracking-tight">
+      {/* Header do form */}
+      <div className="text-center mb-6 w-full">
+        <h2 className="text-xl font-bold text-white tracking-tight">
           Bem-vindo de volta
         </h2>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="text-sm text-zinc-500 mt-1">
           Entre com suas credenciais para acessar o painel
         </p>
       </div>
 
-      <form action={handleSubmit} className="space-y-5">
-        {/* Erro */}
+      <form action={handleSubmit} className="space-y-5 w-full">
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -8 }}
@@ -69,9 +97,8 @@ export function LoginForm() {
           </motion.div>
         )}
 
-        {/* Email */}
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium text-foreground/80">
+          <Label htmlFor="email" className="text-sm font-medium text-zinc-300">
             E-mail
           </Label>
           <Input
@@ -83,13 +110,12 @@ export function LoginForm() {
             autoComplete="email"
             autoFocus
             disabled={isPending}
-            className="h-12 rounded-xl border-border bg-card/80 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
+            className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 text-white placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
           />
         </div>
 
-        {/* Senha */}
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-sm font-medium text-foreground/80">
+          <Label htmlFor="password" className="text-sm font-medium text-zinc-300">
             Senha
           </Label>
           <div className="relative">
@@ -101,35 +127,29 @@ export function LoginForm() {
               required
               autoComplete="current-password"
               disabled={isPending}
-              className="h-12 rounded-xl border-border bg-card/80 pr-11 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
+              className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 pr-11 text-white placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 transition-colors duration-200 hover:text-foreground cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-600 transition-colors duration-200 hover:text-zinc-300 cursor-pointer"
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        {/* Esqueci minha senha */}
         <div className="flex justify-end">
           <a
             href="/forgot-password"
-            className="text-sm text-muted-foreground transition-colors duration-200 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded"
+            className="text-sm text-zinc-500 transition-colors duration-200 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded"
             tabIndex={isPending ? -1 : 0}
           >
             Esqueci minha senha
           </a>
         </div>
 
-        {/* Botao */}
         <Button
           type="submit"
           disabled={isPending}
