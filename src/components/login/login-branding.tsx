@@ -64,8 +64,8 @@ export function LoginBranding() {
           transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' as const }}
           className="text-center"
         >
-          <h1 className="text-4xl font-bold text-white tracking-tight">Nexus AI</h1>
-          <p className="text-base text-zinc-400 mt-2">Roteador de Webhooks</p>
+          <h1 className="text-4xl font-bold text-foreground tracking-tight">Nexus AI</h1>
+          <p className="text-base text-muted-foreground mt-2">Roteador de Webhooks</p>
         </motion.div>
       </div>
 
@@ -76,7 +76,7 @@ export function LoginBranding() {
         transition={{ duration: 0.6, delay: 1.0 }}
         className="absolute bottom-8 z-10"
       >
-        <p className="text-xs text-zinc-600">
+        <p className="text-xs text-muted-foreground/60">
           NexusAI360 &copy; {new Date().getFullYear()}. Todos os direitos reservados.
         </p>
       </motion.div>

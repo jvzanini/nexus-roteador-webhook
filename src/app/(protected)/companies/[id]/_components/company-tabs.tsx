@@ -25,34 +25,34 @@ export function CompanyTabs({ company }: CompanyTabsProps) {
   return (
     <Tabs defaultValue="overview" className="space-y-6">
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-      <TabsList className="bg-zinc-900 border border-zinc-800 rounded-lg p-1 w-max sm:w-auto">
+      <TabsList className="bg-card border border-border rounded-lg p-1 w-max sm:w-auto">
         <TabsTrigger
           value="overview"
-          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
+          className="data-[state=active]:bg-muted data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-muted-foreground rounded-md transition-all duration-200 cursor-pointer"
         >
           Visão Geral
         </TabsTrigger>
         <TabsTrigger
           value="credentials"
-          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
+          className="data-[state=active]:bg-muted data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-muted-foreground rounded-md transition-all duration-200 cursor-pointer"
         >
           WhatsApp Cloud
         </TabsTrigger>
         <TabsTrigger
           value="routes"
-          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
+          className="data-[state=active]:bg-muted data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-muted-foreground rounded-md transition-all duration-200 cursor-pointer"
         >
           Rotas de Webhook
         </TabsTrigger>
         <TabsTrigger
           value="logs"
-          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
+          className="data-[state=active]:bg-muted data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-muted-foreground rounded-md transition-all duration-200 cursor-pointer"
         >
           Logs
         </TabsTrigger>
         <TabsTrigger
           value="members"
-          className="data-[state=active]:bg-zinc-800 data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-zinc-400 rounded-md transition-all duration-200 cursor-pointer"
+          className="data-[state=active]:bg-muted data-[state=active]:text-violet-400 data-[state=active]:shadow-none text-muted-foreground rounded-md transition-all duration-200 cursor-pointer"
         >
           Membros
         </TabsTrigger>

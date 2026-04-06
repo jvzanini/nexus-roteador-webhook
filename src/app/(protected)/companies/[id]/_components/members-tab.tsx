@@ -175,8 +175,8 @@ export function MembersTab({ companyId }: MembersTabProps) {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-10 bg-zinc-800/50 rounded-lg animate-pulse" />
-        <div className="h-64 bg-zinc-800/50 rounded-xl animate-pulse" />
+        <div className="h-10 bg-muted/50 rounded-lg animate-pulse" />
+        <div className="h-64 bg-muted/50 rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -194,8 +194,8 @@ export function MembersTab({ companyId }: MembersTabProps) {
         className="flex items-center justify-between"
       >
         <div className="flex items-center gap-2">
-          <Users className="size-5 text-zinc-400" />
-          <h3 className="text-sm font-medium text-zinc-300">
+          <Users className="size-5 text-muted-foreground" />
+          <h3 className="text-sm font-medium text-foreground/80">
             {members.length} {members.length === 1 ? "membro" : "membros"}
           </h3>
         </div>
@@ -203,7 +203,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50 hover:text-zinc-100 cursor-pointer transition-all duration-200"
+            className="border-border bg-muted/50 text-foreground/80 hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
             onClick={handleOpenAddForm}
             disabled={isPending}
             title="Adicionar novo membro"
@@ -220,11 +220,11 @@ export function MembersTab({ companyId }: MembersTabProps) {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4"
+          className="rounded-xl border border-border bg-card/50 p-4"
         >
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-1 space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">
+              <label className="text-xs font-medium text-muted-foreground">
                 Usuário
               </label>
               <CustomSelect
@@ -244,7 +244,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
             </div>
 
             <div className="w-44 space-y-1.5">
-              <label className="text-xs font-medium text-zinc-400">Papel</label>
+              <label className="text-xs font-medium text-muted-foreground">Papel</label>
               <CustomSelect
                 value={selectedRole}
                 onChange={(v) => setSelectedRole(v)}
@@ -269,7 +269,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
               size="sm"
               onClick={handleCancelAdd}
               disabled={isPending}
-              className="text-zinc-400 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+              className="text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
             >
               Cancelar
             </Button>
@@ -280,22 +280,22 @@ export function MembersTab({ companyId }: MembersTabProps) {
       {/* Tabela de membros */}
       <motion.div
         variants={itemVariants}
-        className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden overflow-x-auto"
+        className="rounded-xl border border-border bg-card/50 overflow-hidden overflow-x-auto"
       >
         {members.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-zinc-500">
-            <Users className="size-10 mb-3 text-zinc-600" />
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Users className="size-10 mb-3 text-muted-foreground/60" />
             <p className="text-sm">Nenhum membro nesta empresa</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-400 px-4 py-2">Nome</TableHead>
-                <TableHead className="text-zinc-400 px-4 py-2">Email</TableHead>
-                <TableHead className="text-zinc-400 px-4 py-2">Papel</TableHead>
-                <TableHead className="text-zinc-400 px-4 py-2">Status</TableHead>
-                <TableHead className="text-zinc-400 text-right px-4 py-2">
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground px-4 py-2">Nome</TableHead>
+                <TableHead className="text-muted-foreground px-4 py-2">Email</TableHead>
+                <TableHead className="text-muted-foreground px-4 py-2">Papel</TableHead>
+                <TableHead className="text-muted-foreground px-4 py-2">Status</TableHead>
+                <TableHead className="text-muted-foreground text-right px-4 py-2">
                   Ações
                 </TableHead>
               </TableRow>
@@ -304,12 +304,12 @@ export function MembersTab({ companyId }: MembersTabProps) {
               {members.map((member) => (
                 <TableRow
                   key={member.id}
-                  className="border-zinc-800/50 hover:bg-zinc-800/30"
+                  className="border-border/50 hover:bg-accent/30"
                 >
-                  <TableCell className="text-zinc-200 font-medium px-4 py-2">
+                  <TableCell className="text-foreground font-medium px-4 py-2">
                     {member.userName}
                   </TableCell>
-                  <TableCell className="text-zinc-400 px-4 py-2">
+                  <TableCell className="text-muted-foreground px-4 py-2">
                     {member.userEmail}
                   </TableCell>
                   <TableCell className="px-4 py-2">
@@ -345,7 +345,7 @@ export function MembersTab({ companyId }: MembersTabProps) {
                       size="icon-sm"
                       onClick={() => setDeletingMember(member)}
                       disabled={isPending}
-                      className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+                      className="text-muted-foreground hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
                       title="Remover membro"
                     >
                       <Trash2 className="size-4" />
@@ -363,22 +363,22 @@ export function MembersTab({ companyId }: MembersTabProps) {
         open={!!deletingMember}
         onOpenChange={(open) => { if (!open) setDeletingMember(null); }}
       >
-        <AlertDialogContent className="bg-zinc-900 border border-zinc-800 rounded-2xl">
+        <AlertDialogContent className="bg-card border border-border rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-zinc-100">
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
               <AlertTriangle className="h-5 w-5 text-red-400" />
               Remover membro
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-muted-foreground">
               Tem certeza que deseja remover{" "}
-              <strong className="text-zinc-200">{deletingMember?.userName}</strong>{" "}
+              <strong className="text-foreground">{deletingMember?.userName}</strong>{" "}
               ({deletingMember?.userEmail}) desta empresa?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={isPending}
-              className="border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+              className="border-border text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
             >
               Cancelar
             </AlertDialogCancel>

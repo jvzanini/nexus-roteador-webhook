@@ -31,7 +31,7 @@ export function DashboardFilters({
 }: DashboardFiltersProps) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-      <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
 
       <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto sm:ml-auto">
         {/* Filtro de empresa */}
@@ -47,7 +47,7 @@ export function DashboardFilters({
         />
 
         {/* Filtro de periodo */}
-        <div className="flex rounded-xl border border-zinc-800 overflow-hidden bg-zinc-900/80">
+        <div className="flex rounded-xl border border-border overflow-hidden bg-card/80">
           {periods.map((p) => (
             <button
               key={p.value}
@@ -55,7 +55,7 @@ export function DashboardFilters({
               className={`px-3.5 py-1.5 text-xs font-medium transition-all duration-200 cursor-pointer ${
                 selectedPeriod === p.value
                   ? "bg-violet-600 text-white shadow-[0_0_8px_rgba(124,58,237,0.3)]"
-                  : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/50"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
               }`}
             >
               {p.label}
@@ -69,7 +69,7 @@ export function DashboardFilters({
           size="icon"
           onClick={onRefresh}
           disabled={isLoading}
-          className="h-9 w-9 rounded-lg border-zinc-800 bg-zinc-900/80 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+          className="h-9 w-9 rounded-lg border-border bg-card/80 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
         </Button>

@@ -166,7 +166,7 @@ export function NotificationBell() {
       {/* Bell button */}
       <button
         onClick={handleToggle}
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-zinc-400 transition-all duration-200 cursor-pointer hover:bg-zinc-800 hover:text-zinc-200"
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 cursor-pointer hover:bg-accent hover:text-foreground"
         aria-label="Notificações"
       >
         <Bell className="size-5" />
@@ -185,11 +185,11 @@ export function NotificationBell() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute right-0 top-full mt-2 w-96 rounded-xl border border-zinc-800 bg-zinc-900 shadow-xl z-50"
+            className="absolute right-0 top-full mt-2 w-96 rounded-xl border border-border bg-card shadow-xl z-50"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-              <h3 className="text-sm font-semibold text-zinc-200">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <h3 className="text-sm font-semibold text-foreground">
                 Notificações
               </h3>
               {unreadCount > 0 && (
@@ -197,7 +197,7 @@ export function NotificationBell() {
                   variant="ghost"
                   size="xs"
                   onClick={handleMarkAllAsRead}
-                  className="text-xs text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                  className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   <CheckCheck className="mr-1 size-3.5" />
                   Marcar todas como lidas
@@ -209,10 +209,10 @@ export function NotificationBell() {
             <ScrollArea className="max-h-80">
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="size-5 animate-spin rounded-full border-2 border-zinc-700 border-t-zinc-400" />
+                  <div className="size-5 animate-spin rounded-full border-2 border-border border-t-muted-foreground" />
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                   <Bell className="mb-2 size-6" />
                   <p className="text-sm">Nenhuma notificação</p>
                 </div>
@@ -226,9 +226,9 @@ export function NotificationBell() {
                       <button
                         key={notification.id}
                         onClick={() => handleItemClick(notification)}
-                        className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-all duration-200 cursor-pointer hover:bg-zinc-800/50 ${
+                        className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-all duration-200 cursor-pointer hover:bg-accent/50 ${
                           !notification.isRead
-                            ? "border-l-2 border-l-violet-500 bg-zinc-800/20"
+                            ? "border-l-2 border-l-violet-500 bg-accent/20"
                             : "border-l-2 border-l-transparent"
                         }`}
                       >
@@ -242,21 +242,21 @@ export function NotificationBell() {
                             <p
                               className={`truncate text-sm font-medium ${
                                 notification.isRead
-                                  ? "text-zinc-400"
-                                  : "text-zinc-200"
+                                  ? "text-muted-foreground"
+                                  : "text-foreground"
                               }`}
                             >
                               {notification.title}
                             </p>
-                            <span className="flex-shrink-0 text-xs text-zinc-500">
+                            <span className="flex-shrink-0 text-xs text-muted-foreground">
                               {timeAgo(notification.createdAt)}
                             </span>
                           </div>
-                          <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">
+                          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                             {notification.message}
                           </p>
                           {notification.companyName && (
-                            <p className="mt-1 text-xs text-zinc-600">
+                            <p className="mt-1 text-xs text-muted-foreground/60">
                               {notification.companyName}
                             </p>
                           )}

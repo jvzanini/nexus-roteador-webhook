@@ -29,10 +29,10 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
   return (
     <div className="space-y-2">
       <div>
-        <Label htmlFor={id} className="text-sm font-medium text-zinc-300">
+        <Label htmlFor={id} className="text-sm font-medium text-foreground/80">
           {label} {required && <span className="text-red-400">*</span>}
         </Label>
-        <p className="text-xs text-zinc-500 mt-0.5">{description}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
       <div className="relative">
         <Input
@@ -49,7 +49,7 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
           type="button"
           onClick={onToggle}
           disabled={revealing}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer disabled:opacity-50"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-50"
         >
           {revealing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -167,28 +167,28 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
     });
   }
 
-  const inputClasses = "h-11 bg-zinc-800/50 border-zinc-700/50 text-zinc-100 placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200 rounded-lg";
+  const inputClasses = "h-11 bg-muted/50 border-border/50 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200 rounded-lg";
 
   return (
     <form action={handleSubmit} className="space-y-6">
       {/* Webhook URL card */}
-      <Card className="bg-zinc-800/30 border border-zinc-700/40 rounded-xl">
+      <Card className="bg-muted/30 border border-border/40 rounded-xl">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <Globe className="h-4 w-4 text-violet-400" />
-            <span className="text-sm font-medium text-zinc-300">URL do Webhook</span>
+            <span className="text-sm font-medium text-foreground/80">URL do Webhook</span>
           </div>
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-700/30">
-            <code className="text-xs text-zinc-400 truncate flex-1 font-mono">{webhookUrl}</code>
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card/80 border border-border/30">
+            <code className="text-xs text-muted-foreground truncate flex-1 font-mono">{webhookUrl}</code>
             <button
               type="button"
               onClick={handleCopy}
-              className="shrink-0 p-1 rounded hover:bg-zinc-700 transition-colors cursor-pointer"
+              className="shrink-0 p-1 rounded hover:bg-accent transition-colors cursor-pointer"
             >
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-zinc-500" />}
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
             </button>
           </div>
-          <p className="text-xs text-zinc-600 mt-2">Configure esta URL no painel do Meta App como Webhook Callback URL.</p>
+          <p className="text-xs text-muted-foreground/60 mt-2">Configure esta URL no painel do Meta App como Webhook Callback URL.</p>
         </CardContent>
       </Card>
 
@@ -196,10 +196,10 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
       <div className="space-y-4">
         <div className="space-y-2">
           <div>
-            <Label htmlFor="metaAppId" className="text-sm font-medium text-zinc-300">
+            <Label htmlFor="metaAppId" className="text-sm font-medium text-foreground/80">
               Meta App ID <span className="text-red-400">*</span>
             </Label>
-            <p className="text-xs text-zinc-500 mt-0.5">Identificador do aplicativo no painel Meta for Developers</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Identificador do aplicativo no painel Meta for Developers</p>
           </div>
           <Input
             id="metaAppId"
@@ -256,10 +256,10 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <div>
-              <Label htmlFor="phoneNumberId" className="text-sm font-medium text-zinc-300">
+              <Label htmlFor="phoneNumberId" className="text-sm font-medium text-foreground/80">
                 Phone Number ID <span className="text-red-400">*</span>
               </Label>
-              <p className="text-xs text-zinc-500 mt-0.5">ID do número de telefone na API do WhatsApp Business</p>
+              <p className="text-xs text-muted-foreground mt-0.5">ID do número de telefone na API do WhatsApp Business</p>
             </div>
             <Input
               id="phoneNumberId"
@@ -273,10 +273,10 @@ export function CredentialForm({ companyId, webhookKey, existingCredential, onSu
 
           <div className="space-y-2">
             <div>
-              <Label htmlFor="wabaId" className="text-sm font-medium text-zinc-300">
+              <Label htmlFor="wabaId" className="text-sm font-medium text-foreground/80">
                 WABA ID <span className="text-red-400">*</span>
               </Label>
-              <p className="text-xs text-zinc-500 mt-0.5">ID da conta comercial do WhatsApp (WhatsApp Business Account)</p>
+              <p className="text-xs text-muted-foreground mt-0.5">ID da conta comercial do WhatsApp (WhatsApp Business Account)</p>
             </div>
             <Input
               id="wabaId"

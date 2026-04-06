@@ -45,7 +45,7 @@ export function ForgotPasswordForm() {
           className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
         >
           <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-xl" />
-          <span className="text-lg font-bold text-white tracking-tight">Nexus AI</span>
+          <span className="text-lg font-bold text-foreground tracking-tight">Nexus AI</span>
         </motion.div>
 
         <div className="flex items-center justify-center mb-6">
@@ -54,21 +54,21 @@ export function ForgotPasswordForm() {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-white tracking-tight mb-3">
+        <h2 className="text-2xl font-bold text-foreground tracking-tight mb-3">
           Verifique seu e-mail
         </h2>
-        <p className="text-sm text-zinc-400 leading-relaxed mb-2">
-          Se o e-mail <strong className="text-zinc-200">{email}</strong> estiver
+        <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+          Se o e-mail <strong className="text-foreground">{email}</strong> estiver
           cadastrado, você receberá um link para redefinir sua senha.
         </p>
-        <p className="text-xs text-zinc-500 mb-8">
+        <p className="text-xs text-muted-foreground mb-8">
           O link expira em 1 hora. Verifique também a pasta de spam.
         </p>
 
         <Link href="/login">
           <Button
             variant="ghost"
-            className="text-zinc-400 hover:text-white cursor-pointer transition-all duration-200"
+            className="text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar ao login
@@ -93,7 +93,7 @@ export function ForgotPasswordForm() {
         className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
       >
         <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-xl" />
-        <span className="text-lg font-bold text-white tracking-tight">Nexus AI</span>
+        <span className="text-lg font-bold text-foreground tracking-tight">Nexus AI</span>
       </motion.div>
 
       {/* Header */}
@@ -103,10 +103,10 @@ export function ForgotPasswordForm() {
             <Mail className="h-7 w-7 text-violet-400" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-white tracking-tight">
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">
           Esqueci minha senha
         </h2>
-        <p className="text-sm text-zinc-500 mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           Informe seu e-mail para receber o link de redefinição
         </p>
       </div>
@@ -124,7 +124,7 @@ export function ForgotPasswordForm() {
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium text-zinc-300">
+          <Label htmlFor="email" className="text-sm font-medium text-foreground/80">
             E-mail
           </Label>
           <Input
@@ -137,7 +137,7 @@ export function ForgotPasswordForm() {
             disabled={isPending}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 text-white placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
+            className="h-12 rounded-xl border-border bg-card/80 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
           />
         </div>
 
@@ -162,7 +162,7 @@ export function ForgotPasswordForm() {
         <div className="text-center">
           <Link
             href="/login"
-            className="text-sm text-zinc-500 transition-colors duration-200 hover:text-violet-400"
+            className="text-sm text-muted-foreground transition-colors duration-200 hover:text-violet-400"
           >
             <ArrowLeft className="mr-1 h-3 w-3 inline" />
             Voltar ao login

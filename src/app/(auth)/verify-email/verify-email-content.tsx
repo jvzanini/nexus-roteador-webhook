@@ -57,7 +57,7 @@ export function VerifyEmailContent() {
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600 shadow-[0_0_24px_rgba(124,58,237,0.4)]">
           <Webhook className="h-5 w-5 text-white" />
         </div>
-        <span className="text-lg font-bold text-white tracking-tight">
+        <span className="text-lg font-bold text-foreground tracking-tight">
           Nexus
         </span>
       </motion.div>
@@ -69,10 +69,10 @@ export function VerifyEmailContent() {
               <Loader2 className="h-7 w-7 text-violet-400 animate-spin" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight mb-3">
+          <h2 className="text-2xl font-bold text-foreground tracking-tight mb-3">
             Verificando...
           </h2>
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-muted-foreground">
             Confirmando seu novo e-mail, aguarde um momento.
           </p>
         </>
@@ -85,10 +85,10 @@ export function VerifyEmailContent() {
               <CheckCircle2 className="h-7 w-7 text-emerald-400" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight mb-3">
+          <h2 className="text-2xl font-bold text-foreground tracking-tight mb-3">
             E-mail confirmado
           </h2>
-          <p className="text-sm text-zinc-400 mb-8">
+          <p className="text-sm text-muted-foreground mb-8">
             Seu e-mail foi alterado com sucesso. Faça login novamente com o novo
             endereço.
           </p>
@@ -108,10 +108,10 @@ export function VerifyEmailContent() {
               <AlertCircle className="h-7 w-7 text-red-400" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight mb-3">
+          <h2 className="text-2xl font-bold text-foreground tracking-tight mb-3">
             Erro na verificação
           </h2>
-          <p className="text-sm text-zinc-400 mb-8">{errorMessage}</p>
+          <p className="text-sm text-muted-foreground mb-8">{errorMessage}</p>
           <Link href="/profile">
             <Button className="bg-gradient-to-r from-violet-600 to-violet-500 text-white font-semibold text-sm rounded-xl h-11 px-6 cursor-pointer transition-all duration-300 hover:from-violet-500 hover:to-violet-400 hover:shadow-[0_0_24px_rgba(124,58,237,0.4)]">
               Voltar ao perfil

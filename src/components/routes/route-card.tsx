@@ -59,7 +59,7 @@ export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps)
       exit={{ opacity: 0, y: -10 }}
       layout
     >
-      <Card className="group bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all duration-200 rounded-xl">
+      <Card className="group bg-card border border-border hover:border-muted-foreground/30 transition-all duration-200 rounded-xl">
         <CardContent className="flex items-center gap-4 p-4">
           {/* Icone */}
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
@@ -69,19 +69,19 @@ export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps)
           {/* Info */}
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium text-zinc-100 truncate">
+              <h3 className="text-sm font-medium text-foreground truncate">
                 {route.name}
               </h3>
               <Switch
                 checked={route.isActive}
                 onCheckedChange={onToggle}
-                className="cursor-pointer transition-all duration-200 data-checked:bg-emerald-500 data-unchecked:bg-zinc-700"
+                className="cursor-pointer transition-all duration-200 data-checked:bg-emerald-500 data-unchecked:bg-muted"
               />
-              <span className={`text-xs shrink-0 ${route.isActive ? "text-emerald-400" : "text-zinc-500"}`}>
+              <span className={`text-xs shrink-0 ${route.isActive ? "text-emerald-400" : "text-muted-foreground"}`}>
                 {route.isActive ? "Ativa" : "Inativa"}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <ExternalLink className="h-3 w-3 shrink-0" />
               <span className="truncate font-mono">{maskUrl(route.url)}</span>
             </div>
@@ -89,15 +89,15 @@ export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps)
 
           {/* Badges */}
           <div className="hidden sm:flex items-center gap-2 shrink-0">
-            <Badge variant="outline" className="text-xs tabular-nums border-zinc-700 text-zinc-400">
+            <Badge variant="outline" className="text-xs tabular-nums border-border text-muted-foreground">
               {eventCount}/{TOTAL_EVENTS} eventos
             </Badge>
             {headerCount > 0 && (
-              <Badge variant="outline" className="text-xs border-zinc-700 text-zinc-400">
+              <Badge variant="outline" className="text-xs border-border text-muted-foreground">
                 {headerCount} headers
               </Badge>
             )}
-            <Badge variant="outline" className="text-xs tabular-nums border-zinc-700 text-zinc-400">
+            <Badge variant="outline" className="text-xs tabular-nums border-border text-muted-foreground">
               {route.timeoutMs / 1000}s timeout
             </Badge>
           </div>
@@ -108,7 +108,7 @@ export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps)
               variant="ghost"
               size="icon"
               onClick={onEdit}
-              className="h-8 w-8 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 cursor-pointer transition-all duration-200"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer transition-all duration-200"
               title="Editar rota"
             >
               <Pencil className="h-4 w-4" />
@@ -117,7 +117,7 @@ export function RouteCard({ route, onEdit, onDelete, onToggle }: RouteCardProps)
               variant="ghost"
               size="icon"
               onClick={onDelete}
-              className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+              className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
               title="Excluir rota"
             >
               <Trash2 className="h-4 w-4" />

@@ -68,7 +68,7 @@ export function OverviewTab({ company }: OverviewTabProps) {
       {/* Mini Dashboard — Métricas e gráfico */}
       {isPending && !overviewData ? (
         <motion.div variants={itemVariants} className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 text-zinc-500 animate-spin" />
+          <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
         </motion.div>
       ) : overviewData ? (
         <>
@@ -93,22 +93,22 @@ export function OverviewTab({ company }: OverviewTabProps) {
 
       {/* Info */}
       <motion.div variants={itemVariants}>
-        <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
+        <Card className="bg-card border border-border rounded-xl">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-zinc-300">Informações</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground/80">Informações</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500">Slug</span>
-              <span className="text-zinc-300 font-mono">/{company.slug}</span>
+              <span className="text-muted-foreground">Slug</span>
+              <span className="text-foreground/80 font-mono">/{company.slug}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500">Webhook Key</span>
-              <span className="text-zinc-300 font-mono">{company.webhookKey}</span>
+              <span className="text-muted-foreground">Webhook Key</span>
+              <span className="text-foreground/80 font-mono">{company.webhookKey}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500">Criada em</span>
-              <span className="text-zinc-300">
+              <span className="text-muted-foreground">Criada em</span>
+              <span className="text-foreground/80">
                 {new Date(company.createdAt).toLocaleDateString("pt-BR", {
                   day: "2-digit",
                   month: "long",

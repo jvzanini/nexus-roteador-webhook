@@ -51,7 +51,7 @@ const itemVariants = {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+    <label className="block text-sm font-medium text-foreground/80 mb-1.5">
       {children}
     </label>
   );
@@ -230,7 +230,7 @@ export function ProfileContent() {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-48 animate-pulse rounded-xl bg-zinc-800/50 border border-zinc-800"
+            className="h-48 animate-pulse rounded-xl bg-muted/50 border border-border"
           />
         ))}
       </div>
@@ -252,18 +252,18 @@ export function ProfileContent() {
     >
       {/* Header */}
       <motion.div variants={itemVariants}>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Perfil</h1>
-        <p className="text-sm text-zinc-500 mt-1">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Perfil</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Gerencie suas informações pessoais
         </p>
       </motion.div>
 
       {/* Avatar e Nome */}
       <motion.div variants={itemVariants}>
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-zinc-200 text-base">
-              <User className="h-4 w-4 text-zinc-400" />
+            <CardTitle className="flex items-center gap-2 text-foreground text-base">
+              <User className="h-4 w-4 text-muted-foreground" />
               Informações Pessoais
             </CardTitle>
           </CardHeader>
@@ -271,7 +271,7 @@ export function ProfileContent() {
             <div className="flex flex-col sm:flex-row items-center gap-6">
               {/* Avatar */}
               <div className="relative group">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-800 border-2 border-zinc-700 overflow-hidden">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted border-2 border-border overflow-hidden">
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
@@ -279,7 +279,7 @@ export function ProfileContent() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <span className="text-2xl font-bold text-zinc-400">
+                    <span className="text-2xl font-bold text-muted-foreground">
                       {name.charAt(0).toUpperCase()}
                     </span>
                   )}
@@ -305,10 +305,10 @@ export function ProfileContent() {
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                  className="bg-muted/50 border-border text-foreground"
                   disabled={isPending}
                 />
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                   Membro desde {createdAt}
                 </p>
               </div>
@@ -335,10 +335,10 @@ export function ProfileContent() {
 
       {/* E-mail */}
       <motion.div variants={itemVariants}>
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-zinc-200 text-base">
-              <Mail className="h-4 w-4 text-zinc-400" />
+            <CardTitle className="flex items-center gap-2 text-foreground text-base">
+              <Mail className="h-4 w-4 text-muted-foreground" />
               E-mail
             </CardTitle>
           </CardHeader>
@@ -348,7 +348,7 @@ export function ProfileContent() {
               <Input
                 value={email}
                 disabled
-                className="bg-zinc-800/30 border-zinc-700/50 text-zinc-400"
+                className="bg-muted/30 border-border/50 text-muted-foreground"
               />
             </div>
 
@@ -371,7 +371,7 @@ export function ProfileContent() {
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     placeholder="novo@email.com"
-                    className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                    className="bg-muted/50 border-border text-foreground"
                     disabled={isPending}
                   />
                 </div>
@@ -382,7 +382,7 @@ export function ProfileContent() {
                     value={emailPassword}
                     onChange={(e) => setEmailPassword(e.target.value)}
                     placeholder="********"
-                    className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                    className="bg-muted/50 border-border text-foreground"
                     disabled={isPending}
                   />
                 </div>
@@ -392,7 +392,7 @@ export function ProfileContent() {
                     disabled={isPending || !newEmail || !emailPassword}
                     variant="outline"
                     size="sm"
-                    className="w-full sm:w-auto border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-all duration-200"
+                    className="w-full sm:w-auto border-border text-foreground/80 hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
                   >
                     {isPending ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -410,10 +410,10 @@ export function ProfileContent() {
 
       {/* Senha */}
       <motion.div variants={itemVariants}>
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-zinc-200 text-base">
-              <KeyRound className="h-4 w-4 text-zinc-400" />
+            <CardTitle className="flex items-center gap-2 text-foreground text-base">
+              <KeyRound className="h-4 w-4 text-muted-foreground" />
               Alterar Senha
             </CardTitle>
           </CardHeader>
@@ -426,13 +426,13 @@ export function ProfileContent() {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="********"
-                  className="bg-zinc-800/50 border-zinc-700 text-zinc-200 pr-10"
+                  className="bg-muted/50 border-border text-foreground pr-10"
                   disabled={isPending}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasswords(!showPasswords)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 cursor-pointer transition-colors duration-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors duration-200"
                 >
                   {showPasswords ? (
                     <EyeOff className="h-4 w-4" />
@@ -450,7 +450,7 @@ export function ProfileContent() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="********"
-                  className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                  className="bg-muted/50 border-border text-foreground"
                   disabled={isPending}
                 />
               </div>
@@ -461,7 +461,7 @@ export function ProfileContent() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="********"
-                  className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                  className="bg-muted/50 border-border text-foreground"
                   disabled={isPending}
                 />
               </div>
@@ -486,7 +486,7 @@ export function ProfileContent() {
                 }
                 variant="outline"
                 size="sm"
-                className="w-full sm:w-auto border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-all duration-200"
+                className="w-full sm:w-auto border-border text-foreground/80 hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
               >
                 {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -502,10 +502,10 @@ export function ProfileContent() {
 
       {/* Tema */}
       <motion.div variants={itemVariants}>
-        <Card className="border-zinc-800 bg-zinc-900/50">
+        <Card className="border-border bg-card/50">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-zinc-200 text-base">
-              <Palette className="h-4 w-4 text-zinc-400" />
+            <CardTitle className="flex items-center gap-2 text-foreground text-base">
+              <Palette className="h-4 w-4 text-muted-foreground" />
               Aparência
             </CardTitle>
           </CardHeader>
@@ -520,12 +520,12 @@ export function ProfileContent() {
                   className={`flex flex-col items-center gap-2 rounded-xl border p-4 transition-all duration-200 cursor-pointer ${
                     currentTheme === option.value
                       ? "border-violet-500 bg-violet-500/10 text-violet-400"
-                      : "border-zinc-700 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
+                      : "border-border bg-muted/30 text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground"
                   }`}
                 >
                   <option.icon className="h-5 w-5" />
                   <span className="text-sm font-medium">{option.label}</span>
-                  <span className="text-[11px] text-zinc-500">{option.description}</span>
+                  <span className="text-[11px] text-muted-foreground">{option.description}</span>
                 </button>
               ))}
             </div>

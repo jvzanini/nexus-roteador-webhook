@@ -28,7 +28,7 @@ export function CompanyHeader({ company }: CompanyHeaderProps) {
       {/* Breadcrumb */}
       <Link
         href="/companies"
-        className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-300 transition-colors duration-200 w-fit cursor-pointer"
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 w-fit cursor-pointer"
       >
         <ArrowLeft className="h-4 w-4" />
         Voltar para empresas
@@ -41,21 +41,21 @@ export function CompanyHeader({ company }: CompanyHeaderProps) {
             <img
               src={company.logoUrl}
               alt={`Logo ${company.name}`}
-              className="w-14 h-14 rounded-xl object-cover border border-zinc-800"
+              className="w-14 h-14 rounded-xl object-cover border border-border"
             />
           ) : (
-            <div className="w-14 h-14 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-zinc-400" />
+            <div className="w-14 h-14 rounded-xl bg-muted border border-border/50 flex items-center justify-center">
+              <Building2 className="w-7 h-7 text-muted-foreground" />
             </div>
           )}
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-white tracking-tight">
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">
                 {company.name}
               </h1>
               <CompanyStatusBadge isActive={company.isActive} />
             </div>
-            <p className="text-sm text-zinc-500 mt-0.5 font-mono">/{company.slug}</p>
+            <p className="text-sm text-muted-foreground mt-0.5 font-mono">/{company.slug}</p>
           </div>
         </div>
 

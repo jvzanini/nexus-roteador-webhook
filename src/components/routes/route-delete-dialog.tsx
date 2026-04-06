@@ -50,22 +50,22 @@ export function RouteDeleteDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="bg-zinc-900 border border-zinc-800 rounded-2xl">
+      <AlertDialogContent className="bg-card border border-border rounded-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-zinc-100">
+          <AlertDialogTitle className="flex items-center gap-2 text-foreground">
             <AlertTriangle className="h-5 w-5 text-red-400" />
             Excluir rota
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-zinc-400">
+          <AlertDialogDescription className="text-muted-foreground">
             Tem certeza que deseja excluir a rota{" "}
-            <strong className="text-zinc-200">&quot;{routeName}&quot;</strong>? Esta ação não pode ser
+            <strong className="text-foreground">&quot;{routeName}&quot;</strong>? Esta ação não pode ser
             desfeita. Entregas pendentes não serão afetadas.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel
             disabled={isPending}
-            className="border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+            className="border-border text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
           >
             Cancelar
           </AlertDialogCancel>

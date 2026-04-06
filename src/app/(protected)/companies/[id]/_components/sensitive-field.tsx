@@ -50,38 +50,38 @@ export function SensitiveField({
 
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-zinc-400">{label}</label>
-      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
-        <code className="text-sm text-zinc-300 truncate flex-1 font-mono">
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border border-border/50">
+        <code className="text-sm text-foreground/80 truncate flex-1 font-mono">
           {displayValue}
         </code>
         <div className="flex items-center gap-1 shrink-0">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 cursor-pointer transition-all duration-200 hover:bg-zinc-700"
+            className="h-7 w-7 cursor-pointer transition-all duration-200 hover:bg-accent"
             onClick={handleToggle}
             disabled={isPending}
           >
             {isPending ? (
-              <Loader2 className="h-3.5 w-3.5 text-zinc-400 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin" />
             ) : revealed ? (
-              <EyeOff className="h-3.5 w-3.5 text-zinc-400" />
+              <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
             ) : (
-              <Eye className="h-3.5 w-3.5 text-zinc-400" />
+              <Eye className="h-3.5 w-3.5 text-muted-foreground" />
             )}
           </Button>
           {revealed && revealedValue && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 cursor-pointer transition-all duration-200 hover:bg-zinc-700"
+              className="h-7 w-7 cursor-pointer transition-all duration-200 hover:bg-accent"
               onClick={handleCopy}
             >
               {copied ? (
                 <Check className="h-3.5 w-3.5 text-emerald-400" />
               ) : (
-                <Copy className="h-3.5 w-3.5 text-zinc-400" />
+                <Copy className="h-3.5 w-3.5 text-muted-foreground" />
               )}
             </Button>
           )}

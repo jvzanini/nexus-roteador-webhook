@@ -43,15 +43,15 @@ export function LoginForm() {
         className="mb-10 flex items-center justify-center gap-2.5 lg:hidden"
       >
         <Image src="/logo-nexus-ai.png" alt="Nexus AI" width={40} height={40} className="rounded-xl" />
-        <span className="text-lg font-bold text-white tracking-tight">Nexus AI</span>
+        <span className="text-lg font-bold text-foreground tracking-tight">Nexus AI</span>
       </motion.div>
 
       {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-white tracking-tight">
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">
           Bem-vindo de volta
         </h2>
-        <p className="text-sm text-zinc-500 mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           Entre com suas credenciais para acessar o painel
         </p>
       </div>
@@ -71,7 +71,7 @@ export function LoginForm() {
 
         {/* Email */}
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium text-zinc-300">
+          <Label htmlFor="email" className="text-sm font-medium text-foreground/80">
             E-mail
           </Label>
           <Input
@@ -83,13 +83,13 @@ export function LoginForm() {
             autoComplete="email"
             autoFocus
             disabled={isPending}
-            className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 text-white placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
+            className="h-12 rounded-xl border-border bg-card/80 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
           />
         </div>
 
         {/* Senha */}
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-sm font-medium text-zinc-300">
+          <Label htmlFor="password" className="text-sm font-medium text-foreground/80">
             Senha
           </Label>
           <div className="relative">
@@ -101,13 +101,13 @@ export function LoginForm() {
               required
               autoComplete="current-password"
               disabled={isPending}
-              className="h-12 rounded-xl border-zinc-800 bg-zinc-900/80 pr-11 text-white placeholder:text-zinc-600 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
+              className="h-12 rounded-xl border-border bg-card/80 pr-11 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-600 transition-colors duration-200 hover:text-zinc-300 cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 transition-colors duration-200 hover:text-foreground cursor-pointer"
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -122,7 +122,7 @@ export function LoginForm() {
         <div className="flex justify-end">
           <a
             href="/forgot-password"
-            className="text-sm text-zinc-500 transition-colors duration-200 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded"
+            className="text-sm text-muted-foreground transition-colors duration-200 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded"
             tabIndex={isPending ? -1 : 0}
           >
             Esqueci minha senha

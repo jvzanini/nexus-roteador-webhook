@@ -113,8 +113,8 @@ export function LogsTab({ companyId }: LogsTabProps) {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-10 bg-zinc-800/50 rounded-lg animate-pulse" />
-        <div className="h-64 bg-zinc-800/50 rounded-xl animate-pulse" />
+        <div className="h-10 bg-muted/50 rounded-lg animate-pulse" />
+        <div className="h-64 bg-muted/50 rounded-xl animate-pulse" />
       </div>
     );
   }

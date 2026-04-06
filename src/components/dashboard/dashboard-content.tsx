@@ -123,13 +123,13 @@ export function DashboardContent({ userName }: DashboardContentProps) {
   if (isInitialLoad && !data) {
     return (
       <div className="space-y-8 animate-pulse">
-        <div className="h-8 w-48 bg-zinc-800 rounded" />
+        <div className="h-8 w-48 bg-muted rounded" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-zinc-900 border border-zinc-800 rounded-xl" />
+            <div key={i} className="h-32 bg-card border border-border rounded-xl" />
           ))}
         </div>
-        <div className="h-[350px] bg-zinc-900 border border-zinc-800 rounded-xl" />
+        <div className="h-[350px] bg-card border border-border rounded-xl" />
       </div>
     );
   }
@@ -137,10 +137,10 @@ export function DashboardContent({ userName }: DashboardContentProps) {
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <p className="text-zinc-400 text-sm">{error || "Erro ao carregar dashboard"}</p>
+        <p className="text-muted-foreground text-sm">{error || "Erro ao carregar dashboard"}</p>
         <button
           onClick={() => fetchData(true)}
-          className="px-4 py-2 text-sm bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors cursor-pointer"
+          className="px-4 py-2 text-sm bg-muted text-foreground/80 rounded-lg hover:bg-accent transition-colors cursor-pointer"
         >
           Tentar novamente
         </button>
@@ -158,10 +158,10 @@ export function DashboardContent({ userName }: DashboardContentProps) {
       {/* Greeting + Bell */}
       <motion.div variants={itemVariants} className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Olá, {userName}
           </h1>
-          <p className="text-sm text-zinc-500 mt-1 capitalize">{today}</p>
+          <p className="text-sm text-muted-foreground mt-1 capitalize">{today}</p>
         </div>
         <NotificationBell />
       </motion.div>

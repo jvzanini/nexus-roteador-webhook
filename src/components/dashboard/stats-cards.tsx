@@ -68,7 +68,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
 
         return (
           <motion.div key={card.label} variants={itemVariants}>
-            <Card className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all duration-200 rounded-xl cursor-default">
+            <Card className="bg-card border border-border hover:border-muted-foreground/30 transition-all duration-200 rounded-xl cursor-default">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div className={`p-2.5 rounded-lg ${card.iconBg}`}>
@@ -76,11 +76,11 @@ export function StatsCards({ stats }: StatsCardsProps) {
                   </div>
                   <div className="flex items-center gap-1 text-xs font-medium">
                     {card.comparison === null ? (
-                      <Badge variant="outline" className="text-xs border-zinc-700 text-zinc-500">
+                      <Badge variant="outline" className="text-xs border-border text-muted-foreground">
                         Novo
                       </Badge>
                     ) : (
-                      <span className={trendIsGood ? "text-emerald-400" : trendIsBad ? "text-red-400" : "text-zinc-500"}>
+                      <span className={trendIsGood ? "text-emerald-400" : trendIsBad ? "text-red-400" : "text-muted-foreground"}>
                         <span className="inline-flex items-center gap-0.5">
                           {isPositive ? <ArrowUpRight className="h-3.5 w-3.5" /> : isNegative ? <ArrowDownRight className="h-3.5 w-3.5" /> : null}
                           {card.comparison > 0 ? "+" : ""}{card.comparison.toFixed(1)}%
@@ -90,8 +90,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-bold text-white tabular-nums">{card.value}</p>
-                  <p className="text-xs text-zinc-500 mt-1">
+                  <p className="text-2xl font-bold text-foreground tabular-nums">{card.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {card.label}
                     {card.sublabel && <span className="ml-1">{card.sublabel}</span>}
                   </p>

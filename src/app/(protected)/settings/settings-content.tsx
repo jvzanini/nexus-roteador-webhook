@@ -37,7 +37,7 @@ function SettingsSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-64 animate-pulse rounded-xl bg-zinc-800/50 border border-zinc-800"
+          className="h-64 animate-pulse rounded-xl bg-muted/50 border border-border"
         />
       ))}
     </div>
@@ -46,14 +46,14 @@ function SettingsSkeleton() {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+    <label className="block text-sm font-medium text-foreground/80 mb-1.5">
       {children}
     </label>
   );
 }
 
 function FieldHint({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs text-zinc-500 mt-1">{children}</p>;
+  return <p className="text-xs text-muted-foreground mt-1">{children}</p>;
 }
 
 export function SettingsContent() {
@@ -174,10 +174,10 @@ export function SettingsContent() {
             <Settings className="h-5 w-5 text-violet-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
               Configuracoes
             </h1>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               Configuracoes globais da plataforma
             </p>
           </div>
@@ -195,9 +195,9 @@ export function SettingsContent() {
         >
           {/* Retry Section */}
           <motion.div variants={itemVariants}>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-zinc-100">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <RotateCcw className="h-4 w-4 text-violet-500" />
                   Retentativas de Webhook
                 </CardTitle>
@@ -216,7 +216,7 @@ export function SettingsContent() {
                           Math.min(10, Math.max(0, parseInt(e.target.value) || 0))
                         )
                       }
-                      className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                      className="bg-muted/50 border-border text-foreground"
                     />
                     <FieldHint>Numero maximo de vezes que o sistema tentara reenviar um webhook que falhou (0-10)</FieldHint>
                   </div>
@@ -228,7 +228,7 @@ export function SettingsContent() {
                       value={retryIntervals}
                       onChange={(e) => setRetryIntervals(e.target.value)}
                       placeholder="10, 30, 90"
-                      className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                      className="bg-muted/50 border-border text-foreground"
                     />
                     <FieldHint>Tempo entre cada tentativa, separados por virgula (ex: 10, 30, 90 = aguarda 10s, 30s e 90s)</FieldHint>
                   </div>
@@ -284,9 +284,9 @@ export function SettingsContent() {
 
           {/* Logs Retention Section */}
           <motion.div variants={itemVariants}>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-zinc-100">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <Archive className="h-4 w-4 text-violet-500" />
                   Retencao de Logs
                 </CardTitle>
@@ -308,7 +308,7 @@ export function SettingsContent() {
                           )
                         )
                       }
-                      className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                      className="bg-muted/50 border-border text-foreground"
                     />
                     <FieldHint>
                       Logs completos com payload, headers e resposta (1-365 dias)
@@ -330,7 +330,7 @@ export function SettingsContent() {
                           )
                         )
                       }
-                      className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                      className="bg-muted/50 border-border text-foreground"
                     />
                     <FieldHint>
                       Resumos sem payload — apenas metadados como status, duracao e erro (1-730 dias)
@@ -358,9 +358,9 @@ export function SettingsContent() {
 
           {/* Notifications Section */}
           <motion.div variants={itemVariants}>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-zinc-100">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <Bell className="h-4 w-4 text-violet-500" />
                   Notificacoes
                 </CardTitle>
@@ -369,10 +369,10 @@ export function SettingsContent() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-zinc-300">
+                      <p className="text-sm font-medium text-foreground/80">
                         Notificacoes na plataforma
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         Alertas dentro do painel
                       </p>
                     </div>
@@ -384,10 +384,10 @@ export function SettingsContent() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-zinc-300">
+                      <p className="text-sm font-medium text-foreground/80">
                         Notificacoes por e-mail
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         Enviar alertas por e-mail
                       </p>
                     </div>
@@ -403,10 +403,10 @@ export function SettingsContent() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-zinc-300">
+                      <p className="text-sm font-medium text-foreground/80">
                         Notificacoes por WhatsApp
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         Enviar alertas via WhatsApp
                       </p>
                     </div>
@@ -420,7 +420,7 @@ export function SettingsContent() {
                     />
                   </div>
 
-                  <p className="text-xs text-zinc-500 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     E obrigatorio manter pelo menos um canal de notificacao ativo (e-mail ou WhatsApp)
                   </p>
                 </div>
@@ -441,7 +441,7 @@ export function SettingsContent() {
                           )
                         )
                       }
-                      className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                      className="bg-muted/50 border-border text-foreground"
                     />
                     <FieldHint>
                       Quantidade de falhas consecutivas de uma mesma rota para disparar alerta de notificacao
@@ -455,7 +455,7 @@ export function SettingsContent() {
                       value={notifyRecipients}
                       onChange={(e) => setNotifyRecipients(e.target.value)}
                       placeholder="email@exemplo.com, +5511999999999"
-                      className="bg-zinc-800/50 border-zinc-700 text-zinc-200"
+                      className="bg-muted/50 border-border text-foreground"
                     />
                     <FieldHint>
                       E-mails ou numeros de WhatsApp que receberao alertas (separados por virgula)

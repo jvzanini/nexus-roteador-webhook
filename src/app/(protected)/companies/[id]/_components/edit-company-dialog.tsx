@@ -62,27 +62,27 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
     });
   }
 
-  const inputClasses = "bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200";
+  const inputClasses = "bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        render={<Button variant="outline" className="gap-2 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer transition-all duration-200" />}
+        render={<Button variant="outline" className="gap-2 border-border text-foreground/80 hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200" />}
       >
         <Settings className="h-4 w-4" />
         Editar
       </DialogTrigger>
-      <DialogContent className="bg-zinc-900 border border-zinc-800 rounded-2xl">
+      <DialogContent className="bg-card border border-border rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-zinc-100">Editar Empresa</DialogTitle>
-          <DialogDescription className="text-zinc-400">
+          <DialogTitle className="text-foreground">Editar Empresa</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Altere as informacoes da empresa. O slug sera regenerado se o nome mudar.
           </DialogDescription>
         </DialogHeader>
 
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-name" className="text-zinc-300">
+            <Label htmlFor="edit-name" className="text-foreground/80">
               Nome da Empresa
             </Label>
             <Input
@@ -97,7 +97,7 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-logoUrl" className="text-zinc-300">
+            <Label htmlFor="edit-logoUrl" className="text-foreground/80">
               URL do Logo (opcional)
             </Label>
             <Input
@@ -126,7 +126,7 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
               type="button"
               variant="ghost"
               onClick={() => setOpen(false)}
-              className="text-zinc-400 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+              className="text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
             >
               Cancelar
             </Button>

@@ -42,13 +42,13 @@ export function CompanyList({ companies }: CompanyListProps) {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center justify-center py-16 text-center"
       >
-        <div className="w-16 h-16 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center mb-4">
-          <Building2 className="h-7 w-7 text-zinc-500" />
+        <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mb-4">
+          <Building2 className="h-7 w-7 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-zinc-200 mb-1">
+        <h3 className="text-lg font-semibold text-foreground mb-1">
           Nenhuma empresa cadastrada
         </h3>
-        <p className="text-sm text-zinc-500 max-w-sm">
+        <p className="text-sm text-muted-foreground max-w-sm">
           Crie sua primeira empresa para comecar a configurar o roteamento de webhooks.
         </p>
       </motion.div>

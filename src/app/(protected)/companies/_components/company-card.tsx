@@ -39,7 +39,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
   return (
     <Card
       onClick={() => router.push(`/companies/${company.id}`)}
-      className="bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-all duration-300 rounded-xl cursor-pointer group relative overflow-hidden"
+      className="bg-card border border-border hover:border-muted-foreground/30 transition-all duration-300 rounded-xl cursor-pointer group relative overflow-hidden"
     >
       {/* Hover glow */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
@@ -54,18 +54,18 @@ export function CompanyCard({ company }: CompanyCardProps) {
               <img
                 src={company.logoUrl}
                 alt={`Logo ${company.name}`}
-                className="w-11 h-11 rounded-xl object-cover ring-1 ring-zinc-700/50"
+                className="w-11 h-11 rounded-xl object-cover ring-1 ring-border/50"
               />
             ) : (
-              <div className="w-11 h-11 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-zinc-500" />
+              <div className="w-11 h-11 rounded-xl bg-muted border border-border/50 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-muted-foreground" />
               </div>
             )}
             <div>
-              <h3 className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors">
+              <h3 className="text-sm font-semibold text-foreground group-hover:text-foreground transition-colors">
                 {company.name}
               </h3>
-              <p className="text-xs text-zinc-600 font-mono">/{company.slug}</p>
+              <p className="text-xs text-muted-foreground/60 font-mono">/{company.slug}</p>
             </div>
           </div>
           <CompanyStatusBadge isActive={company.isActive} />
@@ -74,16 +74,16 @@ export function CompanyCard({ company }: CompanyCardProps) {
         {/* Webhook URL */}
         <div
           onClick={handleCopy}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/60 border border-zinc-700/40 hover:border-zinc-600 transition-all duration-200 mb-4"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/60 border border-border/40 hover:border-muted-foreground/30 transition-all duration-200 mb-4"
         >
-          <code className="text-[11px] text-zinc-500 truncate flex-1 font-mono">
+          <code className="text-[11px] text-muted-foreground truncate flex-1 font-mono">
             {webhookPath}
           </code>
           <div className="shrink-0">
             {copied ? (
               <Check className="h-3.5 w-3.5 text-emerald-400" />
             ) : (
-              <Copy className="h-3.5 w-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+              <Copy className="h-3.5 w-3.5 text-muted-foreground/60 group-hover:text-muted-foreground transition-colors" />
             )}
           </div>
         </div>
@@ -91,11 +91,11 @@ export function CompanyCard({ company }: CompanyCardProps) {
         {/* Stats row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-xs">
-            <span className="flex items-center gap-1.5 text-zinc-500">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
               <Users className="h-3.5 w-3.5" />
               {company._count.memberships}
             </span>
-            <span className="flex items-center gap-1.5 text-zinc-500">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
               <Route className="h-3.5 w-3.5" />
               {company._count.routes ?? 0}
             </span>
@@ -108,7 +108,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
               )}
             </span>
           </div>
-          <ChevronRight className="h-4 w-4 text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all duration-200" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all duration-200" />
         </div>
       </CardContent>
     </Card>

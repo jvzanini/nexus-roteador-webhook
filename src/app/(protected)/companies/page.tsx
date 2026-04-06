@@ -11,8 +11,8 @@ export default async function CompaniesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Empresas</h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Empresas</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Gerencie as empresas e suas integracoes com a Meta.
           </p>
         </div>

@@ -31,8 +31,8 @@ function CustomTooltip(props: TooltipContentProps<any, any>) {
   const { active, payload, label } = props;
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-3 shadow-lg">
-      <p className="text-xs text-zinc-400 mb-2">{label}</p>
+    <div className="rounded-lg border border-border bg-card p-3 shadow-lg">
+      <p className="text-xs text-muted-foreground mb-2">{label}</p>
       {payload.map((entry) => (
         <p key={entry.name} className="text-xs" style={{ color: entry.color }}>
           {entry.name}: <span className="font-bold">{entry.value?.toLocaleString("pt-BR")}</span>
@@ -55,16 +55,16 @@ export function WebhookChart({ data, period }: WebhookChartProps) {
   const isEmpty = data.every((p) => p.total === 0);
 
   return (
-    <Card className="bg-zinc-900 border border-zinc-800 rounded-xl">
+    <Card className="bg-card border border-border rounded-xl">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-zinc-100 flex items-center gap-2">
+        <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-violet-400" />
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isEmpty ? (
-          <div className="flex items-center justify-center h-[300px] text-sm text-zinc-500">
+          <div className="flex items-center justify-center h-[300px] text-sm text-muted-foreground">
             Nenhuma entrega no período
           </div>
         ) : (

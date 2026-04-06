@@ -164,7 +164,7 @@ function TableSkeleton() {
       {[1, 2, 3, 4, 5].map((i) => (
         <div
           key={i}
-          className="h-14 animate-pulse rounded-lg bg-zinc-800/50 border border-zinc-800"
+          className="h-14 animate-pulse rounded-lg bg-muted/50 border border-border"
         />
       ))}
     </div>
@@ -189,12 +189,12 @@ function PasswordInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="bg-zinc-800/50 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 pr-10"
+        className="bg-muted/50 border-border text-foreground placeholder:text-muted-foreground pr-10"
       />
       <button
         type="button"
         onClick={() => setShow(!show)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 cursor-pointer transition-colors duration-200"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors duration-200"
       >
         {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
@@ -384,20 +384,20 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
       <div className="space-y-4">
         {/* Nome */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+          <label className="block text-sm font-medium text-foreground/80 mb-1.5">
             Nome
           </label>
           <Input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             placeholder="Nome do usuário"
-            className="bg-zinc-800/50 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+            className="bg-muted/50 border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+          <label className="block text-sm font-medium text-foreground/80 mb-1.5">
             Email
           </label>
           <Input
@@ -405,13 +405,13 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             placeholder="email@exemplo.com"
-            className="bg-zinc-800/50 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+            className="bg-muted/50 border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
         {/* Senha */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+          <label className="block text-sm font-medium text-foreground/80 mb-1.5">
             {mode === "edit"
               ? "Nova senha (deixe vazio para manter)"
               : "Senha"}
@@ -431,7 +431,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
         {/* Confirmar senha */}
         {showConfirmPassword && (
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+            <label className="block text-sm font-medium text-foreground/80 mb-1.5">
               Confirmar senha
             </label>
             <PasswordInput
@@ -450,7 +450,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
 
         {/* Nivel de acesso */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+          <label className="block text-sm font-medium text-foreground/80 mb-1.5">
             Nível de acesso
           </label>
           <CustomSelect
@@ -467,14 +467,14 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
 
         {/* Ativo/Inativo (apenas na edicao) */}
         {mode === "edit" && (
-          <div className="flex items-center justify-between rounded-lg bg-zinc-800/30 border border-zinc-800 px-4 py-3">
+          <div className="flex items-center justify-between rounded-lg bg-muted/30 border border-border px-4 py-3">
             <div className="flex items-center gap-2">
               {form.isActive ? (
                 <UserCheck className="h-4 w-4 text-emerald-400" />
               ) : (
                 <UserX className="h-4 w-4 text-red-400" />
               )}
-              <span className="text-sm text-zinc-300">
+              <span className="text-sm text-foreground/80">
                 {form.isActive ? "Ativo" : "Inativo"}
               </span>
             </div>
@@ -507,8 +507,8 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
             <UsersIcon className="h-5 w-5 text-violet-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-zinc-100">Usuários</h1>
-            <p className="text-sm text-zinc-500">
+            <h1 className="text-xl font-bold text-foreground">Usuários</h1>
+            <p className="text-sm text-muted-foreground">
               Gerencie os usuários da plataforma
             </p>
           </div>
@@ -525,36 +525,36 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
       {/* Table */}
       <motion.div
         variants={itemVariants}
-        className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden overflow-x-auto"
+        className="rounded-xl border border-border bg-card/50 overflow-hidden overflow-x-auto"
       >
         {loading ? (
           <div className="p-6">
             <TableSkeleton />
           </div>
         ) : users.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-zinc-500">
-            <UsersIcon className="h-12 w-12 mb-3 text-zinc-600" />
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <UsersIcon className="h-12 w-12 mb-3 text-muted-foreground/60" />
             <p className="text-sm">Nenhum usuário encontrado</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800 hover:bg-transparent">
-                <TableHead className="text-zinc-400">Nome</TableHead>
-                <TableHead className="text-zinc-400">Email</TableHead>
-                <TableHead className="text-zinc-400 text-center">
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Nome</TableHead>
+                <TableHead className="text-muted-foreground">Email</TableHead>
+                <TableHead className="text-muted-foreground text-center">
                   Nível
                 </TableHead>
-                <TableHead className="text-zinc-400 text-center">
+                <TableHead className="text-muted-foreground text-center">
                   Status
                 </TableHead>
-                <TableHead className="text-zinc-400 text-center">
+                <TableHead className="text-muted-foreground text-center">
                   Empresas
                 </TableHead>
-                <TableHead className="text-zinc-400 text-center hidden sm:table-cell">
+                <TableHead className="text-muted-foreground text-center hidden sm:table-cell">
                   Criado em
                 </TableHead>
-                <TableHead className="text-zinc-400 text-center">
+                <TableHead className="text-muted-foreground text-center">
                   Ações
                 </TableHead>
               </TableRow>
@@ -574,12 +574,12 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
                       delay: index * 0.03,
                       ease: "easeOut" as const,
                     }}
-                    className="border-zinc-800 hover:bg-zinc-800/30 transition-colors duration-200"
+                    className="border-border hover:bg-accent/30 transition-colors duration-200"
                   >
-                    <TableCell className="font-medium text-zinc-200">
+                    <TableCell className="font-medium text-foreground">
                       {user.name}
                     </TableCell>
-                    <TableCell className="text-zinc-400">
+                    <TableCell className="text-muted-foreground">
                       {user.email}
                     </TableCell>
                     <TableCell className="text-center">
@@ -603,10 +603,10 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center text-zinc-400">
+                    <TableCell className="text-center text-muted-foreground">
                       {user.companiesCount}
                     </TableCell>
-                    <TableCell className="text-center text-zinc-500 text-sm hidden sm:table-cell">
+                    <TableCell className="text-center text-muted-foreground text-sm hidden sm:table-cell">
                       {format(new Date(user.createdAt), "dd MMM yyyy HH:mm", {
                         locale: ptBR,
                       })}
@@ -624,8 +624,8 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
                           }
                           className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-all duration-200 ${
                             user.canEdit
-                              ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 cursor-pointer"
-                              : "text-zinc-700 cursor-not-allowed"
+                              ? "text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer"
+                              : "text-muted-foreground/40 cursor-not-allowed"
                           }`}
                         >
                           <Pencil className="h-4 w-4" />
@@ -635,7 +635,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
                             type="button"
                             onClick={() => openDeleteDialog(user)}
                             title="Excluir usuário"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -704,15 +704,15 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-zinc-900 border border-zinc-800 rounded-2xl">
+        <AlertDialogContent className="bg-card border border-border rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-zinc-100">
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
               <AlertTriangle className="h-5 w-5 text-red-400" />
               Excluir usuário
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-muted-foreground">
               Tem certeza que deseja excluir o usuário{" "}
-              <strong className="text-zinc-200">
+              <strong className="text-foreground">
                 &quot;{userToDelete?.name}&quot;
               </strong>
               ? Esta ação é irreversível. Todas as associações com empresas
@@ -722,7 +722,7 @@ export function UsersContent({ isSuperAdmin }: UsersContentProps) {
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={deleting}
-              className="border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+              className="border-border text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
             >
               Cancelar
             </AlertDialogCancel>

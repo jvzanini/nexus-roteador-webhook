@@ -78,10 +78,10 @@ export function RouteList({ companyId }: RouteListProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-lg font-semibold text-foreground">
             Rotas de Webhook
           </h2>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             Configure para onde os eventos WhatsApp serão encaminhados
           </p>
         </div>
@@ -98,7 +98,7 @@ export function RouteList({ companyId }: RouteListProps) {
       {/* Loading */}
       {isLoading && routes.length === 0 && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       )}
 
@@ -109,13 +109,13 @@ export function RouteList({ companyId }: RouteListProps) {
           animate={{ opacity: 1 }}
           className="flex flex-col items-center justify-center py-12 text-center"
         >
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 border border-zinc-700 mb-4">
-            <Route className="h-8 w-8 text-zinc-500" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted border border-border mb-4">
+            <Route className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-sm font-medium text-zinc-200 mb-1">
+          <h3 className="text-sm font-medium text-foreground mb-1">
             Nenhuma rota configurada
           </h3>
-          <p className="text-sm text-zinc-500 mb-4 max-w-sm">
+          <p className="text-sm text-muted-foreground mb-4 max-w-sm">
             Crie sua primeira rota para comecar a receber eventos WhatsApp em
             seus sistemas.
           </p>

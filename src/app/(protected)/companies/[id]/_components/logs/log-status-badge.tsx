@@ -30,7 +30,7 @@ const statusConfig: Record<
   delivering: {
     label: "Enviando",
     className:
-      "bg-zinc-500/15 text-zinc-400 border-zinc-500/30 hover:bg-zinc-500/20",
+      "bg-muted/50 text-muted-foreground border-border hover:bg-muted",
   },
 };
 

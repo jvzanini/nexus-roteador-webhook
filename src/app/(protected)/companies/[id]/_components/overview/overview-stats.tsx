@@ -43,15 +43,15 @@ export function OverviewStats({ stats }: OverviewStatsProps) {
 
         return (
           <motion.div key={card.key} variants={itemVariants}>
-            <Card className="bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all duration-200">
+            <Card className="bg-card border border-border rounded-xl hover:border-muted-foreground/30 transition-all duration-200">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className={`p-2.5 rounded-lg ${colors.bg}`}>
                     <Icon className={`h-5 w-5 ${colors.text}`} />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-white tabular-nums">{value}</p>
-                    <p className="text-xs text-zinc-500">{card.label}</p>
+                    <p className="text-2xl font-bold text-foreground tabular-nums">{value}</p>
+                    <p className="text-xs text-muted-foreground">{card.label}</p>
                   </div>
                 </div>
               </CardContent>

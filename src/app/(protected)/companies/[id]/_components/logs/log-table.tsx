@@ -150,7 +150,7 @@ export function LogTable({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-zinc-500">
+        <div className="text-sm text-muted-foreground">
           {page.totalCount} registro{page.totalCount !== 1 ? "s" : ""} encontrado
           {page.totalCount !== 1 ? "s" : ""}
         </div>
@@ -158,7 +158,7 @@ export function LogTable({
         {/* Barra de acoes de lote */}
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-3">
-            <span className="text-sm text-zinc-400">
+            <span className="text-sm text-muted-foreground">
               {selectedIds.size} selecionado{selectedIds.size > 1 ? "s" : ""}
             </span>
             <Button
@@ -166,7 +166,7 @@ export function LogTable({
               size="sm"
               onClick={handleResendBatch}
               disabled={batchResending || selectedIds.size > 50}
-              className="gap-1.5 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-all duration-200"
+              className="gap-1.5 border-border text-foreground/80 hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
               title={selectedIds.size > 50 ? "Máximo 50 por vez" : undefined}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${batchResending ? "animate-spin" : ""}`} />
@@ -176,11 +176,11 @@ export function LogTable({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-zinc-800">
+      <div className="overflow-x-auto rounded-xl border border-border">
         <Table className="min-w-[700px]">
           <TableHeader>
-            <TableRow className="border-zinc-800 hover:bg-transparent">
-              <TableHead className="w-8 text-zinc-500 text-xs">
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="w-8 text-muted-foreground text-xs">
                 {failedDeliveryIds.length > 0 && (
                   <input
                     type="checkbox"
@@ -190,20 +190,20 @@ export function LogTable({
                   />
                 )}
               </TableHead>
-              <TableHead className="w-8 text-zinc-500 text-xs" />
-              <TableHead className="w-[180px] text-zinc-500 text-xs">Timestamp</TableHead>
-              <TableHead className="text-zinc-500 text-xs">Evento</TableHead>
-              <TableHead className="text-zinc-500 text-xs">Rota(s)</TableHead>
-              <TableHead className="w-[120px] text-zinc-500 text-xs">Status</TableHead>
-              <TableHead className="w-[100px] text-right text-zinc-500 text-xs hidden md:table-cell">Duracao</TableHead>
-              <TableHead className="w-[80px] text-right text-zinc-500 text-xs hidden md:table-cell">Tentativas</TableHead>
-              <TableHead className="w-[50px] text-zinc-500 text-xs" />
+              <TableHead className="w-8 text-muted-foreground text-xs" />
+              <TableHead className="w-[180px] text-muted-foreground text-xs">Timestamp</TableHead>
+              <TableHead className="text-muted-foreground text-xs">Evento</TableHead>
+              <TableHead className="text-muted-foreground text-xs">Rota(s)</TableHead>
+              <TableHead className="w-[120px] text-muted-foreground text-xs">Status</TableHead>
+              <TableHead className="w-[100px] text-right text-muted-foreground text-xs hidden md:table-cell">Duracao</TableHead>
+              <TableHead className="w-[80px] text-right text-muted-foreground text-xs hidden md:table-cell">Tentativas</TableHead>
+              <TableHead className="w-[50px] text-muted-foreground text-xs" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {page.entries.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-zinc-500 py-8">
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                   Nenhum log encontrado para os filtros selecionados.
                 </TableCell>
               </TableRow>
@@ -225,7 +225,7 @@ export function LogTable({
 
               return (
                 <Fragment key={entry.id}>
-                  <TableRow className="cursor-pointer hover:bg-zinc-800/30 transition-colors duration-200 border-zinc-800/50">
+                  <TableRow className="cursor-pointer hover:bg-accent/30 transition-colors duration-200 border-border/50">
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       {hasFailedDelivery && (
                         <input
@@ -246,36 +246,36 @@ export function LogTable({
                     </TableCell>
                     <TableCell onClick={() => toggleRow(entry.id)}>
                       {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-zinc-500" />
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       ) : (
-                        <ChevronRight className="h-4 w-4 text-zinc-500" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-zinc-400" onClick={() => toggleRow(entry.id)}>
+                    <TableCell className="font-mono text-xs text-muted-foreground" onClick={() => toggleRow(entry.id)}>
                       {format(new Date(entry.receivedAt), "dd/MM/yy HH:mm:ss", { locale: ptBR })}
                     </TableCell>
                     <TableCell onClick={() => toggleRow(entry.id)}>
-                      <Badge variant="outline" className="font-mono text-xs border-zinc-700 text-zinc-300">
+                      <Badge variant="outline" className="font-mono text-xs border-border text-foreground/80">
                         {entry.eventType}
                       </Badge>
                     </TableCell>
                     <TableCell onClick={() => toggleRow(entry.id)}>
                       <div className="flex flex-wrap gap-1">
                         {entry.deliveries.map((d) => (
-                          <span key={d.id} className="text-xs text-zinc-400">{d.routeName}</span>
+                          <span key={d.id} className="text-xs text-muted-foreground">{d.routeName}</span>
                         ))}
                         {entry.deliveries.length === 0 && (
-                          <span className="text-xs text-zinc-500">-</span>
+                          <span className="text-xs text-muted-foreground">-</span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell onClick={() => toggleRow(entry.id)}>
                       <LogStatusBadge status={primaryStatus} />
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs text-zinc-500 hidden md:table-cell" onClick={() => toggleRow(entry.id)}>
+                    <TableCell className="text-right font-mono text-xs text-muted-foreground hidden md:table-cell" onClick={() => toggleRow(entry.id)}>
                       {maxDuration > 0 ? `${maxDuration}ms` : "-"}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs text-zinc-500 hidden md:table-cell" onClick={() => toggleRow(entry.id)}>
+                    <TableCell className="text-right font-mono text-xs text-muted-foreground hidden md:table-cell" onClick={() => toggleRow(entry.id)}>
                       {totalAttempts}
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
@@ -283,7 +283,7 @@ export function LogTable({
                         <button
                           onClick={() => handleResendSingle(entryFailedIds[0])}
                           disabled={resendingId !== null}
-                          className="p-1 rounded hover:bg-zinc-700 transition-colors duration-200 cursor-pointer text-zinc-500 hover:text-zinc-200 disabled:opacity-50"
+                          className="p-1 rounded hover:bg-accent transition-colors duration-200 cursor-pointer text-muted-foreground hover:text-foreground disabled:opacity-50"
                           title="Reenviar"
                         >
                           <RefreshCw className={`h-3.5 w-3.5 ${resendingId === entryFailedIds[0] ? "animate-spin" : ""}`} />
@@ -312,7 +312,7 @@ export function LogTable({
           size="sm"
           onClick={loadFirstPage}
           disabled={!hasCursor || isPending}
-          className="gap-1 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+          className="gap-1 border-border text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
         >
           <ChevronLeft className="h-4 w-4" />
           Inicio
@@ -322,7 +322,7 @@ export function LogTable({
           size="sm"
           onClick={loadNextPage}
           disabled={!page.nextCursor || isPending}
-          className="gap-1 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+          className="gap-1 border-border text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200"
         >
           Proxima
           <ChevronsRight className="h-4 w-4" />

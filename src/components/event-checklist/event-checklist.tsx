@@ -216,14 +216,14 @@ export function EventChecklist({
                           const IconComp = iconMap[category.icon];
                           return IconComp ? (
                             <IconComp className={`h-4 w-4 shrink-0 transition-colors ${
-                              isActive && colors ? colors.icon : "text-zinc-400"
+                              isActive && colors ? colors.icon : "text-muted-foreground"
                             }`} />
                           ) : null;
                         })()}
                         <div className="flex flex-col items-start min-w-0">
                           <span>{category.label}</span>
                           {category.description && (
-                            <span className="text-xs text-zinc-500 font-normal truncate max-w-[200px]">
+                            <span className="text-xs text-muted-foreground font-normal truncate max-w-[200px]">
                               {category.description}
                             </span>
                           )}

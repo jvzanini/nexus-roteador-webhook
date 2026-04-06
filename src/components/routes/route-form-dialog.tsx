@@ -139,7 +139,7 @@ export function RouteFormDialog({
     ]
   );
 
-  const inputClasses = "bg-zinc-900 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200";
+  const inputClasses = "bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200";
 
   return (
     <Dialog
@@ -149,9 +149,9 @@ export function RouteFormDialog({
         onOpenChange(value);
       }}
     >
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] bg-zinc-900 border border-zinc-800 rounded-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] bg-card border border-border rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-zinc-100">
+          <DialogTitle className="text-foreground">
             {isEditing ? "Editar Rota" : "Nova Rota de Webhook"}
           </DialogTitle>
         </DialogHeader>
@@ -166,7 +166,7 @@ export function RouteFormDialog({
             >
               {/* Nome */}
               <div className="space-y-2">
-                <Label htmlFor="route-name" className="text-zinc-300">Nome *</Label>
+                <Label htmlFor="route-name" className="text-foreground/80">Nome *</Label>
                 <Input
                   id="route-name"
                   placeholder="Ex: N8N Producao, Chatwoot, etc."
@@ -185,7 +185,7 @@ export function RouteFormDialog({
 
               {/* Icone arquivado — funcionalidade desativada temporariamente
               <div className="space-y-2">
-                <Label className="text-zinc-300">Icone</Label>
+                <Label className="text-foreground/80">Icone</Label>
                 <IconPicker
                   value={icon}
                   onChange={setIcon}
@@ -196,7 +196,7 @@ export function RouteFormDialog({
 
               {/* URL */}
               <div className="space-y-2">
-                <Label htmlFor="route-url" className="text-zinc-300">URL do Webhook *</Label>
+                <Label htmlFor="route-url" className="text-foreground/80">URL do Webhook *</Label>
                 <Input
                   id="route-url"
                   placeholder="https://api.exemplo.com/webhook"
@@ -206,7 +206,7 @@ export function RouteFormDialog({
                   type="url"
                   className={inputClasses}
                 />
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                   Somente URLs com HTTPS são aceitas
                 </p>
                 {fieldErrors.url && (
@@ -218,7 +218,7 @@ export function RouteFormDialog({
 
               {/* Secret Key */}
               <div className="space-y-2">
-                <Label htmlFor="route-secret" className="text-zinc-300">Secret Key (opcional)</Label>
+                <Label htmlFor="route-secret" className="text-foreground/80">Secret Key (opcional)</Label>
                 <div className="relative">
                   <Input
                     id="route-secret"
@@ -236,7 +236,7 @@ export function RouteFormDialog({
                   <button
                     type="button"
                     onClick={() => setShowSecretKey(!showSecretKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 cursor-pointer transition-colors duration-200"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors duration-200"
                   >
                     {showSecretKey ? (
                       <EyeOff className="h-4 w-4" />
@@ -245,14 +245,14 @@ export function RouteFormDialog({
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                   Será criptografada com AES-256-GCM antes de salvar
                 </p>
               </div>
 
               {/* Timeout */}
               <div className="space-y-2">
-                <Label htmlFor="route-timeout" className="text-zinc-300">Timeout (ms)</Label>
+                <Label htmlFor="route-timeout" className="text-foreground/80">Timeout (ms)</Label>
                 <Input
                   id="route-timeout"
                   type="number"
@@ -264,7 +264,7 @@ export function RouteFormDialog({
                   disabled={isPending}
                   className={inputClasses}
                 />
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                   Entre 1.000ms e 60.000ms. Padrao: 30.000ms
                 </p>
                 {fieldErrors.timeoutMs && (
@@ -283,7 +283,7 @@ export function RouteFormDialog({
 
               {/* Eventos */}
               <div id="events-section" className="space-y-2">
-                <Label className="text-zinc-300">Eventos WhatsApp *</Label>
+                <Label className="text-foreground/80">Eventos WhatsApp *</Label>
                 <EventChecklist
                   selectedEvents={events}
                   onChange={setEvents}
@@ -298,13 +298,13 @@ export function RouteFormDialog({
             </motion.div>
           </ScrollArea>
 
-          <DialogFooter className="pt-4 border-t border-zinc-800">
+          <DialogFooter className="pt-4 border-t border-border">
             <Button
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
-              className="text-zinc-400 hover:text-zinc-200 cursor-pointer transition-all duration-200"
+              className="text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
             >
               Cancelar
             </Button>
