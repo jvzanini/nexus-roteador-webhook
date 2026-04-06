@@ -5,6 +5,7 @@ interface CurrentUser {
   name: string;
   email: string;
   isSuperAdmin: boolean;
+  platformRole: string;
   avatarUrl: string | null;
   theme: string;
 }
@@ -27,6 +28,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     name: user.name ?? "",
     email: user.email ?? "",
     isSuperAdmin: user.isSuperAdmin ?? false,
+    platformRole: user.platformRole ?? 'viewer',
     avatarUrl: user.avatarUrl ?? null,
     theme: user.theme ?? "dark",
   };

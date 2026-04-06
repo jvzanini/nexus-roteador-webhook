@@ -91,7 +91,7 @@ const ALL_ROLES: RoleOption[] = [
     description: "Acesso total a toda a plataforma",
   },
   {
-    value: "company_admin",
+    value: "admin",
     label: "Admin",
     description: "Gerencia empresas e usuários",
   },
@@ -305,15 +305,6 @@ interface UsersContentProps {
   currentUserId: string;
 }
 
-function mapRoleToValue(displayRole: string): string {
-  switch (displayRole) {
-    case "Super Admin": return "super_admin";
-    case "Admin": return "company_admin";
-    case "Gerente": return "manager";
-    case "Visualizador": return "viewer";
-    default: return "viewer";
-  }
-}
 
 export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps) {
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -360,15 +351,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
       email: user.email,
       password: "",
       confirmPassword: "",
-      role: user.isSuperAdmin
-        ? "super_admin"
-        : user.highestRole === "Admin"
-          ? "company_admin"
-          : user.highestRole === "Gerente"
-            ? "manager"
-            : user.highestRole === "Visualizador"
-              ? "viewer"
-              : "viewer",
+      role: user.platformRole,
       isActive: user.isActive,
     });
     setPasswordError("");
@@ -394,11 +377,18 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
     setPasswordError("");
 
     startSaving(async () => {
+      // Mapear platformRole para o schema do createUser (que usa role legado)
+      const roleMap: Record<string, string> = {
+        super_admin: "super_admin",
+        admin: "company_admin",
+        manager: "manager",
+        viewer: "viewer",
+      };
       const result = await createUser({
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
-        role: form.role as
+        role: (roleMap[form.role] ?? form.role) as
           | "super_admin"
           | "company_admin"
           | "manager"
@@ -436,14 +426,14 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
         name?: string;
         email?: string;
         password?: string;
-        role?: "super_admin" | "company_admin" | "manager" | "viewer";
+        platformRole?: "super_admin" | "admin" | "manager" | "viewer";
         isActive?: boolean;
       } = {
         name: form.name.trim(),
         email: form.email.trim(),
-        role: form.role as
+        platformRole: form.role as
           | "super_admin"
-          | "company_admin"
+          | "admin"
           | "manager"
           | "viewer",
         isActive: form.isActive,
@@ -485,7 +475,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
 
   async function handleInlineRoleChange(userId: string, role: string) {
     startSaving(async () => {
-      const result = await updateUser(userId, { role: role as "super_admin" | "company_admin" | "manager" | "viewer" });
+      const result = await updateUser(userId, { platformRole: role as "super_admin" | "admin" | "manager" | "viewer" });
       if (result.success) {
         const warning = (result as any).warning;
         if (warning) {
@@ -600,18 +590,18 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
               label: r.label,
               description: r.description,
               bg: r.value === "super_admin" ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
-                : r.value === "company_admin" ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                : r.value === "admin" ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
                 : r.value === "manager" ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
                 : "bg-zinc-800 border-zinc-700 text-zinc-400",
               icon: r.value === "super_admin" ? Crown
-                : r.value === "company_admin" ? ShieldCheck
+                : r.value === "admin" ? ShieldCheck
                 : r.value === "manager" ? Shield
                 : Eye,
             }))}
             getBadgeStyle={(val) => {
               switch (val) {
                 case "super_admin": return { bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", icon: Crown };
-                case "company_admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
+                case "admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
                 case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
                 default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
               }
@@ -620,7 +610,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
         </div>
 
         {/* Ativo/Inativo (apenas na edicao, exceto super admin) */}
-        {mode === "edit" && editingUser && editingUser.highestRole !== "Super Admin" && (
+        {mode === "edit" && editingUser && editingUser.platformRole !== "super_admin" && (
           <div className="flex items-center justify-between rounded-lg bg-muted/30 border border-border px-4 py-3">
             <div className="flex items-center gap-2">
               {form.isActive ? (
@@ -739,7 +729,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                     <TableCell className="text-center">
                       {(() => {
                         const isOwnUser = user.id === currentUserId;
-                        const isTargetSuperAdmin = user.highestRole === "Super Admin";
+                        const isTargetSuperAdmin = user.platformRole === "super_admin";
 
                         if (isOwnUser || (isTargetSuperAdmin && !isSuperAdmin)) {
                           return (
@@ -755,7 +745,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                         const roleSelectOptions = (isSuperAdmin ? [
                           { value: "super_admin", label: "Super Admin", description: "Acesso total a toda a plataforma", bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", icon: Crown },
                         ] : []).concat([
-                          { value: "company_admin", label: "Admin", description: "Gerencia empresas e usuários", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck },
+                          { value: "admin", label: "Admin", description: "Gerencia empresas e usuários", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck },
                           { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks", bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield },
                           { value: "viewer", label: "Visualizador", description: "Apenas visualização", bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye },
                         ]);
@@ -763,13 +753,13 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                         return (
                           <BadgeSelect
                             useFixed
-                            value={mapRoleToValue(user.highestRole)}
+                            value={user.platformRole}
                             onChange={(val) => handleInlineRoleChange(user.id, val)}
                             options={roleSelectOptions}
                             getBadgeStyle={(val) => {
                               switch (val) {
                                 case "super_admin": return { bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", icon: Crown };
-                                case "company_admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
+                                case "admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
                                 case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
                                 default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
                               }

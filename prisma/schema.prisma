@@ -8,17 +8,18 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid()) @db.Uuid
+  id            String       @id @default(uuid()) @db.Uuid
   name          String
-  email         String   @unique
+  email         String       @unique
   password      String
-  isSuperAdmin  Boolean  @default(false) @map("is_super_admin")
-  avatarUrl     String?  @map("avatar_url")
-  theme         Theme    @default(dark)
-  isActive      Boolean  @default(true) @map("is_active")
-  invitedById   String?  @map("invited_by") @db.Uuid
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  platformRole  PlatformRole @default(viewer) @map("platform_role")
+  isSuperAdmin  Boolean      @default(false) @map("is_super_admin")
+  avatarUrl     String?      @map("avatar_url")
+  theme         Theme        @default(dark)
+  isActive      Boolean      @default(true) @map("is_active")
+  invitedById   String?      @map("invited_by") @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
 
   invitedBy     User?    @relation("UserInvites", fields: [invitedById], references: [id])
   invitees      User[]   @relation("UserInvites")
@@ -53,7 +54,15 @@ model UserCompanyMembership {
   @@map("user_company_memberships")
 }
 
+enum PlatformRole {
+  super_admin
+  admin
+  manager
+  viewer
+}
+
 enum CompanyRole {
+  super_admin
   company_admin
   manager
   viewer

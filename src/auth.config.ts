@@ -25,6 +25,7 @@ export const authConfig = {
       if (user) {
         token.id = user.id!;
         token.isSuperAdmin = (user as any).isSuperAdmin;
+        token.platformRole = (user as any).platformRole;
         token.avatarUrl = (user as any).avatarUrl;
         token.theme = (user as any).theme;
         token.name = user.name;
@@ -43,10 +44,12 @@ export const authConfig = {
               name: true,
               avatarUrl: true,
               theme: true,
+              platformRole: true,
             },
           });
           if (freshUser) {
             token.isSuperAdmin = freshUser.isSuperAdmin;
+            token.platformRole = freshUser.platformRole;
             token.name = freshUser.name;
             token.avatarUrl = freshUser.avatarUrl;
             token.theme = freshUser.theme;
@@ -67,6 +70,7 @@ export const authConfig = {
       if (session.user) {
         session.user.id = token.id as string;
         (session.user as any).isSuperAdmin = token.isSuperAdmin as boolean;
+        (session.user as any).platformRole = token.platformRole as string;
         (session.user as any).avatarUrl = token.avatarUrl as string | null;
         (session.user as any).theme = token.theme as string;
       }

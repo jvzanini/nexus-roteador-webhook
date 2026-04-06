@@ -5,7 +5,7 @@ import { SettingsContent } from "./settings-content";
 export default async function SettingsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (!user.isSuperAdmin) redirect("/dashboard");
+  if (user.platformRole !== 'super_admin') redirect("/dashboard");
 
   return <SettingsContent />;
 }

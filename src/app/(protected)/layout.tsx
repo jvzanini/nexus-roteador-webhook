@@ -2,7 +2,13 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { Sidebar } from '@/components/layout/sidebar';
 import { ThemeInitializer } from '@/components/providers/theme-initializer';
-import { prisma } from '@/lib/prisma';
+
+const PLATFORM_ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  manager: 'Gerente',
+  viewer: 'Visualizador',
+};
 
 export default async function ProtectedLayout({
   children,
@@ -16,32 +22,16 @@ export default async function ProtectedLayout({
   }
 
   const isSuperAdmin = (session.user as any)?.isSuperAdmin ?? false;
+  const platformRole = (session.user as any)?.platformRole ?? 'viewer';
   const avatarUrl = (session.user as any)?.avatarUrl ?? null;
-  const userId = (session.user as any)?.id;
 
-  let roleLabel = 'Usuário';
-  if (isSuperAdmin) {
-    roleLabel = 'Super Admin';
-  } else if (userId) {
-    const membership = await prisma.userCompanyMembership.findFirst({
-      where: { userId, isActive: true },
-      select: { role: true },
-      orderBy: { role: 'asc' },
-    });
-    if (membership) {
-      const labels: Record<string, string> = {
-        company_admin: 'Admin',
-        manager: 'Gerente',
-        viewer: 'Visualizador',
-      };
-      roleLabel = labels[membership.role] || 'Usuário';
-    }
-  }
+  const roleLabel = PLATFORM_ROLE_LABELS[platformRole] || 'Usuário';
 
   const user = {
     name: session.user.name || session.user.email || 'Usuário',
     email: session.user.email || '',
     role: roleLabel,
+    platformRole,
     isSuperAdmin,
     avatarUrl,
   };

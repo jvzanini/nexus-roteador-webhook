@@ -1,25 +1,17 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { UsersContent } from "./users-content";
 
 export default async function UsersPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  // Super admin tem acesso direto
-  if (user.isSuperAdmin) {
-    return <UsersContent isSuperAdmin currentUserId={user.id} />;
-  }
+  const platformRole = user.platformRole;
 
-  // Verificar se o usuario e company_admin em alguma empresa
-  const adminMembership = await prisma.userCompanyMembership.findFirst({
-    where: { userId: user.id, role: "company_admin", isActive: true },
-  });
-
-  if (!adminMembership) {
+  // Apenas super_admin e admin têm acesso à página de usuários
+  if (platformRole !== 'super_admin' && platformRole !== 'admin') {
     redirect("/dashboard");
   }
 
-  return <UsersContent isSuperAdmin={false} currentUserId={user.id} />;
+  return <UsersContent isSuperAdmin={platformRole === 'super_admin'} currentUserId={user.id} />;
 }

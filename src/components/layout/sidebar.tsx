@@ -21,7 +21,8 @@ interface SidebarProps {
   user: {
     name: string;
     email: string;
-    role: string;
+    role: string; // Display label
+    platformRole: string; // super_admin, admin, manager, viewer
     isSuperAdmin: boolean;
     avatarUrl: string | null;
   };
@@ -38,11 +39,11 @@ export function Sidebar({ user }: SidebarProps) {
 
   const allMenuItems = [
     ...menuItems,
-    ...(user.isSuperAdmin
-      ? [
-          { label: 'Usuários', href: '/users', icon: Users },
-          { label: 'Configurações', href: '/settings', icon: Settings },
-        ]
+    ...(user.platformRole === 'super_admin' || user.platformRole === 'admin'
+      ? [{ label: 'Usuários', href: '/users', icon: Users }]
+      : []),
+    ...(user.platformRole === 'super_admin'
+      ? [{ label: 'Configurações', href: '/settings', icon: Settings }]
       : []),
   ];
 

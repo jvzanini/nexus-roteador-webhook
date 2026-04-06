@@ -13,6 +13,7 @@ interface AuthUser {
   email: string;
   name: string;
   isSuperAdmin: boolean;
+  platformRole: string;
   avatarUrl: string | null;
   theme: string;
 }
@@ -41,6 +42,7 @@ export async function authorizeCredentials(
       name: true,
       password: true,
       isSuperAdmin: true,
+      platformRole: true,
       isActive: true,
       avatarUrl: true,
       theme: true,
@@ -73,6 +75,7 @@ export async function authorizeCredentials(
     email: user.email,
     name: user.name,
     isSuperAdmin: user.isSuperAdmin,
+    platformRole: user.platformRole,
     avatarUrl: user.avatarUrl,
     theme: user.theme,
   };

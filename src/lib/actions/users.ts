@@ -13,6 +13,7 @@ export interface UserItem {
   name: string;
   email: string;
   isSuperAdmin: boolean;
+  platformRole: string;
   isActive: boolean;
   createdAt: Date;
   companiesCount: number;
@@ -46,6 +47,7 @@ export interface MemberItem {
   userName: string;
   userEmail: string;
   isSuperAdmin: boolean;
+  platformRole: string;
   role: CompanyRole;
   isActive: boolean;
   createdAt: Date;
@@ -63,6 +65,13 @@ const ROLE_HIERARCHY: Record<string, number> = {
 
 const ROLE_LABELS: Record<string, string> = {
   company_admin: "Admin",
+  manager: "Gerente",
+  viewer: "Visualizador",
+};
+
+const PLATFORM_ROLE_LABELS: Record<string, string> = {
+  super_admin: "Super Admin",
+  admin: "Admin",
   manager: "Gerente",
   viewer: "Visualizador",
 };
@@ -107,6 +116,7 @@ const UpdateUserSchema = z.object({
   email: z.string().email().optional(),
   password: z.string().min(8).optional(),
   role: z.enum(["super_admin", "company_admin", "manager", "viewer"]).optional(),
+  platformRole: z.enum(["super_admin", "admin", "manager", "viewer"]).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -128,8 +138,8 @@ export async function getUsers(): Promise<ActionResult<UserItem[]>> {
   const currentUser = await getCurrentUser();
   if (!currentUser) return { success: false, error: "Não autenticado" };
 
-  const isSuperAdmin = currentUser.isSuperAdmin;
-  const isAdmin = !isSuperAdmin && (await isCompanyAdmin(currentUser.id));
+  const isSuperAdmin = currentUser.platformRole === 'super_admin';
+  const isAdmin = currentUser.platformRole === 'admin';
 
   if (!isSuperAdmin && !isAdmin) {
     return { success: false, error: "Acesso negado" };
@@ -142,6 +152,7 @@ export async function getUsers(): Promise<ActionResult<UserItem[]>> {
       name: true,
       email: true,
       isSuperAdmin: true,
+      platformRole: true,
       isActive: true,
       createdAt: true,
       _count: { select: { memberships: true } },
@@ -158,10 +169,7 @@ export async function getUsers(): Promise<ActionResult<UserItem[]>> {
     success: true,
     data: filtered.map((u) => {
       // Determinar canEdit e canDelete baseado no nivel do usuario logado
-      const targetIsSuperAdmin = u.isSuperAdmin;
-      const targetIsAdmin =
-        !targetIsSuperAdmin &&
-        u.memberships.some((m) => m.role === "company_admin");
+      const targetPlatformRole = u.platformRole;
 
       let canEdit = false;
       let canDelete = false;
@@ -171,10 +179,9 @@ export async function getUsers(): Promise<ActionResult<UserItem[]>> {
         canEdit = u.id !== currentUser.id;
         canDelete = u.id !== currentUser.id;
       } else if (isAdmin) {
-        // Admin edita apenas manager e viewer
-        canEdit = !targetIsSuperAdmin && !targetIsAdmin;
-        // Admin deleta apenas manager e viewer
-        canDelete = !targetIsSuperAdmin && !targetIsAdmin;
+        // Admin edita apenas manager e viewer (não super_admin nem admin)
+        canEdit = targetPlatformRole === 'manager' || targetPlatformRole === 'viewer';
+        canDelete = targetPlatformRole === 'manager' || targetPlatformRole === 'viewer';
       }
 
       return {
@@ -182,10 +189,11 @@ export async function getUsers(): Promise<ActionResult<UserItem[]>> {
         name: u.name,
         email: u.email,
         isSuperAdmin: u.isSuperAdmin,
+        platformRole: u.platformRole,
         isActive: u.isActive,
         createdAt: u.createdAt,
         companiesCount: u._count.memberships,
-        highestRole: getHighestRole(u.isSuperAdmin, u.memberships),
+        highestRole: PLATFORM_ROLE_LABELS[u.platformRole] || 'Sem acesso',
         canEdit,
         canDelete,
       };
@@ -247,8 +255,8 @@ export async function createUser(
   const currentUser = await getCurrentUser();
   if (!currentUser) return { success: false, error: "Não autenticado" };
 
-  const isSuperAdmin = currentUser.isSuperAdmin;
-  const isAdmin = !isSuperAdmin && (await isCompanyAdmin(currentUser.id));
+  const isSuperAdmin = currentUser.platformRole === 'super_admin';
+  const isAdmin = currentUser.platformRole === 'admin';
 
   if (!isSuperAdmin && !isAdmin) {
     return { success: false, error: "Acesso negado" };
@@ -269,12 +277,21 @@ export async function createUser(
 
     const hashedPassword = await bcrypt.hash(parsed.password, 12);
 
+    // Mapear role legado para platformRole
+    const platformRoleMap: Record<string, string> = {
+      super_admin: "super_admin",
+      company_admin: "admin",
+      manager: "manager",
+      viewer: "viewer",
+    };
+
     const created = await prisma.user.create({
       data: {
         name: parsed.name,
         email: parsed.email,
         password: hashedPassword,
         isSuperAdmin: parsed.role === "super_admin",
+        platformRole: (platformRoleMap[parsed.role] ?? "viewer") as any,
         invitedById: currentUser.id,
       },
     });
@@ -295,8 +312,8 @@ export async function updateUser(
   const currentUser = await getCurrentUser();
   if (!currentUser) return { success: false, error: "Não autenticado" };
 
-  const isSuperAdmin = currentUser.isSuperAdmin;
-  const isAdmin = !isSuperAdmin && (await isCompanyAdmin(currentUser.id));
+  const isSuperAdmin = currentUser.platformRole === 'super_admin';
+  const isAdmin = currentUser.platformRole === 'admin';
 
   if (!isSuperAdmin && !isAdmin) {
     return { success: false, error: "Acesso negado" };
@@ -310,6 +327,7 @@ export async function updateUser(
       where: { id: userId },
       select: {
         isSuperAdmin: true,
+        platformRole: true,
         memberships: { select: { role: true } },
       },
     });
@@ -332,12 +350,12 @@ export async function updateUser(
       if (targetUser.isSuperAdmin) {
         return { success: false, error: "Sem permissão para editar Super Admin" };
       }
-      // Admin nao pode editar outro admin
-      if (targetUser.memberships.some((m) => m.role === "company_admin")) {
+      // Admin nao pode editar outro admin (platformRole === 'admin')
+      if (targetUser.platformRole === 'admin') {
         return { success: false, error: "Sem permissão para editar outro Admin" };
       }
       // Admin nao pode promover para super admin
-      if (parsed.role === "super_admin") {
+      if (parsed.platformRole === "super_admin" || parsed.role === "super_admin") {
         return { success: false, error: "Sem permissão para definir Super Admin" };
       }
     }
@@ -354,19 +372,37 @@ export async function updateUser(
     }
     if (parsed.password !== undefined)
       updateData.password = await bcrypt.hash(parsed.password, 12);
-    if (parsed.role !== undefined) {
-      updateData.isSuperAdmin = parsed.role === "super_admin";
-    }
     if (parsed.isActive !== undefined) updateData.isActive = parsed.isActive;
+
+    // Mapear platformRole → CompanyRole para memberships
+    const PLATFORM_TO_COMPANY_ROLE: Record<string, string> = {
+      super_admin: "super_admin",
+      admin: "company_admin",
+      manager: "manager",
+      viewer: "viewer",
+    };
+
+    // Determinar o platformRole efetivo (prioridade: parsed.platformRole > parsed.role legado)
+    const effectivePlatformRole = parsed.platformRole ?? (
+      parsed.role ? (
+        parsed.role === "company_admin" ? "admin" :
+        parsed.role === "super_admin" ? "super_admin" :
+        parsed.role
+      ) : undefined
+    );
+
+    if (effectivePlatformRole !== undefined) {
+      updateData.platformRole = effectivePlatformRole;
+      updateData.isSuperAdmin = effectivePlatformRole === "super_admin";
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       await tx.user.update({ where: { id: userId }, data: updateData });
 
       let membershipsUpdated = 0;
-      if (parsed.role !== undefined) {
-        if (parsed.role === "super_admin") {
-          // Super admin: todas as memberships viram company_admin
-          // + vincular a todas as empresas existentes (regra de super admin)
+      if (effectivePlatformRole !== undefined) {
+        if (effectivePlatformRole === "super_admin") {
+          // Promovido a super_admin: vincular a TODAS as empresas como super_admin
           const allCompanies = await tx.company.findMany({
             where: { isActive: true },
             select: { id: true },
@@ -374,25 +410,34 @@ export async function updateUser(
           for (const company of allCompanies) {
             await tx.userCompanyMembership.upsert({
               where: { userId_companyId: { userId, companyId: company.id } },
-              create: { userId, companyId: company.id, role: "company_admin" },
-              update: { role: "company_admin", isActive: true },
+              create: { userId, companyId: company.id, role: "super_admin" as any },
+              update: { role: "super_admin" as any, isActive: true },
             });
           }
           membershipsUpdated = allCompanies.length;
-        } else {
-          // Qualquer outro role: propagar para todas as memberships existentes
+        } else if (targetUser.isSuperAdmin) {
+          // Era super_admin, agora rebaixado — atualizar todas as memberships
+          const companyRole = PLATFORM_TO_COMPANY_ROLE[effectivePlatformRole] ?? "viewer";
+          await tx.userCompanyMembership.updateMany({
+            where: { userId },
+            data: { role: companyRole as any },
+          });
+          membershipsUpdated = (await tx.userCompanyMembership.count({ where: { userId } }));
+        } else if (effectivePlatformRole === "viewer") {
+          // Mudou para viewer — todas as memberships viram viewer
           const updated = await tx.userCompanyMembership.updateMany({
             where: { userId },
-            data: { role: parsed.role as "company_admin" | "manager" | "viewer" },
+            data: { role: "viewer" },
           });
           membershipsUpdated = updated.count;
         }
+        // admin↔manager: não toca nas memberships
       }
 
       return { membershipsUpdated };
     });
 
-    if (parsed.role !== undefined && result.membershipsUpdated === 0) {
+    if (effectivePlatformRole !== undefined && result.membershipsUpdated === 0 && effectivePlatformRole !== "super_admin") {
       return {
         success: true,
         warning: "Nível atualizado, mas o usuário não está vinculado a nenhuma empresa. Vincule-o a uma empresa para que o nível tenha efeito.",
@@ -412,8 +457,8 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
   const currentUser = await getCurrentUser();
   if (!currentUser) return { success: false, error: "Não autenticado" };
 
-  const isSuperAdmin = currentUser.isSuperAdmin;
-  const isAdmin = !isSuperAdmin && (await isCompanyAdmin(currentUser.id));
+  const isSuperAdmin = currentUser.platformRole === 'super_admin';
+  const isAdmin = currentUser.platformRole === 'admin';
 
   if (!isSuperAdmin && !isAdmin) {
     return { success: false, error: "Acesso negado" };
@@ -425,7 +470,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
       where: { id: userId },
       select: {
         isSuperAdmin: true,
-        memberships: { select: { role: true } },
+        platformRole: true,
       },
     });
 
@@ -439,10 +484,10 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
     // Super admin pode deletar qualquer um (exceto a si mesmo, ja tratado acima)
     // Admin nao pode deletar super admin nem outro admin
     if (!isSuperAdmin) {
-      if (targetUser.isSuperAdmin) {
+      if (targetUser.platformRole === 'super_admin') {
         return { success: false, error: "Sem permissão para excluir Super Admin" };
       }
-      if (targetUser.memberships.some((m) => m.role === "company_admin")) {
+      if (targetUser.platformRole === 'admin') {
         return { success: false, error: "Sem permissão para excluir Admin" };
       }
     }
@@ -485,7 +530,7 @@ export async function getCompanyMembers(
       role: true,
       isActive: true,
       createdAt: true,
-      user: { select: { name: true, email: true, isSuperAdmin: true } },
+      user: { select: { name: true, email: true, isSuperAdmin: true, platformRole: true } },
     },
   });
 
@@ -497,6 +542,7 @@ export async function getCompanyMembers(
       userName: m.user.name,
       userEmail: m.user.email,
       isSuperAdmin: m.user.isSuperAdmin,
+      platformRole: m.user.platformRole,
       role: m.role,
       isActive: m.isActive,
       createdAt: m.createdAt,
