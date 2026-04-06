@@ -15,6 +15,7 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 3:** Em progresso — gestão usuários OK, ajustes UI/UX massivos OK, super admin auto-vinculado OK, selects padronizados OK, esqueci senha OK, perfil completo OK (avatar, nome, email com verificação, senha, tema). Pendente: busca global, exportação CSV
 - **Fase 3B:** CONCLUÍDA — rebranding roxo Nexus AI, light mode, responsividade mobile/tablet, login redesign, selects padronizados, sidebar sync avatar/nome
 - **Fase 3C:** CONCLUÍDA — controle de acesso completo (backend+frontend), seguranca webhook-routes e logs, fix updateUser, excluir empresa, slug editavel, viewer read-only, selects inline usuarios, toast redesign
+- **Fase 3D:** CONCLUÍDA — sistema de permissoes em duas camadas (platformRole + CompanyRole independentes), JWT refresh em tempo real, login usuario inativo, sidebar com role real
 
 ## Idioma
 Sempre responder em português brasileiro.
