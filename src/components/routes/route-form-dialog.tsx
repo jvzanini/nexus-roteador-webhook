@@ -13,7 +13,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-// import { IconPicker } from "@/components/icon-picker/icon-picker"; // Arquivado temporariamente
 import { EventChecklist } from "@/components/event-checklist/event-checklist";
 import {
   RouteHeaderFields,
@@ -181,17 +180,6 @@ export function RouteFormDialog({
                   </p>
                 )}
               </div>
-
-              {/* Icone arquivado — funcionalidade desativada temporariamente
-              <div className="space-y-2">
-                <Label className="text-foreground/80">Icone</Label>
-                <IconPicker
-                  value={icon}
-                  onChange={setIcon}
-                  disabled={isPending}
-                />
-              </div>
-              */}
 
               {/* URL */}
               <div className="space-y-2">
