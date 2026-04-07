@@ -119,64 +119,8 @@
   --sidebar-ring: #7c3aed;
 }
 
-/* ===== TOAST NOTIFICATIONS — estilo Portainer (pilha bottom-up) ===== */
-
-/* Lista de toasts: flexbox column-reverse = mais recente embaixo, antigos sobem */
-[data-sonner-toaster] ol {
-  display: flex !important;
-  flex-direction: column-reverse !important;
-  gap: 12px !important;
-}
-
-/* Cada toast: position relative (nao absolute), sem transform do Sonner */
-[data-sonner-toaster] [data-sonner-toast] {
-  position: relative !important;
-  bottom: auto !important;
-  height: auto !important;
-  opacity: 1 !important;
-  overflow: hidden !important;
-}
-
-/* Override transform — exceto durante swipe */
-[data-sonner-toaster] [data-sonner-toast]:not([data-swiping=true]):not([data-swipe-out=true]) {
-  transform: none !important;
-}
-
-/* Conteudo SEMPRE visivel em todos os toasts */
-[data-sonner-toaster] [data-sonner-toast] > * {
-  opacity: 1 !important;
-}
-
-/* Toast removido: colapsa suavemente */
-[data-sonner-toaster] [data-sonner-toast][data-removed=true] {
-  opacity: 0 !important;
-  height: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-  transition: all 0.3s ease !important;
-}
-
-/* Toast invisivel (excedeu visibleToasts) */
-[data-sonner-toaster] [data-sonner-toast][data-visible=false] {
-  display: none !important;
-}
-
-/* Animacao de entrada: slide up suave */
-@keyframes toast-enter-bottom {
-  from {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-mounted=true]:not([data-removed=true]):not([data-swiping=true]):not([data-swipe-out=true]) {
-  animation: toast-enter-bottom 0.3s ease forwards;
-}
+/* ===== TOAST NOTIFICATIONS ===== */
+/* Posicionamento e visibilidade controlados via JS (sonner.tsx MutationObserver) */
 
 /* Progress bar no rodapé */
 [data-sonner-toaster] [data-sonner-toast]::before {
