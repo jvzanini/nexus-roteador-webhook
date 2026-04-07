@@ -32,6 +32,7 @@ import {
   getUsers,
 } from "@/lib/actions/users";
 import type { MemberItem, UserItem } from "@/lib/actions/users";
+import { COMPANY_ROLE_STYLES, PLATFORM_ROLE_STYLES, COMPANY_ROLE_OPTIONS } from "@/lib/constants/roles";
 
 interface MembersTabProps {
   companyId: string;
@@ -40,23 +41,29 @@ interface MembersTabProps {
   currentUserIsSuperAdmin?: boolean;
 }
 
-const roleLabels: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
-  company_admin: {
-    label: "Admin",
-    icon: <ShieldCheck className="size-3" />,
-    className: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  },
-  manager: {
-    label: "Gerente",
-    icon: <Shield className="size-3" />,
-    className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  },
-  viewer: {
-    label: "Visualizador",
-    icon: <Eye className="size-3" />,
-    className: "bg-zinc-800 text-zinc-400 border-zinc-700",
-  },
+const ROLE_ICONS: Record<string, { element: React.ReactNode; component: typeof ShieldCheck }> = {
+  company_admin: { element: <ShieldCheck className="size-3" />, component: ShieldCheck },
+  manager: { element: <Shield className="size-3" />, component: Shield },
+  viewer: { element: <Eye className="size-3" />, component: Eye },
 };
+
+const roleLabels: Record<string, { label: string; icon: React.ReactNode; className: string }> = Object.fromEntries(
+  Object.entries(COMPANY_ROLE_STYLES).map(([key, style]) => [
+    key,
+    { ...style, icon: ROLE_ICONS[key]?.element ?? <Eye className="size-3" /> },
+  ])
+);
+
+const companyRoleSelectOptions = COMPANY_ROLE_OPTIONS.map((opt) => ({
+  ...opt,
+  icon: ROLE_ICONS[opt.value]?.component ?? Eye,
+}));
+
+function getCompanyRoleBadgeStyle(val: string) {
+  const opt = COMPANY_ROLE_OPTIONS.find((o) => o.value === val);
+  const icon = ROLE_ICONS[val]?.component ?? Eye;
+  return { bg: opt?.bg ?? "bg-zinc-800 border-zinc-700 text-zinc-400", icon };
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -329,13 +336,7 @@ export function MembersTab({ companyId, canEdit = true, currentUserId, currentUs
                 }}
                 placeholder="Selecione um usuário"
                 options={availableUsers.map((user) => {
-                  const platformLabels: Record<string, { label: string; className: string }> = {
-                    super_admin: { label: "Super Admin", className: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-                    admin: { label: "Admin", className: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-                    manager: { label: "Gerente", className: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-                    viewer: { label: "Visualizador", className: "bg-zinc-800 text-zinc-400 border-zinc-700" },
-                  };
-                  const pl = platformLabels[user.platformRole] || platformLabels.viewer;
+                  const pl = PLATFORM_ROLE_STYLES[user.platformRole] || PLATFORM_ROLE_STYLES.viewer;
                   return {
                     value: user.id,
                     label: user.name,
@@ -367,18 +368,8 @@ export function MembersTab({ companyId, canEdit = true, currentUserId, currentUs
                   <MemberBadgeSelect
                     value={selectedRole}
                     onChange={(v) => setSelectedRole(v)}
-                    options={[
-                      { value: "company_admin", label: "Admin", description: "Gerencia a empresa", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck },
-                      { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks", bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield },
-                      { value: "viewer", label: "Visualizador", description: "Apenas visualização", bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye },
-                    ]}
-                    getBadgeStyle={(val) => {
-                      switch (val) {
-                        case "company_admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
-                        case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
-                        default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
-                      }
-                    }}
+                    options={companyRoleSelectOptions}
+                    getBadgeStyle={getCompanyRoleBadgeStyle}
                   />
                 );
               })()}
@@ -437,16 +428,16 @@ export function MembersTab({ companyId, canEdit = true, currentUserId, currentUs
                 >
                   <TableCell className="px-4 py-2">
                     {(() => {
-                      const platformStyles: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
-                        super_admin: { label: "Super Admin", icon: <Crown className="size-3" />, className: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-                        admin: { label: "Admin", icon: <ShieldCheck className="size-3" />, className: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-                        manager: { label: "Gerente", icon: <Shield className="size-3" />, className: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-                        viewer: { label: "Visualizador", icon: <Eye className="size-3" />, className: "bg-zinc-800 text-zinc-400 border-zinc-700" },
+                      const PLATFORM_ICONS: Record<string, React.ReactNode> = {
+                        super_admin: <Crown className="size-3" />,
+                        admin: <ShieldCheck className="size-3" />,
+                        manager: <Shield className="size-3" />,
+                        viewer: <Eye className="size-3" />,
                       };
-                      const pl = platformStyles[member.platformRole] || platformStyles.viewer;
+                      const pl = PLATFORM_ROLE_STYLES[member.platformRole] || PLATFORM_ROLE_STYLES.viewer;
                       return (
                         <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${pl.className}`}>
-                          {pl.icon}
+                          {PLATFORM_ICONS[member.platformRole] ?? <Eye className="size-3" />}
                           {pl.label}
                         </span>
                       );

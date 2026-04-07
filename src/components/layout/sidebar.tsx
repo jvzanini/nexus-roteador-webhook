@@ -5,14 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  Settings,
   LogOut,
   Menu,
   X,
 } from 'lucide-react';
+import { getNavItems } from '@/lib/constants/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'next-auth/react';
@@ -28,24 +25,11 @@ interface SidebarProps {
   };
 }
 
-const menuItems = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Empresas', href: '/companies', icon: Building2 },
-];
-
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const allMenuItems = [
-    ...menuItems,
-    ...(user.platformRole === 'super_admin' || user.platformRole === 'admin'
-      ? [{ label: 'Usuários', href: '/users', icon: Users }]
-      : []),
-    ...(user.platformRole === 'super_admin'
-      ? [{ label: 'Configurações', href: '/settings', icon: Settings }]
-      : []),
-  ];
+  const allMenuItems = getNavItems(user.platformRole);
 
   function isActive(href: string) {
     if (href === '/dashboard') return pathname === '/dashboard';

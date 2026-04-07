@@ -5,6 +5,11 @@ import { getCurrentUser } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import type { CompanyRole } from "@/generated/prisma/client";
+import {
+  COMPANY_ROLE_HIERARCHY as ROLE_HIERARCHY,
+  COMPANY_ROLE_LABELS as ROLE_LABELS,
+  PLATFORM_ROLE_LABELS,
+} from "@/lib/constants/roles";
 
 // --- Types ---
 
@@ -56,25 +61,6 @@ export interface MemberItem {
 type ActionResult<T = unknown> = { success: boolean; data?: T; error?: string };
 
 // --- Helpers ---
-
-const ROLE_HIERARCHY: Record<string, number> = {
-  company_admin: 3,
-  manager: 2,
-  viewer: 1,
-};
-
-const ROLE_LABELS: Record<string, string> = {
-  company_admin: "Admin",
-  manager: "Gerente",
-  viewer: "Visualizador",
-};
-
-const PLATFORM_ROLE_LABELS: Record<string, string> = {
-  super_admin: "Super Admin",
-  admin: "Admin",
-  manager: "Gerente",
-  viewer: "Visualizador",
-};
 
 function getHighestRole(
   isSuperAdmin: boolean,

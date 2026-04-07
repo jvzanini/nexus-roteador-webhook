@@ -2,13 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { Sidebar } from '@/components/layout/sidebar';
 import { ThemeInitializer } from '@/components/providers/theme-initializer';
-
-const PLATFORM_ROLE_LABELS: Record<string, string> = {
-  super_admin: 'Super Admin',
-  admin: 'Admin',
-  manager: 'Gerente',
-  viewer: 'Visualizador',
-};
+import { PLATFORM_ROLE_LABELS } from '@/lib/constants/roles';
 
 export default async function ProtectedLayout({
   children,
