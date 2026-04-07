@@ -12,16 +12,18 @@ const Toaster = ({ ...props }: ToasterProps) => {
     const toaster = document.querySelector('[data-sonner-toaster]')
     if (!toaster) return
 
-    // Forcar <ol> como flex column-reverse (mais recente embaixo)
+    // Forcar <ol> como flex column-reverse (mais recente embaixo, antigos sobem)
     const ol = toaster.querySelector('ol') as HTMLElement | null
     if (ol) {
       ol.style.setProperty('display', 'flex', 'important')
       ol.style.setProperty('flex-direction', 'column-reverse', 'important')
-      ol.style.setProperty('gap', '12px', 'important')
+      ol.style.setProperty('gap', '0', 'important')
+      ol.style.setProperty('padding', '0', 'important')
     }
 
-    // Forcar cada toast como position relative, sem transform, com conteudo visivel
-    toaster.querySelectorAll<HTMLElement>('[data-sonner-toast]').forEach((el) => {
+    // Forcar cada toast: position relative, sem transform, conteudo visivel, com margem
+    const toasts = toaster.querySelectorAll<HTMLElement>('[data-sonner-toast]')
+    toasts.forEach((el, i) => {
       const isRemoved = el.getAttribute('data-removed') === 'true'
       const isVisible = el.getAttribute('data-visible') !== 'false'
 
@@ -41,10 +43,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
       el.style.setProperty('position', 'relative', 'important')
       el.style.setProperty('bottom', 'auto', 'important')
+      el.style.setProperty('left', 'auto', 'important')
+      el.style.setProperty('right', 'auto', 'important')
       el.style.setProperty('transform', 'none', 'important')
       el.style.setProperty('height', 'auto', 'important')
       el.style.setProperty('opacity', '1', 'important')
       el.style.setProperty('overflow', 'hidden', 'important')
+      // Espaco entre toasts (12px), exceto o ultimo visivel
+      el.style.setProperty('margin-bottom', i < toasts.length - 1 ? '10px' : '0', 'important')
+      el.style.setProperty('margin-top', '0', 'important')
 
       // Forcar conteudo visivel em todos os filhos
       Array.from(el.children).forEach((child) => {
