@@ -111,7 +111,7 @@ function MemberBadgeSelect({
         position: "fixed" as const,
         top: rect.bottom + 4,
         left: rect.left,
-        width: Math.max(rect.width, 240),
+        width: Math.max(rect.width, 300),
         zIndex: 100,
       });
     }
@@ -144,7 +144,7 @@ function MemberBadgeSelect({
                 <button
                   key={option.value}
                   onClick={() => { onChange(option.value); setOpen(false); }}
-                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-left cursor-pointer transition-all hover:bg-accent ${value === option.value ? "bg-accent/50" : ""}`}
+                  className={`flex w-full items-center gap-3 px-4 py-2.5 text-left cursor-pointer transition-all hover:bg-accent ${value === option.value ? "bg-accent/50" : ""}`}
                 >
                   <OptionIcon className={`h-4 w-4 shrink-0 ${option.bg.includes("purple") ? "text-purple-400" : option.bg.includes("blue") ? "text-blue-400" : option.bg.includes("amber") ? "text-amber-400" : "text-muted-foreground"}`} />
                   <div className="flex-1 min-w-0">

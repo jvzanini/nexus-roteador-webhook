@@ -57,7 +57,7 @@ export function CustomSelect({
         position: 'fixed' as const,
         top: rect.bottom + 4,
         left: rect.left,
-        width: Math.max(rect.width, 220),
+        width: Math.max(rect.width, 280),
       });
     }
     if (!disabled) setOpen(!open);
@@ -105,7 +105,7 @@ export function CustomSelect({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex w-full items-start gap-3 px-3 py-2.5 text-left cursor-pointer transition-all duration-200 hover:bg-accent",
+                  "flex w-full items-start gap-3 px-4 py-2.5 text-left cursor-pointer transition-all duration-200 hover:bg-accent",
                   value === option.value && "bg-accent/50"
                 )}
               >

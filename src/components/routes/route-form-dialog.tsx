@@ -138,7 +138,7 @@ export function RouteFormDialog({
     ]
   );
 
-  const inputClasses = "bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200";
+  const inputClasses = "bg-card border-border text-foreground placeholder:text-muted-foreground focus-visible:border-violet-500 focus-visible:ring-[1.5px] focus-visible:ring-violet-500/50 focus-visible:ring-offset-0 focus:outline-none transition-all duration-200";
 
   return (
     <Dialog

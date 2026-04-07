@@ -187,7 +187,7 @@ export function DashboardContent({ userName }: DashboardContentProps) {
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Olá, {userName}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 capitalize">{today}</p>
+          <p className="text-sm text-muted-foreground mt-1">{today}</p>
         </div>
         <NotificationBell />
       </motion.div>
