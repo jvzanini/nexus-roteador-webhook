@@ -12,11 +12,11 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 2A:** CONCLUÍDA (em produção) — dashboard real, gráficos, reenvio, UI premium
 - **Pendentes pré-2B:** CONCLUÍDOS — Aba Logs integrada + Visão Geral mini dashboard
 - **Fase 2B:** CONCLUÍDA (em produção) — config globais, notificações, real-time SSE, health check
-- **Fase 3:** Em progresso — gestão usuários OK, ajustes UI/UX massivos OK, super admin auto-vinculado OK, selects padronizados OK, esqueci senha OK, perfil completo OK (avatar, nome, email com verificação, senha, tema). Pendente: busca global, exportação CSV
+- **Fase 3:** CONCLUÍDA — gestão usuários, ajustes UI/UX massivos, super admin auto-vinculado, selects padronizados, esqueci senha, perfil completo (avatar, nome, email com verificação, senha, tema)
 - **Fase 3B:** CONCLUÍDA — rebranding roxo Nexus AI, light mode, responsividade mobile/tablet, login redesign, selects padronizados, sidebar sync avatar/nome
-- **Fase 3C:** CONCLUÍDA — controle de acesso completo (backend+frontend), seguranca webhook-routes e logs, fix updateUser, excluir empresa, slug editavel, viewer read-only, selects inline usuarios, toast redesign
-- **Fase 3D:** CONCLUÍDA — sistema de permissoes em duas camadas (platformRole + CompanyRole independentes), JWT refresh em tempo real, login usuario inativo, sidebar com role real
-- **Fase 3E:** CONCLUÍDA — toast estilo Portainer (pilha bottom-up, timers independentes, hover individual), data minúscula dashboard, selects largura ajustada, ring inputs corrigido
+- **Fase 3C:** CONCLUÍDA — controle de acesso completo (backend+frontend), segurança webhook-routes e logs, fix updateUser, excluir empresa, slug editável, viewer read-only, selects inline usuários
+- **Fase 3D:** CONCLUÍDA — sistema de permissões em duas camadas (platformRole + CompanyRole independentes), JWT refresh em tempo real, login usuário inativo, sidebar com role real
+- **Fase 3E:** CONCLUÍDA — toast estilo Portainer (pilha bottom-up, timers independentes via pointer-events), data minúscula dashboard, selects largura ajustada, ring inputs corrigido, coluna nível membros, limpeza arquivos obsoletos
 
 ## Idioma
 Sempre responder em português brasileiro.
@@ -106,6 +106,16 @@ Continuar Fase 3:
 - **Planos Fase 1:** `docs/superpowers/plans/2026-04-03-fase1-*.md`
 - **Plano Fase 2A:** `docs/superpowers/plans/2026-04-04-fase2a-dashboard-reenvio.md`
 - **Plano Fase 3B:** `docs/superpowers/plans/2026-04-06-fase3b-rebranding-responsividade-ajustes.md`
+- **Plano Fase 3C:** `docs/superpowers/plans/2026-04-06-fase3c-controle-acesso-ajustes-ui.md`
 - **Spec Logs+Overview:** `docs/superpowers/specs/2026-04-04-logs-overview-tabs-design.md`
 - **Spec Ajustes UI/UX:** `docs/superpowers/specs/2026-04-05-ajustes-ui-ux-massivos.md`
+- **Spec Permissões:** `docs/superpowers/specs/2026-04-06-permissoes-duas-camadas-design.md`
 - **Design System:** `design-system/nexus-roteador-webhook/MASTER.md`
+
+## Toast System
+- Sonner v2 customizado com MutationObserver em `src/components/ui/sonner.tsx`
+- Pilha bottom-up: flex column-reverse no `<ol>`, position relative nos toasts
+- Timers independentes: pointer-events none no `<ol>`, auto em cada `<li>`
+- Progress bar CSS: `::before` com animação toast-shrink (4s)
+- Animação entrada: slide-up com cubic-bezier spring
+- Animação saída: colapso suave (height/opacity/margin transition)
