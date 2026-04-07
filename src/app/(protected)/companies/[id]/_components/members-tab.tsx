@@ -418,6 +418,7 @@ export function MembersTab({ companyId, canEdit = true, currentUserId, currentUs
           <Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground px-4 py-2">Nível</TableHead>
                 <TableHead className="text-muted-foreground px-4 py-2">Nome</TableHead>
                 <TableHead className="text-muted-foreground px-4 py-2">Email</TableHead>
                 <TableHead className="text-muted-foreground px-4 py-2">Papel</TableHead>
@@ -434,6 +435,23 @@ export function MembersTab({ companyId, canEdit = true, currentUserId, currentUs
                   key={member.id}
                   className="border-border/50 hover:bg-accent/30"
                 >
+                  <TableCell className="px-4 py-2">
+                    {(() => {
+                      const platformStyles: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+                        super_admin: { label: "Super Admin", icon: <Crown className="size-3" />, className: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+                        admin: { label: "Admin", icon: <ShieldCheck className="size-3" />, className: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+                        manager: { label: "Gerente", icon: <Shield className="size-3" />, className: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+                        viewer: { label: "Visualizador", icon: <Eye className="size-3" />, className: "bg-zinc-800 text-zinc-400 border-zinc-700" },
+                      };
+                      const pl = platformStyles[member.platformRole] || platformStyles.viewer;
+                      return (
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${pl.className}`}>
+                          {pl.icon}
+                          {pl.label}
+                        </span>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell className="text-foreground font-medium px-4 py-2">
                     {member.userName}
                   </TableCell>
