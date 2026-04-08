@@ -65,18 +65,9 @@ Sempre responder em português brasileiro.
 - **ui-ux-pro-max:** OBRIGATÓRIO para TODO layout/UI — design system em `design-system/nexus-roteador-webhook/MASTER.md`
 
 ## Blueprint
-Pasta `blueprint/` contém documentação modular para criar novas plataformas.
-Ao concluir funcionalidade reutilizável, SEMPRE verificar:
-- Novo módulo genérico? → Criar `blueprint/modules/{nome}.md`
-- Módulo existente evoluiu? → Atualizar `blueprint/modules/{nome}.md`
-- Novo padrão arquitetural? → Criar `blueprint/patterns/{nome}.md`
-- Novo componente UI base? → Atualizar `blueprint/core/ui.md`
-- Mudança no auth/users/profile? → Atualizar `blueprint/core/overview.md`
-- Mudança no schema base? → Atualizar `blueprint/core/database.md`
-- Mudança no deploy? → Atualizar `blueprint/core/deploy.md`
-- Novo valor hardcoded? → Atualizar `blueprint/hardcoded-values.md`
-
-Pergunta de checkpoint: "Essa feature é reutilizável? O blueprint precisa ser atualizado?"
+Movido para repositório próprio: github.com/jvzanini/nexus-ai-blueprint
+Instalar como plugin do Claude Code para usar (`/nexus-ai-blueprint:criar`).
+Checkpoint ao finalizar features: "Essa feature é reutilizável? Documentar no blueprint."
 
 ## Regras
 - Testes direto em produção
