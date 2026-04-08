@@ -1,0 +1,58 @@
+# {{APP_NAME}}
+
+## Projeto
+{{DESCRIPTION}}
+Deploy via Docker Swarm Stack no Portainer (VPS).
+
+**URL Produção:** https://{{DOMAIN}}
+**Repositório:** https://github.com/{{GITHUB_USER}}/{{PROJECT_SLUG}}
+**Blueprint de origem:** {{BLUEPRINT_PATH}}
+
+## Idioma
+Sempre responder em português brasileiro.
+
+## Convenções
+- Commits em português
+- Código e variáveis em inglês
+- Comentários em português quando necessário
+- Server Actions em `src/lib/actions/`
+- Todo texto visível ao usuário DEVE ter acentos e caracteres PT-BR corretos
+
+## Stack Técnica
+- Next.js 14+ (App Router, Server Components, Server Actions)
+- TypeScript
+- Prisma v7 — imports de `@/generated/prisma/client` (NÃO `@prisma/client`)
+- PostgreSQL 16 + Redis 7
+- NextAuth.js v5 (JWT stateless, trustHost: true)
+- Tailwind CSS + shadcn/ui (base-ui) — usar `render` prop, NÃO `asChild`
+- next-themes (ThemeProvider) — dark/light/system mode
+- Framer Motion — `as const` em variants com `ease`
+- Lucide React (ícones, NUNCA emojis)
+
+## Identidade Visual
+- **Cor primária:** {{PRIMARY_COLOR}}
+- **Logo:** `public/logo.png`
+- **Temas:** Dark (padrão), Light, Sistema
+- **CSS variables:** Todas as cores via CSS custom properties em globals.css
+
+## Deploy
+- **Ambiente:** Produção direta (sem staging)
+- **Pipeline:** Push main → GitHub Actions (test → build → deploy)
+- **Infraestrutura:** Docker Swarm Stack via Portainer
+- **Registry:** {{REGISTRY}}/{{PROJECT_SLUG}}
+
+## Módulos Incluídos
+{{MODULES_LIST}}
+
+## Para adicionar módulos
+Ler `{{BLUEPRINT_PATH}}/modules/{nome}.md` e seguir a seção "Integração".
+
+## Regras
+- Testes direto em produção
+- Todo serviço sobe como container Docker
+- Credenciais NUNCA no GitHub — apenas em `.env.production` (local)
+- Ir pelo caminho mais simples e direto
+
+## Estrutura de Actions
+Todas as Server Actions ficam em `src/lib/actions/`:
+{{ACTIONS_LIST}}

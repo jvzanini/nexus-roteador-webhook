@@ -64,6 +64,20 @@ Sempre responder em português brasileiro.
 - **superpowers:** Brainstorm, planejamento, desenvolvimento, testes, debugging
 - **ui-ux-pro-max:** OBRIGATÓRIO para TODO layout/UI — design system em `design-system/nexus-roteador-webhook/MASTER.md`
 
+## Blueprint
+Pasta `blueprint/` contém documentação modular para criar novas plataformas.
+Ao concluir funcionalidade reutilizável, SEMPRE verificar:
+- Novo módulo genérico? → Criar `blueprint/modules/{nome}.md`
+- Módulo existente evoluiu? → Atualizar `blueprint/modules/{nome}.md`
+- Novo padrão arquitetural? → Criar `blueprint/patterns/{nome}.md`
+- Novo componente UI base? → Atualizar `blueprint/core/ui.md`
+- Mudança no auth/users/profile? → Atualizar `blueprint/core/overview.md`
+- Mudança no schema base? → Atualizar `blueprint/core/database.md`
+- Mudança no deploy? → Atualizar `blueprint/core/deploy.md`
+- Novo valor hardcoded? → Atualizar `blueprint/hardcoded-values.md`
+
+Pergunta de checkpoint: "Essa feature é reutilizável? O blueprint precisa ser atualizado?"
+
 ## Regras
 - Testes direto em produção
 - Todo serviço sobe como container Docker dentro da stack

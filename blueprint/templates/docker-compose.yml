@@ -1,0 +1,67 @@
+# Template: substituir valores marcados com ←
+# Gerado a partir do docker-compose.yml real do Nexus Roteador Webhook
+
+version: "3.8"
+
+services:
+  app:
+    image: ghcr.io/jvzanini/nexus-roteador-webhook:latest # ← REGISTRY/PROJECT_SLUG
+    command: ["node", "server.js"]
+    environment:
+      - DATABASE_URL=postgresql://nexus:${DB_PASSWORD}@db:5432/nexus # ← DB_USER, DB_NAME
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=https://roteadorwebhook.nexusai360.com # ← DOMAIN
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    networks:
+      - traefik-public
+      - internal
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.nexus.rule=Host(`roteadorwebhook.nexusai360.com`) # ← DOMAIN
+        - traefik.http.routers.nexus.entrypoints=websecure
+        - traefik.http.services.nexus.loadbalancer.server.port=3000
+
+  worker: # ← REMOVER se pattern queue NÃO estiver incluso
+    image: ghcr.io/jvzanini/nexus-roteador-webhook:latest # ← REGISTRY/PROJECT_SLUG
+    command: ["node", "worker/index.js"]
+    environment:
+      - DATABASE_URL=postgresql://nexus:${DB_PASSWORD}@db:5432/nexus # ← DB_USER, DB_NAME
+      - REDIS_URL=redis://redis:6379
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    networks:
+      - internal
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=nexus # ← DB_USER
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=nexus # ← DB_NAME
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  traefik-public: # ← NETWORK (nome da rede externa do Traefik)
+    external: true
+  internal:
+    driver: overlay
