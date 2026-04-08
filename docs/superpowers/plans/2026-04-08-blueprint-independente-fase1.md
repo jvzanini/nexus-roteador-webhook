@@ -4,7 +4,14 @@
 
 **Goal:** Extrair o blueprint do Nexus para um repo independente com plugin Claude Code funcional.
 
-**Architecture:** Criar repo `nexus-ai-blueprint` no GitHub, migrar 27 arquivos do `blueprint/` do Nexus, adicionar plugin Claude Code (plugin.json + 2 skills), atualizar README e template, registrar plugin no settings.json, limpar o Nexus.
+**Architecture:** Criar repo `nexus-ai-blueprint` no GitHub, migrar 27 arquivos do `blueprint/` do Nexus, adicionar plugin Claude Code (plugin.json + 2 skills), atualizar README e template, configurar alias de terminal para carregamento persistente do plugin, limpar o Nexus.
+
+**IMPORTANTE — Descobertas sobre o Plugin System:**
+- NÃO existe campo `plugins` no `~/.claude/settings.json` para plugins locais
+- A forma de carregar plugin local é via `claude --plugin-dir /caminho`
+- Para persistir, usar alias no shell: `alias claude='claude --plugin-dir ~/Desktop/nexus-ai-blueprint'`
+- Dentro de skills, `!commands` rodam no CWD do usuário, NÃO no diretório do plugin
+- Para referenciar arquivos do próprio plugin, usar `${CLAUDE_SKILL_DIR}` (aponta pro dir do SKILL.md)
 
 **Tech Stack:** Git, GitHub CLI (`gh`), Claude Code Plugin System (SKILL.md + plugin.json)
 
@@ -68,15 +75,24 @@ blueprint/ (remover pasta inteira)
 - Create: `~/Desktop/nexus-ai-blueprint/` (repo inteiro)
 - Modify: nenhum do Nexus ainda
 
-- [ ] **Step 1: Criar repositório no GitHub**
+- [ ] **Step 1: Verificar gh CLI**
 
 ```bash
-gh repo create jvzanini/nexus-ai-blueprint --private --description "Blueprint modular para criação de plataformas Nexus AI" --clone --clone-dir ~/Desktop/nexus-ai-blueprint
+gh auth status
+```
+
+Esperado: mostra conta autenticada. Se não, o usuário precisa rodar `gh auth login`.
+
+- [ ] **Step 2: Criar repositório no GitHub e clonar**
+
+```bash
+gh repo create jvzanini/nexus-ai-blueprint --private --description "Blueprint modular para criação de plataformas Nexus AI"
+gh repo clone jvzanini/nexus-ai-blueprint ~/Desktop/nexus-ai-blueprint
 ```
 
 Esperado: repo criado e clonado em `~/Desktop/nexus-ai-blueprint/`
 
-- [ ] **Step 2: Copiar todo o conteúdo do blueprint**
+- [ ] **Step 3: Copiar todo o conteúdo do blueprint**
 
 ```bash
 cp -r "/Users/joaovitorzanini/Desktop/Claude Code/Roteador Webhook Meta/blueprint/"* ~/Desktop/nexus-ai-blueprint/
@@ -84,7 +100,7 @@ cp -r "/Users/joaovitorzanini/Desktop/Claude Code/Roteador Webhook Meta/blueprin
 
 Esperado: todos os 27 arquivos copiados.
 
-- [ ] **Step 3: Verificar que tudo foi copiado**
+- [ ] **Step 4: Verificar que tudo foi copiado**
 
 ```bash
 cd ~/Desktop/nexus-ai-blueprint && find . -type f -not -path './.git/*' | sort | wc -l
@@ -92,7 +108,7 @@ cd ~/Desktop/nexus-ai-blueprint && find . -type f -not -path './.git/*' | sort |
 
 Esperado: 27 arquivos.
 
-- [ ] **Step 4: Commit inicial**
+- [ ] **Step 5: Commit inicial**
 
 ```bash
 cd ~/Desktop/nexus-ai-blueprint
@@ -170,7 +186,7 @@ allowed-tools: Read Glob Grep
 Você é o assistente do Blueprint Nexus AI. Sua tarefa é listar todos os módulos e patterns disponíveis.
 
 ## Versão do Blueprint
-!`cat ../../.claude-plugin/plugin.json 2>/dev/null || echo "versão não encontrada"`
+!`cat ${CLAUDE_SKILL_DIR}/${CLAUDE_SKILL_DIR}/../../.claude-plugin/plugin.json 2>/dev/null || echo "versão não encontrada"`
 
 ## Instruções
 
@@ -178,7 +194,7 @@ Leia os arquivos do blueprint e apresente ao usuário em formato de tabelas orga
 
 ### 1. Core (sempre incluído)
 
-Leia o arquivo `../../core/overview.md`. Identifique os 5 subsistemas (Auth, Users, Profile, Password Reset, Email) e apresente:
+Leia o arquivo `${CLAUDE_SKILL_DIR}/../../core/overview.md`. Identifique os 5 subsistemas (Auth, Users, Profile, Password Reset, Email) e apresente:
 
 | Subsistema | Descrição |
 |------------|-----------|
@@ -190,7 +206,7 @@ Leia o arquivo `../../core/overview.md`. Identifique os 5 subsistemas (Auth, Use
 
 ### 2. Módulos Opcionais
 
-Para cada arquivo `.md` em `../../modules/` (exceto README.md):
+Para cada arquivo `.md` em `${CLAUDE_SKILL_DIR}/../../modules/` (exceto README.md):
 1. Leia o arquivo
 2. Extraia o título (primeira linha `#`) e a seção `## Resumo`
 3. Extraia a seção `## Dependências`
@@ -202,7 +218,7 @@ Apresente em tabela:
 
 ### 3. Patterns (arquitetura adaptável)
 
-Para cada arquivo `.md` em `../../patterns/` (exceto README.md):
+Para cada arquivo `.md` em `${CLAUDE_SKILL_DIR}/../../patterns/` (exceto README.md):
 1. Leia o arquivo
 2. Extraia o título e a seção `## Resumo`
 3. Extraia `## Quando usar`
@@ -214,7 +230,7 @@ Apresente em tabela:
 
 ### 4. Templates Disponíveis
 
-Liste os arquivos em `../../templates/`:
+Liste os arquivos em `${CLAUDE_SKILL_DIR}/../../templates/`:
 
 | Template | Propósito |
 |----------|-----------|
@@ -286,13 +302,13 @@ Você é o assistente de criação de plataformas do Blueprint Nexus AI. Sua tar
 ## Contexto do Blueprint
 
 ### Módulos disponíveis
-!`ls ../../modules/*.md 2>/dev/null | xargs -I{} basename {} .md | grep -v README`
+!`ls ${CLAUDE_SKILL_DIR}/../../modules/*.md 2>/dev/null | xargs -I{} basename {} .md | grep -v README`
 
 ### Patterns disponíveis
-!`ls ../../patterns/*.md 2>/dev/null | xargs -I{} basename {} .md | grep -v README`
+!`ls ${CLAUDE_SKILL_DIR}/../../patterns/*.md 2>/dev/null | xargs -I{} basename {} .md | grep -v README`
 
 ### Versão
-!`cat ../../.claude-plugin/plugin.json 2>/dev/null | grep version`
+!`cat ${CLAUDE_SKILL_DIR}/../../.claude-plugin/plugin.json 2>/dev/null | grep version`
 
 ---
 
@@ -429,7 +445,7 @@ git init
 ```
 
 #### 7.2 — Gerar app.config.ts
-Ler `../../templates/app.config.ts` do blueprint.
+Ler `${CLAUDE_SKILL_DIR}/../../templates/app.config.ts` do blueprint.
 Substituir todos os `{{placeholders}}` com os valores coletados.
 Salvar em `$PROJECT_DIR/src/lib/app.config.ts`.
 
@@ -444,7 +460,7 @@ Criar `package.json` com:
 Executar: `npm install`
 
 #### 7.4 — Gerar Prisma schema
-Ler `../../core/database.md` do blueprint.
+Ler `${CLAUDE_SKILL_DIR}/../../core/database.md` do blueprint.
 Montar `prisma/schema.prisma` combinando:
 - Config base (datasource, generator)
 - Enums base (PlatformRole, Theme)
@@ -452,34 +468,34 @@ Montar `prisma/schema.prisma` combinando:
 - Para cada módulo em MODULES: adicionar os modelos listados no doc do módulo
 
 #### 7.5 — Gerar globals.css
-Ler `../../templates/globals.css` do blueprint.
+Ler `${CLAUDE_SKILL_DIR}/../../templates/globals.css` do blueprint.
 Substituir as cores marcadas com `← COR PRIMÁRIA` pelo `PRIMARY_COLOR` coletado.
 Salvar em `$PROJECT_DIR/src/app/globals.css`.
 
 #### 7.6 — Gerar docker-compose.yml
-Ler `../../templates/docker-compose.yml` do blueprint.
+Ler `${CLAUDE_SKILL_DIR}/../../templates/docker-compose.yml` do blueprint.
 Substituir valores marcados com `←` pelos dados coletados (REGISTRY, PROJECT_SLUG, DOMAIN, NETWORK).
 Se "queue" NÃO está em PATTERNS: remover service "worker".
 Salvar em `$PROJECT_DIR/docker-compose.yml`.
 
 #### 7.7 — Gerar GitHub Actions
-Ler `../../templates/build.yml` do blueprint.
+Ler `${CLAUDE_SKILL_DIR}/../../templates/build.yml` do blueprint.
 Substituir valores marcados com `←`.
 Se "queue" NÃO está em PATTERNS: remover update do worker no deploy.
 Salvar em `$PROJECT_DIR/.github/workflows/build.yml`.
 
 #### 7.8 — Gerar Dockerfile
-Ler `../../templates/Dockerfile` do blueprint.
+Ler `${CLAUDE_SKILL_DIR}/../../templates/Dockerfile` do blueprint.
 Se "queue" NÃO está em PATTERNS: remover linha `COPY worker/`.
 Salvar em `$PROJECT_DIR/docker/Dockerfile`.
 
 #### 7.9 — Gerar .env.example
-Ler `../../templates/env.example` do blueprint.
+Ler `${CLAUDE_SKILL_DIR}/../../templates/env.example` do blueprint.
 Se "encryption" NÃO está em MODULES: remover seção ENCRYPTION_KEY.
 Salvar em `$PROJECT_DIR/.env.example`.
 
 #### 7.10 — Gerar CLAUDE.md
-Ler `../../templates/claude-md.template` do blueprint.
+Ler `${CLAUDE_SKILL_DIR}/../../templates/claude-md.template` do blueprint.
 Substituir TODOS os placeholders:
 - `{{APP_NAME}}`, `{{DESCRIPTION}}`, `{{DOMAIN}}`, `{{GITHUB_USER}}`, `{{PROJECT_SLUG}}`
 - `{{PRIMARY_COLOR}}`, `{{REGISTRY}}`
@@ -499,37 +515,37 @@ Esta é a parte mais pesada. Usar a ferramenta **Agent** para despachar subagent
 **Para cada subsistema, ler o doc correspondente do blueprint E o código do Nexus Roteador Webhook como referência:**
 
 Subagente Auth:
-- Ler `../../core/overview.md` seção Auth
+- Ler `${CLAUDE_SKILL_DIR}/../../core/overview.md` seção Auth
 - Criar: src/auth.ts, src/auth.config.ts, src/middleware.ts, src/lib/auth.ts, src/lib/auth-helpers.ts, src/lib/rate-limit.ts, src/lib/redis.ts
 - Adaptar: trocar nomes, rotas públicas, textos
 
 Subagente Pages:
-- Ler `../../core/ui.md`
+- Ler `${CLAUDE_SKILL_DIR}/../../core/ui.md`
 - Criar: src/app/(auth)/layout.tsx, login/page.tsx, login-content.tsx, forgot-password/, reset-password/, verify-email/
 - Criar: src/app/(protected)/layout.tsx, src/components/layout/sidebar.tsx
 - Criar: src/components/providers/theme-provider.tsx, theme-initializer.tsx
 - Adaptar: cores, logo, textos
 
 Subagente Actions:
-- Ler `../../core/overview.md` seções Users, Profile, Password Reset, Email
+- Ler `${CLAUDE_SKILL_DIR}/../../core/overview.md` seções Users, Profile, Password Reset, Email
 - Criar: src/lib/actions/users.ts, profile.ts, password-reset.ts
 - Criar: src/lib/email.ts, src/lib/constants/roles.ts, src/lib/constants/navigation.ts
 - Adaptar: labels, hierarquia, textos
 
 Subagente Infra:
-- Ler `../../core/database.md`
+- Ler `${CLAUDE_SKILL_DIR}/../../core/database.md`
 - Criar: src/lib/prisma.ts, src/lib/utils.ts, src/lib/env.ts
 - Criar: src/app/api/auth/[...nextauth]/route.ts, src/app/api/health/route.ts
 - Executar: npx prisma generate
 
 #### 7.12 — Implementar módulos selecionados
 Para cada módulo em MODULES:
-- Ler `../../modules/{nome}.md`
+- Ler `${CLAUDE_SKILL_DIR}/../../modules/{nome}.md`
 - Seguir seção "Arquivos a criar"
 - Seguir seção "Integração" pra conectar com core
 
 Para cada pattern em PATTERNS:
-- Ler `../../patterns/{nome}.md`
+- Ler `${CLAUDE_SKILL_DIR}/../../patterns/{nome}.md`
 - Seguir seção "Como adaptar" (patterns precisam de adaptação ao domínio)
 
 ### PASSO 8: VALIDAÇÃO
@@ -612,25 +628,23 @@ Adicionar LOGO APÓS o header (título + versão), ANTES do catálogo de módulo
 git clone git@github.com:jvzanini/nexus-ai-blueprint.git ~/Desktop/nexus-ai-blueprint
 ```
 
-### 2. Registrar como plugin do Claude Code
+### 2. Configurar carregamento automático
 
-Abrir o arquivo `~/.claude/settings.json` e adicionar na raiz:
+Adicionar ao final do `~/.zshrc`:
 
-```json
-{
-  "plugins": [
-    "/Users/joaovitorzanini/Desktop/nexus-ai-blueprint"
-  ]
-}
+```bash
+# Blueprint Nexus AI — plugin Claude Code
+alias claude='claude --plugin-dir ~/Desktop/nexus-ai-blueprint'
 ```
 
-Se o arquivo já tiver outras configs, apenas adicionar o campo `plugins` (sem apagar o resto).
+Depois recarregar: `source ~/.zshrc`
 
-### 3. Reiniciar o Claude Code
-Fechar e reabrir o Claude Code para carregar o plugin.
-
-### 4. Verificar
-Rodar `/nexus-ai-blueprint:listar` — deve mostrar todos os módulos e patterns.
+### 3. Verificar
+Abrir o Claude Code (usando `claude` no terminal) e rodar:
+```
+/nexus-ai-blueprint:listar
+```
+Deve mostrar todos os módulos e patterns.
 
 ---
 
@@ -759,39 +773,49 @@ git commit -m "docs: claude-md.template com metodologia, versão e deploy condic
 
 ---
 
-## Task 7: Registrar plugin no settings.json
+## Task 7: Configurar carregamento persistente do plugin
 
 **Files:**
-- Modify: `~/.claude/settings.json`
+- Modify: `~/.zshrc` (ou equivalente do shell)
 
-- [ ] **Step 1: Ler settings.json atual**
+**Contexto:** O Claude Code NÃO tem campo `plugins` no settings.json para plugins locais. A forma correta de carregar plugin local é via flag `--plugin-dir`. Para persistir entre sessões, usar alias no shell.
 
-Ler `~/.claude/settings.json`.
-
-- [ ] **Step 2: Adicionar campo plugins**
-
-O settings.json atual tem `permissions`, `enabledPlugins`, `extraKnownMarketplaces`, etc. Adicionar o campo `plugins` na raiz:
-
-```json
-{
-  "plugins": [
-    "/Users/joaovitorzanini/Desktop/nexus-ai-blueprint"
-  ],
-  "permissions": { ... },
-  "enabledPlugins": { ... },
-  ...resto mantido igual...
-}
-```
-
-**IMPORTANTE:** Não apagar nenhum campo existente. Apenas adicionar `plugins`.
-
-- [ ] **Step 3: Verificar JSON válido**
+- [ ] **Step 1: Verificar shell do usuário**
 
 ```bash
-python3 -c "import json; json.load(open('/Users/joaovitorzanini/.claude/settings.json'))" && echo "JSON válido" || echo "JSON inválido"
+echo $SHELL
 ```
 
-Esperado: "JSON válido"
+Esperado: `/bin/zsh` (macOS padrão).
+
+- [ ] **Step 2: Adicionar alias ao .zshrc**
+
+Adicionar ao final de `~/.zshrc`:
+
+```bash
+# Blueprint Nexus AI — plugin Claude Code
+alias claude='claude --plugin-dir ~/Desktop/nexus-ai-blueprint'
+```
+
+- [ ] **Step 3: Recarregar shell**
+
+```bash
+source ~/.zshrc
+```
+
+- [ ] **Step 4: Verificar que o alias funciona**
+
+```bash
+which claude
+alias claude
+```
+
+Esperado: mostra o alias com `--plugin-dir`.
+
+**Alternativa (se o usuário preferir não usar alias):** Sempre rodar manualmente:
+```bash
+claude --plugin-dir ~/Desktop/nexus-ai-blueprint
+```
 
 ---
 
