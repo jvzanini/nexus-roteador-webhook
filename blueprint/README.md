@@ -29,26 +29,22 @@ Ao iniciar um novo projeto, aponte o Claude Code para esta pasta e diga:
 | Email | Resend SDK, templates HTML dark-themed responsivos | core/overview.md |
 
 ### Módulos Opcionais
-| Módulo | Descrição | Depende de | Doc | Status |
-|--------|-----------|-----------|-----|--------|
-| Multi-tenant | Empresas, workspaces, scoping de dados | auth, users | modules/multi-tenant.md | Fase 2 |
-| Notifications | Feed, badge no header, contagem, mark as read | auth | modules/notifications.md | Fase 2 |
-| Audit Log | Registro fire-and-forget (quem, o quê, quando) | auth | modules/audit-log.md | Fase 2 |
-| Real-time | SSE + Redis Pub/Sub, useRealtime hook | Redis | modules/realtime.md | Fase 3 |
-| Encryption | AES-256-GCM, encrypt/decrypt/mask | — | modules/encryption.md | Fase 3 |
-| Toast | Sonner customizado, pilha bottom-up, timers independentes | — | modules/toast.md | Fase 2 |
-
-> **Nota:** Docs marcados como Fase 2/3 ainda não existem. Serão criados quando implementarmos essas fases.
+| Módulo | Descrição | Depende de | Doc |
+|--------|-----------|-----------|-----|
+| Multi-tenant | Empresas, workspaces, scoping de dados | auth, users | [modules/multi-tenant.md](modules/multi-tenant.md) |
+| Notifications | Feed, badge no header, contagem, mark as read | auth | [modules/notifications.md](modules/notifications.md) |
+| Audit Log | Registro fire-and-forget (quem, o quê, quando) | auth | [modules/audit-log.md](modules/audit-log.md) |
+| Real-time | SSE + Redis Pub/Sub, useRealtime hook | Redis | [modules/realtime.md](modules/realtime.md) |
+| Encryption | AES-256-GCM, encrypt/decrypt/mask | — | [modules/encryption.md](modules/encryption.md) |
+| Toast | Sonner customizado, pilha bottom-up, timers independentes | — | [modules/toast.md](modules/toast.md) |
 
 ### Patterns (arquitetura adaptável)
-| Pattern | Descrição | Depende de | Doc | Status |
-|---------|-----------|-----------|-----|--------|
-| Dashboard | Stats cards, gráficos Recharts, filtros, tabela | — | patterns/dashboard.md | Fase 3 |
-| Queue | BullMQ worker, retry com backoff, DLQ | Redis, realtime (opc.) | patterns/queue.md | Fase 3 |
-| Settings | Config globais key-value, admin-only | auth | patterns/settings.md | Fase 3 |
-| Webhook Routing | Receber, normalizar, dedup, entregar | queue, encryption | patterns/webhook-routing.md | Fase 3 |
-
-> **Nota:** Docs de patterns serão criados na Fase 3.
+| Pattern | Descrição | Depende de | Doc |
+|---------|-----------|-----------|-----|
+| Dashboard | Stats cards, gráficos Recharts, filtros, tabela | — | [patterns/dashboard.md](patterns/dashboard.md) |
+| Queue | BullMQ worker, retry com backoff, DLQ | Redis, realtime (opc.) | [patterns/queue.md](patterns/queue.md) |
+| Settings | Config globais key-value, admin-only | auth | [patterns/settings.md](patterns/settings.md) |
+| Webhook Routing | Receber, normalizar, dedup, entregar | queue, encryption | [patterns/webhook-routing.md](patterns/webhook-routing.md) |
 
 ---
 
@@ -140,4 +136,6 @@ No CLAUDE.md do novo projeto, incluir:
 
 ## Changelog
 
-- v1.0 (2026-04-07) — Versão inicial: core + 6 módulos + 4 patterns
+- v1.0 (2026-04-07) — Versão inicial: core (4 docs), templates (7 arquivos)
+- v1.1 (2026-04-08) — Fase 2: módulos multi-tenant, notifications, audit-log, toast
+- v1.2 (2026-04-08) — Fase 3: módulos realtime, encryption + patterns dashboard, queue, settings, webhook-routing. Blueprint completo.
