@@ -1,7 +1,7 @@
 # Blueprint Nexus AI Independente — Spec de Design
 
 **Data:** 2026-04-08
-**Versão:** 1.0
+**Versão:** 2.0
 **Status:** Em revisão
 
 ---
@@ -21,16 +21,16 @@ O blueprint precisa virar uma **ferramenta independente** com seu próprio repos
 ## 2. Escopo
 
 ### Fase 1 (esta spec):
-- Repo independente `nexus-ai-blueprint` no GitHub
-- Skill `/blueprint criar` — cria projetos novos com fluxo guiado
-- Skill `/blueprint listar` — lista módulos disponíveis
+- Repo independente `nexus-ai-blueprint` no GitHub (privado)
+- Plugin Claude Code com duas skills: `/nexus-ai-blueprint:criar` e `/nexus-ai-blueprint:listar`
+- Instalação persistente via settings.json
 - CLAUDE.md template com metodologia padrão
-- Testar criando 1 projeto real
+- Migração completa do Nexus
+- Teste: criar 1 projeto real
 
 ### Fase 2 (spec futura, após uso da Fase 1):
-- `/blueprint absorver` — absorção guiada de módulos de outros projetos
-- `/blueprint atualizar` — atualizar módulo existente com mudanças
-- Evolução do core conforme necessidade real
+- `/nexus-ai-blueprint:absorver` — absorção guiada de módulos
+- `/nexus-ai-blueprint:atualizar` — atualizar módulo existente
 
 ---
 
@@ -39,39 +39,26 @@ O blueprint precisa virar uma **ferramenta independente** com seu próprio repos
 ### 3.1 Repositório independente
 
 **Repo:** `github.com/jvzanini/nexus-ai-blueprint`
-**Tipo:** Repositório privado
-**Conteúdo:** Toda a documentação do blueprint + a skill do Claude Code
+**Tipo:** Privado
+**Conteúdo:** Documentação do blueprint + plugin Claude Code
 
-O conteúdo atual de `blueprint/` do Nexus é migrado integralmente. No projeto Nexus, a pasta `blueprint/` é substituída por um link/nota apontando pro repo novo.
+O conteúdo de `blueprint/` do Nexus migra integralmente pra raiz do novo repo. No Nexus, a pasta é removida e o CLAUDE.md passa a apontar pro repo novo.
 
-### 3.2 Skill como plugin do Claude Code
+### 3.2 Plugin do Claude Code
 
-A skill é distribuída como **plugin** do Claude Code, dentro do próprio repo do blueprint:
+A skill é distribuída como **plugin** dentro do próprio repo do blueprint.
 
-```
-nexus-ai-blueprint/
-├── .claude-plugin/
-│   └── plugin.json              # Manifesto do plugin
-├── skills/
-│   ├── criar/
-│   │   └── SKILL.md             # /nexus-ai-blueprint:criar
-│   └── listar/
-│       └── SKILL.md             # /nexus-ai-blueprint:listar
-├── core/
-├── modules/
-├── patterns/
-├── templates/
-├── architecture.md
-├── integration-map.md
-├── hardcoded-values.md
-└── README.md
+**Instalação persistente** — adicionar ao `~/.claude/settings.json`:
+
+```json
+{
+  "plugins": [
+    "/Users/joaovitorzanini/Desktop/nexus-ai-blueprint"
+  ]
+}
 ```
 
-**Instalação:**
-```bash
-# No settings.json do Claude Code, adicionar o caminho do plugin:
-# Ou usar: claude --plugin-dir ~/Desktop/nexus-ai-blueprint
-```
+Isso faz o plugin carregar automaticamente em toda sessão do Claude Code, de qualquer diretório.
 
 **Invocação:**
 ```
@@ -81,63 +68,59 @@ nexus-ai-blueprint/
 
 ### 3.3 Tipos de projeto
 
-Toda criação começa com a pergunta do tipo. Cada tipo sugere defaults, mas tudo é editável.
+Toda criação começa com a pergunta do tipo. Cada tipo sugere defaults, mas **todos são editáveis**. Mesmo pra interno, SEMPRE confirmar.
 
 | Aspecto | Interno Nexus AI | Cliente Nexus AI | Terceiro |
 |---------|:----------------:|:----------------:|:--------:|
-| **Repo name** | Sugestão: `nexus-[nome]` | Sugestão: `cliente-[empresa]-[projeto]` | Perguntar |
-| **GitHub org** | `jvzanini` | `jvzanini` | Perguntar |
+| **Repo name** | Sugestão: `nexus-[slug]` — confirmar | Sugestão: `cliente-[empresa]-[slug]` — confirmar | Perguntar |
+| **GitHub user/org** | Sugestão: `jvzanini` — confirmar | Sugestão: `jvzanini` — confirmar | Perguntar |
 | **Domínio** | Sugestão: `[slug].nexusai360.com` — confirmar | Perguntar | Perguntar |
 | **Email from** | Sugestão: `noreply@nexusai360.com` — confirmar | Perguntar | Perguntar |
-| **Logo/Cores** | Sugestão: herdar Nexus AI — confirmar | Obrigatório informar | Obrigatório informar |
+| **Logo/Cores** | Sugestão: Nexus AI (violet #7c3aed) — confirmar | Obrigatório | Obrigatório |
 | **Registry** | Sugestão: `ghcr.io/jvzanini` — confirmar | Perguntar | Perguntar |
-| **Network Docker** | Sugestão: `rede_nexusAI` — confirmar | Perguntar | Perguntar |
+| **Network** | Sugestão: `rede_nexusAI` — confirmar | Perguntar | Perguntar |
+| **Deploy** | Sugestão: Portainer — confirmar | Perguntar (pode não usar) | Perguntar |
 
-**Regra:** mesmo para interno, SEMPRE confirmar. Defaults são sugestões, nunca imposições.
+### 3.4 Core protegido
 
-### 3.4 Core protegido (não imutável)
-
-O core (auth, users, profile, password-reset, email, architecture, padrões) é **protegido**:
-- Nunca muda por absorção automática (Fase 2)
+O core é **protegido, não imutável**:
+- Nunca muda por absorção (Fase 2)
 - Só muda por decisão explícita do dono
-- Qualquer conflito com o core é sinalizado
+- Conflitos são sinalizados e rejeitados
+- Se um dia migrar de NextAuth pra Clerk, o core evolui — mas conscientemente
 
-Isso não é "cláusula pétrea" — é "precisa de aprovação". Se um dia migrar de NextAuth pra Clerk, o core evolui. Mas conscientemente.
+### 3.5 Versionamento
 
-### 3.5 Metodologia padrão
+O blueprint tem versão no `plugin.json` e no `README.md`. Todo projeto criado registra no seu `CLAUDE.md`:
 
-Todo projeto criado pelo blueprint segue esta metodologia (documentada no CLAUDE.md gerado):
+```
+**Blueprint versão:** 1.2
+**Criado em:** 2026-04-08
+```
+
+Isso permite saber de qual versão do blueprint cada projeto veio.
+
+### 3.6 Metodologia padrão
+
+Todo projeto segue:
 
 ```
 1. CRIAÇÃO       /nexus-ai-blueprint:criar
-                 → Tipo, nome, cores, domínio, módulos
-                 → Repo no GitHub, diretório local, código base
-
 2. PLANEJAMENTO  superpowers:brainstorming → writing-plans
-                 → Spec de design → plano de implementação
-
-3. CONSTRUÇÃO    superpowers:executing-plans
-                 → Task por task, commits frequentes
-                 → Layout: ui-ux-pro-max (se frontend)
-
+3. CONSTRUÇÃO    superpowers:executing-plans (layout: ui-ux-pro-max se frontend)
 4. ABSORÇÃO      /nexus-ai-blueprint:absorver (Fase 2)
-                 → Funcionalidades reutilizáveis voltam pro blueprint
 ```
 
-### 3.6 Skills pré-configuradas
+### 3.7 Skills pré-configuradas
 
-Na criação, o Claude Code pergunta quais skills incluir:
+Na criação, pergunta quais skills incluir:
 
 ```
-"Quais skills pré-configurar? (recomendadas marcadas com ✓)"
-
-  ✓ superpowers — brainstorm, planejamento, desenvolvimento, debug
-  ✓ ui-ux-pro-max — design system, layout (desmarcar se API sem frontend)
-  □ n8n-mcp-skills — automação n8n (se usar)
-  □ outras...
+"Quais skills pré-configurar?"
+  ✓ superpowers (recomendado)
+  ✓ ui-ux-pro-max (recomendado se tem frontend — desmarcar pra API pura)
+  □ n8n-mcp-skills (se usar automação n8n)
 ```
-
-As skills selecionadas são referenciadas no CLAUDE.md do novo projeto como obrigatórias.
 
 ---
 
@@ -147,26 +130,26 @@ As skills selecionadas são referenciadas no CLAUDE.md do novo projeto como obri
 nexus-ai-blueprint/
 │
 ├── .claude-plugin/
-│   └── plugin.json                # Manifesto: name, description, version
+│   └── plugin.json                 # Manifesto do plugin
 │
 ├── skills/
 │   ├── criar/
-│   │   └── SKILL.md               # Skill de criação de projeto
+│   │   └── SKILL.md                # /nexus-ai-blueprint:criar
 │   └── listar/
-│       └── SKILL.md               # Skill de listagem de módulos
+│       └── SKILL.md                # /nexus-ai-blueprint:listar
 │
-├── README.md                      # Índice geral + como usar
-├── architecture.md                # Stack, padrões, convenções (protegido)
-├── integration-map.md             # Dependências entre módulos
-├── hardcoded-values.md            # Inventário de valores por plataforma
+├── README.md                       # Índice + instalação + como usar
+├── architecture.md                 # Stack, padrões (protegido)
+├── integration-map.md              # Dependências entre módulos
+├── hardcoded-values.md             # Inventário de valores
 │
-├── core/                          # PROTEGIDO — base de toda plataforma
+├── core/                           # PROTEGIDO
 │   ├── overview.md
 │   ├── database.md
 │   ├── deploy.md
 │   └── ui.md
 │
-├── modules/                       # Peças opcionais
+├── modules/                        # Peças opcionais
 │   ├── README.md
 │   ├── multi-tenant.md
 │   ├── notifications.md
@@ -175,14 +158,14 @@ nexus-ai-blueprint/
 │   ├── realtime.md
 │   └── encryption.md
 │
-├── patterns/                      # Arquitetura adaptável
+├── patterns/                       # Arquitetura adaptável
 │   ├── README.md
 │   ├── dashboard.md
 │   ├── queue.md
 │   ├── settings.md
 │   └── webhook-routing.md
 │
-└── templates/                     # Arquivos base
+└── templates/                      # Arquivos base
     ├── app.config.ts
     ├── globals.css
     ├── docker-compose.yml
@@ -194,237 +177,209 @@ nexus-ai-blueprint/
 
 ---
 
-## 5. Skill: `/nexus-ai-blueprint:criar`
+## 5. plugin.json
 
-### 5.1 Fluxo completo
-
-```
-PASSO 1: TIPO DE PROJETO
-─────────────────────────
-"Qual o tipo deste projeto?"
-  1. Interno Nexus AI
-  2. Cliente Nexus AI
-  3. Terceiro (projeto independente)
-
-
-PASSO 2: IDENTIDADE
-────────────────────
-"Nome da plataforma?" → ex: "Nexus CRM"
-"O que ela faz? (uma frase)" → ex: "Gestão de clientes e vendas"
-
-[Se interno]:
-  "Domínio — usar [slug].nexusai360.com? Ou mudar?"
-  "Email — usar noreply@nexusai360.com? Ou mudar?"
-  "Logo/Cores — usar padrão Nexus AI (violet #7c3aed)? Ou mudar?"
-  "Registry — usar ghcr.io/jvzanini? Ou mudar?"
-  "Rede Docker — usar rede_nexusAI? Ou mudar?"
-
-[Se cliente]:
-  "Nome da empresa cliente?" → ex: "ACME Corp"
-  "Domínio?" → ex: "portal.acme.com"
-  "Email from?" → ex: "noreply@acme.com"
-  "Cor primária (hex)?" → obrigatório
-  "Logo (caminho)?" → obrigatório ou placeholder
-  "Registry Docker?" → default ghcr.io/jvzanini ou mudar
-  "Rede Docker?" → perguntar
-
-[Se terceiro]:
-  Todas as perguntas sem defaults. Tudo obrigatório.
-
-
-PASSO 3: DIRETÓRIO
-───────────────────
-"Onde criar o projeto?"
-  Sugestão: ~/Desktop/[slug-do-projeto]/
-  Aceitar ou informar outro caminho absoluto
-
-
-PASSO 4: MÓDULOS
-─────────────────
-Apresentar catálogo completo.
-Sugerir baseado na descrição do projeto.
-Marcar recomendados. Perguntar se quer mudar.
-
-
-PASSO 5: SKILLS
-────────────────
-"Quais skills pré-configurar?"
-  ✓ superpowers (recomendado)
-  ✓ ui-ux-pro-max (recomendado se tem frontend)
-  □ outras
-
-
-PASSO 6: REPOSITÓRIO GITHUB
-────────────────────────────
-"Criar repositório no GitHub agora?"
-  → Se sim: gh repo create [nome] --private
-  → Se não: criar só local, push depois
-
-Nome sugerido baseado no tipo:
-  Interno: nexus-[slug]
-  Cliente: cliente-[empresa]-[slug]
-  Terceiro: [slug]
-
-
-PASSO 7: CRIAÇÃO
-─────────────────
-Executar na ordem:
-  1. Criar diretório
-  2. git init
-  3. Gerar app.config.ts (com dados coletados)
-  4. Gerar package.json + npm install
-  5. Gerar prisma/schema.prisma (core + módulos)
-  6. Gerar globals.css (com cores informadas)
-  7. Gerar docker-compose.yml
-  8. Gerar .github/workflows/build.yml
-  9. Gerar docker/Dockerfile
-  10. Gerar .env.example
-  11. Implementar core (auth, users, profile, reset, email)
-  12. Implementar módulos selecionados
-  13. Gerar CLAUDE.md (com metodologia + skills + módulos)
-  14. Commit inicial
-  15. Push pro GitHub (se repo criado)
-
-
-PASSO 8: VALIDAÇÃO
-───────────────────
-  1. npx tsc --noEmit → zero erros
-  2. npm run build → passa
-  3. docker compose config → válido
-
-
-PASSO 9: PRÓXIMOS PASSOS
-─────────────────────────
-Informar ao usuário:
-  "Projeto criado em [caminho]. Próximo passo:"
-  "1. cd [caminho]"
-  "2. Abra o Claude Code"
-  "3. Use superpowers:brainstorming pra planejar as features"
+```json
+{
+  "name": "nexus-ai-blueprint",
+  "description": "Blueprint modular para criação de plataformas. Cria projetos completos com auth, multi-tenancy, dashboard e mais.",
+  "version": "1.2.0"
+}
 ```
 
-### 5.2 SKILL.md — Estrutura
+---
+
+## 6. Skill: `/nexus-ai-blueprint:criar` (detalhamento completo)
+
+### 6.1 SKILL.md
 
 ```yaml
 ---
 name: criar
-description: Cria uma nova plataforma a partir do Blueprint Nexus AI. Use quando quiser iniciar um novo projeto.
+description: Cria uma nova plataforma completa a partir do Blueprint Nexus AI. Use quando quiser iniciar um novo projeto com auth, multi-tenancy, dashboard e mais.
 disable-model-invocation: true
+user-invocable: true
 allowed-tools: Read Glob Grep Bash Write Edit Agent
 argument-hint: "[nome-opcional]"
 ---
+```
 
-# Criar Nova Plataforma
+**O conteúdo da skill (abaixo do frontmatter) deve conter:**
 
-Você é o assistente de criação de plataformas do Blueprint Nexus AI.
+### 6.2 Seção de contexto (com dynamic injection)
 
-## Contexto
-Leia estes arquivos do blueprint para entender os módulos disponíveis:
-- !`cat {blueprint_path}/README.md`
-- !`ls {blueprint_path}/modules/*.md | sed 's/.*\///' | sed 's/\.md//'`
-- !`ls {blueprint_path}/patterns/*.md | sed 's/.*\///' | sed 's/\.md//'`
+A skill usa `!command` pra injetar contexto dinamicamente. Os caminhos são **relativos ao diretório do plugin** (onde o SKILL.md mora). Para acessar os arquivos do blueprint, a skill precisa subir dois níveis (`../../`) já que está em `skills/criar/SKILL.md`:
 
-## Fluxo
-Siga EXATAMENTE o fluxo de 9 passos documentado nesta skill.
-[... fluxo completo dos 9 passos ...]
+```markdown
+## Módulos disponíveis
+!`ls ../../modules/*.md 2>/dev/null | xargs -I{} basename {} .md`
 
-## Ao criar o projeto
-- Leia os docs do core: core/overview.md, core/database.md, core/deploy.md, core/ui.md
-- Para cada módulo selecionado, leia modules/{nome}.md
-- Para cada pattern selecionado, leia patterns/{nome}.md
-- Use templates/ como base para os arquivos de config
-- Gere código real e funcional, não placeholders
+## Patterns disponíveis
+!`ls ../../patterns/*.md 2>/dev/null | xargs -I{} basename {} .md | grep -v README`
 
-## CLAUDE.md do novo projeto
-Use templates/claude-md.template como base. Incluir:
-- Metodologia: criar → planejar (superpowers) → construir → absorver
-- Skills obrigatórias selecionadas
-- Módulos incluídos
-- Link de volta pro blueprint
+## Versão do Blueprint
+!`cat ../../.claude-plugin/plugin.json | grep version`
+```
+
+### 6.3 Fluxo completo (no corpo da skill)
+
+O corpo da skill contém o fluxo COMPLETO dos 9 passos — não referência, mas o texto real. Cada passo com as perguntas exatas, os defaults, e as ações.
+
+### 6.4 Estratégia de criação (Passo 7)
+
+O Passo 7 (criação do código) é o mais pesado. A skill instrui o Claude Code a:
+
+1. **Gerar configs e templates primeiro** (passos 7.1 a 7.10) — são arquivos pequenos gerados diretamente
+2. **Depois implementar o core e módulos** (passos 7.11 e 7.12) — usando subagentes:
+
+```
+Para implementar o core:
+  1. Ler ../../core/overview.md do blueprint (5 subsistemas)
+  2. Ler ../../core/database.md (schema Prisma)
+  3. Ler ../../core/deploy.md (Docker, CI/CD)
+  4. Ler ../../core/ui.md (tokens, tema, layout, auth pages, componentes)
+  5. Usar Agent tool para despachar subagentes que implementam cada subsistema:
+     - Subagente 1: Auth (auth.ts, auth.config.ts, middleware.ts, auth-helpers.ts, rate-limit.ts)
+     - Subagente 2: Pages (login, forgot-password, reset-password, verify-email, layout protegido, sidebar)
+     - Subagente 3: Server Actions (users.ts, profile.ts, password-reset.ts, email.ts)
+     - Subagente 4: Prisma + Redis + Utils (prisma.ts, redis.ts, constants/, schemas/)
+
+Para cada módulo selecionado:
+  1. Ler ../../modules/{nome}.md
+  2. Seguir a seção "Arquivos a criar" do módulo
+  3. Seguir a seção "Integração" pra conectar com o core
+```
+
+### 6.5 Tratamento de erros
+
+```
+Se o diretório já existir:
+  → Perguntar: "O diretório [caminho] já existe. Sobrescrever, escolher outro, ou cancelar?"
+
+Se o repo GitHub já existir:
+  → Perguntar: "O repositório [nome] já existe. Usar outro nome, usar o existente, ou criar só local?"
+
+Se npm install falhar:
+  → Mostrar o erro e perguntar se quer tentar novamente ou resolver manualmente
+
+Se o build falhar no Passo 8:
+  → Analisar o erro, tentar corrigir automaticamente, e rebuildar
+  → Se persistir, informar o usuário com o erro e sugerir próximo passo
 ```
 
 ---
 
-## 6. Skill: `/nexus-ai-blueprint:listar`
+## 7. Skill: `/nexus-ai-blueprint:listar`
 
 ```yaml
 ---
 name: listar
 description: Lista todos os módulos e patterns disponíveis no Blueprint Nexus AI.
 disable-model-invocation: false
+user-invocable: true
 allowed-tools: Read Glob
 ---
 
-# Listar Módulos do Blueprint
+# Módulos do Blueprint Nexus AI
 
-Leia o README.md do blueprint e apresente:
+## Versão
+!`cat ../../.claude-plugin/plugin.json | grep version`
 
-1. **Core** (sempre incluído) — listar os 5 subsistemas
-2. **Módulos** — para cada .md em modules/, mostrar nome e resumo (primeira frase)
-3. **Patterns** — para cada .md em patterns/, mostrar nome e resumo
-4. **Templates** — listar os 7 templates disponíveis
+## Core (sempre incluído)
+!`head -5 ../../core/overview.md`
 
-Formato: tabela organizada por categoria.
+Ler ../../core/overview.md e listar os 5 subsistemas com resumo de uma linha cada.
+
+## Módulos Opcionais
+Para cada arquivo .md em ../../modules/ (exceto README.md):
+- Ler o arquivo
+- Extrair o "## Resumo" (primeira seção após o título)
+- Apresentar: nome | resumo | dependências
+
+## Patterns
+Para cada arquivo .md em ../../patterns/ (exceto README.md):
+- Ler o arquivo
+- Extrair o "## Resumo"
+- Apresentar: nome | resumo | dependências
+
+Formato: tabelas organizadas por categoria.
 ```
 
 ---
 
-## 7. Migração do Nexus
+## 8. README.md do Blueprint (atualizado)
 
-### O que migra:
-- Todo o conteúdo de `blueprint/` → raiz do novo repo
+O README precisa de uma seção de instalação no topo. Adicionar ANTES do catálogo de módulos:
 
-### O que muda no Nexus:
-- Remover pasta `blueprint/`
-- Atualizar `CLAUDE.md` do Nexus:
-  - Seção "Blueprint" passa a dizer: "Blueprint movido para repo próprio: github.com/jvzanini/nexus-ai-blueprint"
-  - Manter regra de checkpoint: "Essa feature é reutilizável? Documentar no blueprint."
+```markdown
+## Instalação
 
----
+### 1. Clonar o repositório
+git clone git@github.com:jvzanini/nexus-ai-blueprint.git ~/Desktop/nexus-ai-blueprint
 
-## 8. plugin.json
+### 2. Registrar como plugin do Claude Code
+Adicionar ao arquivo `~/.claude/settings.json`:
 
-```json
 {
-  "name": "nexus-ai-blueprint",
-  "description": "Blueprint modular para criação de plataformas. Cria projetos completos com auth, multi-tenancy, dashboard e mais.",
-  "version": "1.0.0"
+  "plugins": [
+    "/Users/joaovitorzanini/Desktop/nexus-ai-blueprint"
+  ]
 }
+
+### 3. Reiniciar o Claude Code
+Fechar e reabrir, ou usar `/reload-plugins`.
+
+### 4. Verificar
+Rodar `/nexus-ai-blueprint:listar` — deve mostrar todos os módulos.
+
+## Como Usar
+
+### Criar nova plataforma
+/nexus-ai-blueprint:criar
+
+### Listar módulos disponíveis
+/nexus-ai-blueprint:listar
 ```
 
 ---
 
 ## 9. CLAUDE.md Template (atualizado)
 
-O template `templates/claude-md.template` é atualizado pra incluir a metodologia:
+Mudanças em relação à versão anterior:
+- Deploy condicional (nem todo projeto usa Portainer)
+- Versão do blueprint registrada
+- Data de criação
+- Tipo do projeto registrado
 
 ```markdown
 # {{APP_NAME}}
 
 ## Projeto
 {{DESCRIPTION}}
-Deploy via Docker Swarm Stack no Portainer (VPS).
 
 **URL Produção:** https://{{DOMAIN}}
 **Repositório:** https://github.com/{{GITHUB_USER}}/{{PROJECT_SLUG}}
-**Blueprint:** github.com/jvzanini/nexus-ai-blueprint
-**Tipo:** {{PROJECT_TYPE}} (interno/cliente/terceiro)
+**Blueprint:** github.com/jvzanini/nexus-ai-blueprint (v{{BLUEPRINT_VERSION}})
+**Tipo:** {{PROJECT_TYPE}}
+**Criado em:** {{CREATED_DATE}}
 
 ## Metodologia
 Este projeto segue a metodologia do Blueprint Nexus AI:
-1. **Criação** — `/nexus-ai-blueprint:criar` (já executado)
+1. **Criação** — `/nexus-ai-blueprint:criar` (concluída)
 2. **Planejamento** — `superpowers:brainstorming` → `writing-plans`
 3. **Construção** — `superpowers:executing-plans` com commits frequentes
 4. **Absorção** — ao concluir, funcionalidades reutilizáveis voltam pro blueprint
 
-## Skills Obrigatórias
-{{SKILLS_LIST}}
-
 ## Idioma
 Sempre responder em português brasileiro.
+
+## Skills Obrigatórias
+{{SKILLS_LIST}}
 
 ## Convenções
 - Commits em português
 - Código e variáveis em inglês
+- Comentários em português quando necessário
 - Server Actions em `src/lib/actions/`
 - Todo texto visível ao usuário DEVE ter acentos e caracteres PT-BR corretos
 
@@ -443,68 +398,95 @@ Sempre responder em português brasileiro.
 - **Cor primária:** {{PRIMARY_COLOR}}
 - **Logo:** `public/logo.png`
 - **Temas:** Dark (padrão), Light, Sistema
+- **CSS variables:** Todas as cores via CSS custom properties em globals.css
 
 ## Deploy
-- **Pipeline:** Push main → GitHub Actions (test → build → deploy)
-- **Infraestrutura:** Docker Swarm Stack via Portainer
-- **Registry:** {{REGISTRY}}/{{PROJECT_SLUG}}
+{{DEPLOY_SECTION}}
 
 ## Módulos Incluídos
 {{MODULES_LIST}}
 
 ## Regras
-- Testes direto em produção
 - Todo serviço sobe como container Docker
-- Credenciais NUNCA no GitHub
+- Credenciais NUNCA no GitHub — apenas em `.env.production` (local)
 - Ir pelo caminho mais simples e direto
 
 ## Estrutura de Actions
+Todas as Server Actions ficam em `src/lib/actions/`:
 {{ACTIONS_LIST}}
 ```
 
+**A seção `{{DEPLOY_SECTION}}`** é gerada dinamicamente:
+- Se usa Portainer: inclui pipeline, infraestrutura Docker Swarm, registry
+- Se não usa Portainer: inclui só Docker Compose local ou outra infra informada
+
 ---
 
-## 10. Fase 2 (documentada, não implementada)
+## 10. Migração do Nexus
 
-Após a Fase 1 estar em uso, implementar:
+### O que migra:
+- `blueprint/` inteiro → raiz do novo repo `nexus-ai-blueprint`
+
+### O que se cria de novo no repo:
+- `.claude-plugin/plugin.json`
+- `skills/criar/SKILL.md`
+- `skills/listar/SKILL.md`
+- Seção "Instalação" no README.md
+
+### O que muda no Nexus:
+- Remover pasta `blueprint/`
+- Atualizar CLAUDE.md seção "Blueprint":
+  ```
+  ## Blueprint
+  Movido para repositório próprio: github.com/jvzanini/nexus-ai-blueprint
+  Instalar como plugin do Claude Code para usar.
+  Checkpoint: "Essa feature é reutilizável? Documentar no blueprint."
+  ```
+
+---
+
+## 11. Fase 2 (documentada, não implementada)
 
 ### `/nexus-ai-blueprint:absorver [caminho]`
-- Absorção **guiada** (não automática)
-- Usuário aponta o projeto e opcionalmente diz o que quer absorver
-- Claude Code analisa, filtra por compatibilidade com o core
-- Apresenta ao usuário o que encontrou
-- Após aprovação, escreve a documentação do módulo no formato padrão
+- Absorção **guiada** — o usuário aponta o projeto e opcionalmente diz o que extrair
+- Claude Code analisa por compatibilidade com o core (stack, padrões)
+- Apresenta candidatos organizados em: módulos, componentes, patterns
+- Após aprovação, escreve documentação no formato padrão
 - Commita no repo do blueprint
-- Rejeita qualquer coisa que conflite com o core protegido
+- Rejeita conflitos com o core protegido
 
 ### `/nexus-ai-blueprint:atualizar [módulo]`
-- Atualiza um módulo existente com mudanças do projeto atual
-- Compara a versão no blueprint com o código real
-- Apresenta as diferenças e pede aprovação
+- Compara versão no blueprint com código real do projeto
+- Apresenta diferenças e pede aprovação
+- Atualiza a documentação do módulo
 
 ---
 
-## 11. Implementação — O que fazer
+## 12. Implementação — O que fazer
 
 1. Criar repo `nexus-ai-blueprint` no GitHub (privado)
-2. Migrar conteúdo de `blueprint/` do Nexus
+2. Migrar conteúdo de `blueprint/` do Nexus pra raiz
 3. Criar `.claude-plugin/plugin.json`
-4. Criar `skills/criar/SKILL.md`
-5. Criar `skills/listar/SKILL.md`
-6. Atualizar `templates/claude-md.template` com metodologia
-7. Atualizar `README.md` do blueprint (como instalar, como usar)
-8. Atualizar `CLAUDE.md` do Nexus (remover blueprint, adicionar link)
-9. Remover `blueprint/` do Nexus
-10. Testar: instalar plugin e rodar `/nexus-ai-blueprint:criar`
+4. Criar `skills/criar/SKILL.md` (completo, com fluxo real e dynamic injection)
+5. Criar `skills/listar/SKILL.md` (completo)
+6. Atualizar `README.md` (adicionar seção Instalação)
+7. Atualizar `templates/claude-md.template` (deploy condicional, versão, tipo)
+8. Registrar plugin no `~/.claude/settings.json`
+9. Atualizar CLAUDE.md do Nexus (link pro repo novo)
+10. Remover `blueprint/` do Nexus
+11. Commit + push em ambos os repos
+12. Testar: `/nexus-ai-blueprint:listar` e `/nexus-ai-blueprint:criar`
 
 ---
 
-## 12. Critérios de Sucesso
+## 13. Critérios de Sucesso
 
-1. O plugin instala e as skills aparecem no Claude Code
-2. `/nexus-ai-blueprint:criar` conduz o fluxo completo de 9 passos
-3. O projeto criado compila, builda e tem Docker válido
-4. O CLAUDE.md gerado tem metodologia e skills configuradas
-5. `/nexus-ai-blueprint:listar` mostra todos os módulos e patterns
-6. O repo do blueprint é autossuficiente (não depende do Nexus)
-7. O Nexus continua funcionando sem a pasta blueprint/
+1. O plugin instala e as duas skills aparecem no Claude Code
+2. `/nexus-ai-blueprint:listar` mostra todos os 6 módulos e 4 patterns
+3. `/nexus-ai-blueprint:criar` conduz o fluxo completo de 9 passos sem travar
+4. O projeto criado compila (`tsc`), builda (`next build`) e tem Docker válido
+5. O CLAUDE.md gerado tem metodologia, skills, versão do blueprint e tipo do projeto
+6. O repo do blueprint é autossuficiente — funciona sem o Nexus
+7. O Nexus funciona normalmente sem a pasta `blueprint/`
+8. O plugin funciona de qualquer diretório (não só do blueprint)
+9. Erros no fluxo (diretório existente, repo existente, build falho) são tratados
