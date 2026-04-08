@@ -50,10 +50,35 @@ blueprint/
 
 **Contexto:** O README é o arquivo mais importante — é o que o Claude Code lê primeiro. Contém o catálogo de módulos, sugestões por tipo de plataforma, e o fluxo guiado completo de criação.
 
-- [ ] **Step 1: Criar diretórios**
+- [ ] **Step 1: Criar diretórios e placeholders**
 
 ```bash
 mkdir -p blueprint/core blueprint/modules blueprint/patterns blueprint/templates
+```
+
+Criar arquivos placeholder nas pastas que ficarão vazias na Fase 1:
+
+**blueprint/modules/README.md:**
+```markdown
+# Módulos Opcionais
+
+Documentação dos módulos opcionais será adicionada nas próximas fases:
+
+- **Fase 2:** multi-tenant, notifications, audit-log, toast
+- **Fase 3:** realtime, encryption
+
+Cada módulo segue o formato definido na spec (`docs/superpowers/specs/2026-04-07-blueprint-nexus-ai-design.md`, seção 9).
+```
+
+**blueprint/patterns/README.md:**
+```markdown
+# Patterns Arquiteturais
+
+Documentação dos patterns será adicionada na Fase 3:
+
+- dashboard, queue, settings, webhook-routing
+
+Cada pattern segue o formato definido na spec (`docs/superpowers/specs/2026-04-07-blueprint-nexus-ai-design.md`, seção 10).
 ```
 
 - [ ] **Step 2: Escrever README.md**
@@ -92,22 +117,26 @@ Ao iniciar um novo projeto, aponte o Claude Code para esta pasta e diga:
 | Email | Resend SDK, templates HTML dark-themed responsivos | core/overview.md |
 
 ### Módulos Opcionais
-| Módulo | Descrição | Depende de | Doc |
-|--------|-----------|-----------|-----|
-| Multi-tenant | Empresas, workspaces, scoping de dados | auth, users | modules/multi-tenant.md |
-| Notifications | Feed, badge no header, contagem, mark as read | auth | modules/notifications.md |
-| Audit Log | Registro fire-and-forget (quem, o quê, quando) | auth | modules/audit-log.md |
-| Real-time | SSE + Redis Pub/Sub, useRealtime hook | Redis | modules/realtime.md |
-| Encryption | AES-256-GCM, encrypt/decrypt/mask | — | modules/encryption.md |
-| Toast | Sonner customizado, pilha bottom-up, timers independentes | — | modules/toast.md |
+| Módulo | Descrição | Depende de | Doc | Status |
+|--------|-----------|-----------|-----|--------|
+| Multi-tenant | Empresas, workspaces, scoping de dados | auth, users | modules/multi-tenant.md | Fase 2 |
+| Notifications | Feed, badge no header, contagem, mark as read | auth | modules/notifications.md | Fase 2 |
+| Audit Log | Registro fire-and-forget (quem, o quê, quando) | auth | modules/audit-log.md | Fase 2 |
+| Real-time | SSE + Redis Pub/Sub, useRealtime hook | Redis | modules/realtime.md | Fase 3 |
+| Encryption | AES-256-GCM, encrypt/decrypt/mask | — | modules/encryption.md | Fase 3 |
+| Toast | Sonner customizado, pilha bottom-up, timers independentes | — | modules/toast.md | Fase 2 |
+
+> **Nota:** Docs marcados como Fase 2/3 ainda não existem. Serão criados quando implementarmos essas fases.
 
 ### Patterns (arquitetura adaptável)
-| Pattern | Descrição | Depende de | Doc |
-|---------|-----------|-----------|-----|
-| Dashboard | Stats cards, gráficos Recharts, filtros, tabela | — | patterns/dashboard.md |
-| Queue | BullMQ worker, retry com backoff, DLQ | Redis, realtime (opc.) | patterns/queue.md |
-| Settings | Config globais key-value, admin-only | auth | patterns/settings.md |
-| Webhook Routing | Receber, normalizar, dedup, entregar | queue, encryption | patterns/webhook-routing.md |
+| Pattern | Descrição | Depende de | Doc | Status |
+|---------|-----------|-----------|-----|--------|
+| Dashboard | Stats cards, gráficos Recharts, filtros, tabela | — | patterns/dashboard.md | Fase 3 |
+| Queue | BullMQ worker, retry com backoff, DLQ | Redis, realtime (opc.) | patterns/queue.md | Fase 3 |
+| Settings | Config globais key-value, admin-only | auth | patterns/settings.md | Fase 3 |
+| Webhook Routing | Receber, normalizar, dedup, entregar | queue, encryption | patterns/webhook-routing.md | Fase 3 |
+
+> **Nota:** Docs de patterns serão criados na Fase 3.
 
 ---
 
@@ -205,8 +234,8 @@ No CLAUDE.md do novo projeto, incluir:
 - [ ] **Step 3: Commit**
 
 ```bash
-git add blueprint/README.md
-git commit -m "docs(blueprint): README com catálogo, fluxos guiados e sugestões"
+git add blueprint/README.md blueprint/modules/README.md blueprint/patterns/README.md
+git commit -m "docs(blueprint): README com catálogo e fluxos + placeholders modules/patterns"
 ```
 
 ---
@@ -1079,7 +1108,22 @@ npm run build 2>&1 | tail -5
 
 Esperar: zero erros novos, build passa.
 
-- [ ] **Step 4: Commit final (se houver ajustes)**
+- [ ] **Step 4: Smoke test — simular leitura do blueprint**
+
+Validar que o blueprint é usável: ler o README como se fosse o Claude Code iniciando uma nova plataforma.
+
+Verificar que o fluxo faz sentido:
+1. README aponta pra core/overview.md → arquivo existe e tem as 5 seções de subsistema
+2. README aponta pra core/database.md → arquivo existe e tem schema Prisma completo (não abreviado)
+3. README aponta pra core/deploy.md → arquivo existe e tem Dockerfile, compose, CI/CD
+4. README aponta pra core/ui.md → arquivo existe e tem tokens, tema, layout
+5. Templates em templates/ → todos completos e funcionais (não têm `...` ou seções vazias)
+6. hardcoded-values.md lista valores concretos com arquivo + valor + substituto
+7. integration-map.md tem tabelas de impacto para cada módulo
+
+Se qualquer ponto falhar (seção vazia, conteúdo abreviado, referência quebrada), corrigir antes de seguir.
+
+- [ ] **Step 5: Commit final (se houver ajustes)**
 
 ```bash
 git add -A blueprint/
@@ -1090,17 +1134,19 @@ git commit -m "docs(blueprint): fase 1 completa — validação e ajustes finais
 
 ## Resumo de Tasks
 
-| Task | Descrição | Arquivos |
-|------|-----------|----------|
-| 1 | Estrutura + README.md | blueprint/README.md |
-| 2 | architecture.md | blueprint/architecture.md |
-| 3 | integration-map + hardcoded-values | blueprint/integration-map.md, hardcoded-values.md |
-| 4 | core/overview.md (5 subsistemas) | blueprint/core/overview.md |
-| 5 | core/database.md (schema completo) | blueprint/core/database.md |
-| 6 | core/deploy.md (Docker, CI/CD) | blueprint/core/deploy.md |
-| 7 | core/ui.md (tokens, tema, layout) | blueprint/core/ui.md |
-| 8 | Templates: app.config + globals.css | blueprint/templates/app.config.ts, globals.css |
-| 9 | Templates: Docker + CI/CD | blueprint/templates/docker-compose.yml, build.yml, Dockerfile |
-| 10 | Templates: env.example + claude-md | blueprint/templates/env.example, claude-md.template |
-| 11 | Atualizar CLAUDE.md do Nexus | CLAUDE.md |
-| 12 | Validação final | — |
+| Task | Descrição | Arquivos | Estimativa |
+|------|-----------|----------|-----------|
+| 1 | Estrutura + README.md + placeholders | blueprint/README.md, modules/README.md, patterns/README.md | Médio |
+| 2 | architecture.md | blueprint/architecture.md | Médio |
+| 3 | integration-map + hardcoded-values | blueprint/integration-map.md, hardcoded-values.md | Médio |
+| 4 | core/overview.md (5 subsistemas) | blueprint/core/overview.md | Grande — ler 12 arquivos do Nexus |
+| 5 | core/database.md (schema completo) | blueprint/core/database.md | Médio |
+| 6 | core/deploy.md (Docker, CI/CD) | blueprint/core/deploy.md | Médio |
+| 7 | core/ui.md (tokens, tema, layout) | blueprint/core/ui.md | Grande — ler 12+ arquivos de UI |
+| 8 | Templates: app.config + globals.css | blueprint/templates/app.config.ts, globals.css | Médio |
+| 9 | Templates: Docker + CI/CD | blueprint/templates/docker-compose.yml, build.yml, Dockerfile | Médio |
+| 10 | Templates: env.example + claude-md | blueprint/templates/env.example, claude-md.template | Pequeno |
+| 11 | Atualizar CLAUDE.md do Nexus | CLAUDE.md | Pequeno |
+| 12 | Validação final + smoke test | — | Pequeno |
+
+**Tasks parallelizáveis:** 2, 3, 5, 6 podem rodar em paralelo (sem dependências entre si). Tasks 4 e 7 são as maiores e devem ter review dedicado. Task 12 depende de todas as anteriores.
