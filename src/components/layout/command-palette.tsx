@@ -155,7 +155,7 @@ export function CommandPalette() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="fixed top-[10%] left-1/2 -translate-x-1/2 translate-y-0 max-w-lg w-[calc(100%-2rem)] p-0 gap-0 sm:top-[15%]"
+        className="fixed top-[10%] left-1/2 -translate-x-1/2 translate-y-0 max-w-2xl w-[calc(100%-2rem)] p-0 gap-0 sm:top-[12%]"
       >
         <Command
           className="rounded-2xl overflow-hidden"
@@ -183,7 +183,7 @@ export function CommandPalette() {
           </div>
 
           {/* Resultados */}
-          <Command.List className="max-h-[360px] overflow-y-auto overscroll-contain">
+          <Command.List className="max-h-[480px] overflow-y-auto overscroll-contain">
             {/* Estado vazio: sem query */}
             {query.trim().length < 2 && (
               <div className="px-4 py-8 text-center text-sm text-muted-foreground">
@@ -229,7 +229,10 @@ export function CommandPalette() {
                               <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
                             </div>
                             {item.meta && (
-                              <span className="text-xs text-muted-foreground bg-muted/50 border border-border rounded px-2 py-0.5 shrink-0">
+                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 border border-border rounded px-2 py-0.5 shrink-0">
+                                {(item.type === "route" || item.type === "log") && (
+                                  <Building2 className="h-3 w-3" />
+                                )}
                                 {item.meta}
                               </span>
                             )}
