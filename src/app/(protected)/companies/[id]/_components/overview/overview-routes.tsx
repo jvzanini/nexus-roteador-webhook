@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Route, Circle } from "lucide-react";
+import { TOTAL_EVENTS } from "@/lib/constants/whatsapp-events";
 import type { CompanyOverviewData } from "@/lib/actions/dashboard";
 
 const itemVariants = {
@@ -33,14 +34,17 @@ export function OverviewRoutes({ routes, activeRoutes, totalRoutes }: OverviewRo
           {routes.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhuma rota configurada</p>
           ) : (
-            <div className="space-y-2 h-full overflow-y-auto">
+            <div className="divide-y divide-border h-full overflow-y-auto">
               {routes.map((route) => (
-                <div key={route.id} className="flex items-center gap-2 text-sm">
+                <div key={route.id} className="flex items-center gap-2 text-sm py-2 first:pt-0 last:pb-0">
                   <Circle
-                    className={`h-2 w-2 fill-current ${route.isActive ? "text-emerald-400" : "text-muted-foreground/60"}`}
+                    className={`h-2 w-2 fill-current shrink-0 ${route.isActive ? "text-emerald-400" : "text-muted-foreground/60"}`}
                   />
-                  <span className={route.isActive ? "text-foreground/80" : "text-muted-foreground"}>
+                  <span className={`flex-1 truncate ${route.isActive ? "text-foreground/80" : "text-muted-foreground"}`}>
                     {route.name}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+                    {route.eventCount}/{TOTAL_EVENTS}
                   </span>
                 </div>
               ))}

@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
-import { Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Pencil, Trash2, Copy, Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,14 @@ function maskUrl(url: string): string {
 }
 
 export function RouteCard({ route, onEdit, onDelete, onToggle, canManageRoutes = true }: RouteCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopyUrl() {
+    await navigator.clipboard.writeText(route.url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   const Icon = useMemo(() => {
     const icon = (LucideIcons as unknown as Record<string, LucideIcon>)[route.icon];
     return icon ?? LucideIcons.Webhook;
@@ -85,7 +93,13 @@ export function RouteCard({ route, onEdit, onDelete, onToggle, canManageRoutes =
               </span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <ExternalLink className="h-3 w-3 shrink-0" />
+              <button
+                onClick={handleCopyUrl}
+                className="shrink-0 cursor-pointer hover:text-foreground transition-colors"
+                title="Copiar URL"
+              >
+                {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+              </button>
               <span className="truncate font-mono">{maskUrl(route.url)}</span>
             </div>
           </div>

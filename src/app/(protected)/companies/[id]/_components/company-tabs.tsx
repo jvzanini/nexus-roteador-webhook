@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OverviewTab } from "./overview-tab";
 import { CredentialsTab } from "./credentials-tab";
@@ -33,16 +33,12 @@ interface CompanyTabsProps {
 const VALID_TABS = ["overview", "credentials", "routes", "logs", "members"];
 
 export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, canDelete = false, currentUserId, currentUserIsSuperAdmin = false, defaultTab = "overview" }: CompanyTabsProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const tab = VALID_TABS.includes(defaultTab) ? defaultTab : "overview";
 
   function handleTabChange(value: string) {
-    if (value === "overview") {
-      router.replace(pathname, { scroll: false });
-    } else {
-      router.replace(`${pathname}?tab=${value}`, { scroll: false });
-    }
+    const url = value === "overview" ? pathname : `${pathname}?tab=${value}`;
+    window.history.replaceState(null, "", url);
   }
 
   return (

@@ -386,6 +386,7 @@ export interface CompanyOverviewData {
     id: string;
     name: string;
     isActive: boolean;
+    eventCount: number;
   }>;
   activeRoutes: number;
   totalRoutes: number;
@@ -417,7 +418,7 @@ export async function getCompanyOverviewData(companyId: string): Promise<Company
     }),
     prisma.webhookRoute.findMany({
       where: { companyId },
-      select: { id: true, name: true, isActive: true },
+      select: { id: true, name: true, isActive: true, events: true },
       orderBy: { name: "asc" },
     }),
   ]);
@@ -447,7 +448,12 @@ export async function getCompanyOverviewData(companyId: string): Promise<Company
   return {
     stats: { webhooksReceived, deliveriesCompleted, deliveriesFailed, successRate },
     chart: Array.from(chartMap.values()),
-    routes,
+    routes: routes.map((r) => ({
+      id: r.id,
+      name: r.name,
+      isActive: r.isActive,
+      eventCount: Array.isArray(r.events) ? r.events.length : 0,
+    })),
     activeRoutes: routes.filter((r: { isActive: boolean }) => r.isActive).length,
     totalRoutes: routes.length,
   };
