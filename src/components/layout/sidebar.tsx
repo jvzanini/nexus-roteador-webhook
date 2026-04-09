@@ -51,7 +51,7 @@ export function Sidebar({ user }: SidebarProps) {
       </div>
 
       {/* Busca */}
-      <div className="px-3 pb-2">
+      <div className="px-3 pb-2 border-b border-border mb-1">
         <button
           onClick={() => {
             openSearch();

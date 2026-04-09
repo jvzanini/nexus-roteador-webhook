@@ -155,7 +155,7 @@ export function CommandPalette() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="fixed top-[15%] left-1/2 -translate-x-1/2 translate-y-0 max-w-lg w-[calc(100%-2rem)] p-0 gap-0 sm:top-[20%]"
+        className="fixed top-[10%] left-1/2 -translate-x-1/2 translate-y-0 max-w-lg w-[calc(100%-2rem)] p-0 gap-0 sm:top-[15%]"
       >
         <Command
           className="rounded-2xl overflow-hidden"
