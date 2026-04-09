@@ -8,11 +8,13 @@ import {
   LogOut,
   Menu,
   X,
+  Search,
 } from 'lucide-react';
 import { getNavItems } from '@/lib/constants/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'next-auth/react';
+import { useSearch } from '@/components/layout/search-context';
 
 interface SidebarProps {
   user: {
@@ -28,6 +30,7 @@ interface SidebarProps {
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { openSearch } = useSearch();
 
   const allMenuItems = getNavItems(user.platformRole);
 
@@ -45,6 +48,23 @@ export function Sidebar({ user }: SidebarProps) {
           <h1 className="text-base font-bold text-foreground tracking-tight">Nexus AI</h1>
           <p className="text-[11px] text-muted-foreground leading-none">Roteador Webhook</p>
         </div>
+      </div>
+
+      {/* Busca */}
+      <div className="px-3 pb-2">
+        <button
+          onClick={() => {
+            openSearch();
+            setMobileOpen(false);
+          }}
+          className="flex w-full items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground transition-colors duration-200 hover:bg-muted/50 hover:text-foreground cursor-pointer"
+        >
+          <Search className="h-4 w-4" />
+          <span className="flex-1 text-left">Buscar</span>
+          <kbd className="hidden text-[10px] font-mono text-muted-foreground/70 bg-background border border-border rounded px-1.5 py-0.5 sm:inline-block">
+            ⌘K
+          </kbd>
+        </button>
       </div>
 
       {/* Menu */}
