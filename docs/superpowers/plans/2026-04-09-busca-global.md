@@ -6,7 +6,7 @@
 
 **Architecture:** API Route `GET /api/search?q=` executa 4 queries Prisma em paralelo com tenant scoping. Client usa `cmdk` dentro de Dialog base-ui, com debounce + AbortController. SearchContext compartilha controle entre Sidebar e CommandPalette.
 
-**Tech Stack:** cmdk, Next.js API Route, Prisma (contains/startsWith), Dialog base-ui, Lucide React, framer-motion
+**Tech Stack:** cmdk, Next.js API Route, Prisma (contains/startsWith), Dialog base-ui, Lucide React, date-fns
 
 **Spec:** `docs/superpowers/specs/2026-04-09-busca-global-design.md`
 
@@ -52,6 +52,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PLATFORM_ROLE_LABELS } from "@/lib/constants/roles";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface SearchItem {
   id: string;
@@ -193,7 +195,7 @@ export async function GET(request: NextRequest) {
     logs: logs.map((l) => ({
       id: l.id,
       title: l.eventType ?? "Evento",
-      subtitle: l.company.name,
+      subtitle: `${l.company.name} · ${formatDistanceToNow(l.receivedAt, { addSuffix: true, locale: ptBR })}`,
       href: `/companies/${l.companyId}?tab=logs`,
       type: "log" as const,
       meta: l.processingStatus,
@@ -310,7 +312,7 @@ git commit -m "feat: SearchContext para comunicação sidebar ↔ command palett
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
-import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useSearch } from "@/components/layout/search-context";
 import {
   Search,
@@ -359,6 +361,14 @@ export function CommandPalette() {
   const [loading, setLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup do debounce e abort no unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, []);
 
   // Atalho global ⌘K / Ctrl+K
   useEffect(() => {
@@ -452,15 +462,15 @@ export function CommandPalette() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogPortal>
-        <DialogOverlay />
-        <div className="fixed inset-0 z-50 flex justify-center pt-[15vh] sm:pt-[20vh]">
-          <div className="w-full max-w-lg mx-4 h-fit">
-            <Command
-              className="rounded-2xl bg-card border border-border shadow-2xl shadow-black/40 overflow-hidden"
-              shouldFilter={false}
-              loop
-            >
+      <DialogContent
+        showCloseButton={false}
+        className="fixed top-[15%] left-1/2 -translate-x-1/2 translate-y-0 max-w-lg w-[calc(100%-2rem)] p-0 gap-0 sm:top-[20%]"
+      >
+        <Command
+          className="rounded-2xl overflow-hidden"
+          shouldFilter={false}
+          loop
+        >
               {/* Input */}
               <div className="flex items-center gap-3 px-4 border-b border-border">
                 {loading ? (
@@ -554,10 +564,8 @@ export function CommandPalette() {
                   </span>
                 </div>
               )}
-            </Command>
-          </div>
-        </div>
-      </DialogPortal>
+        </Command>
+      </DialogContent>
     </Dialog>
   );
 }
