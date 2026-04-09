@@ -1,3 +1,6 @@
+"use client";
+
+import { useRouter, usePathname } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OverviewTab } from "./overview-tab";
 import { CredentialsTab } from "./credentials-tab";
@@ -27,12 +30,23 @@ interface CompanyTabsProps {
   defaultTab?: string;
 }
 
+const VALID_TABS = ["overview", "credentials", "routes", "logs", "members"];
+
 export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, canDelete = false, currentUserId, currentUserIsSuperAdmin = false, defaultTab = "overview" }: CompanyTabsProps) {
-  const validTabs = ["overview", "credentials", "routes", "logs", "members"];
-  const tab = validTabs.includes(defaultTab) ? defaultTab : "overview";
+  const router = useRouter();
+  const pathname = usePathname();
+  const tab = VALID_TABS.includes(defaultTab) ? defaultTab : "overview";
+
+  function handleTabChange(value: string) {
+    if (value === "overview") {
+      router.replace(pathname, { scroll: false });
+    } else {
+      router.replace(`${pathname}?tab=${value}`, { scroll: false });
+    }
+  }
 
   return (
-    <Tabs defaultValue={tab} className="space-y-6">
+    <Tabs defaultValue={tab} onValueChange={handleTabChange} className="space-y-6">
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
       <TabsList className="bg-card border border-border rounded-lg p-1 gap-1 w-max sm:w-auto">
         <TabsTrigger

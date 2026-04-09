@@ -18,7 +18,7 @@ interface OverviewRoutesProps {
 
 export function OverviewRoutes({ routes, activeRoutes, totalRoutes }: OverviewRoutesProps) {
   return (
-    <motion.div variants={itemVariants}>
+    <motion.div variants={itemVariants} className="h-full">
       <Card className="bg-card border border-border rounded-xl h-full flex flex-col">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-foreground/80 flex items-center gap-2">

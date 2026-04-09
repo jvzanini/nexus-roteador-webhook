@@ -211,12 +211,14 @@ function BadgeSelect({
   options,
   getBadgeStyle,
   useFixed = false,
+  minWidth = 300,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: string; description?: string; bg: string; icon: React.ComponentType<{ className?: string }> }[];
   getBadgeStyle: (value: string) => { bg: string; icon: React.ComponentType<{ className?: string }> };
   useFixed?: boolean;
+  minWidth?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [dropdownPos, setDropdownPos] = useState<React.CSSProperties>({});
@@ -240,7 +242,7 @@ function BadgeSelect({
         position: 'fixed' as const,
         top: rect.bottom + 4,
         left: rect.left,
-        width: Math.max(rect.width, 220),
+        width: Math.max(rect.width, minWidth),
         zIndex: 200,
       });
     }
@@ -249,7 +251,7 @@ function BadgeSelect({
 
   const dropdownClasses = useFixed
     ? "rounded-lg border border-border bg-popover shadow-xl overflow-hidden"
-    : "absolute left-0 top-full mt-1 z-[200] min-w-[220px] rounded-lg border border-border bg-popover shadow-xl overflow-hidden";
+    : `absolute left-0 top-full mt-1 z-[200] rounded-lg border border-border bg-popover shadow-xl overflow-hidden`;
 
   return (
     <div ref={ref} className="relative inline-flex">
@@ -269,7 +271,7 @@ function BadgeSelect({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            style={useFixed ? dropdownPos : undefined}
+            style={useFixed ? dropdownPos : { minWidth }}
             className={dropdownClasses}
           >
             {options.map((option) => {
@@ -278,7 +280,7 @@ function BadgeSelect({
                 <button
                   key={option.value}
                   onClick={() => { onChange(option.value); setOpen(false); }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-left cursor-pointer transition-all hover:bg-accent ${value === option.value ? "bg-accent/50" : ""}`}
+                  className={`flex w-full items-center gap-3 px-4 py-2.5 text-left cursor-pointer transition-all hover:bg-accent ${value === option.value ? "bg-accent/50" : ""}`}
                 >
                   <OptionIcon className={`h-4 w-4 shrink-0 ${option.bg.includes("purple") ? "text-purple-400" : option.bg.includes("blue") ? "text-blue-400" : option.bg.includes("amber") ? "text-amber-400" : option.bg.includes("emerald") ? "text-emerald-400" : option.bg.includes("red") ? "text-red-400" : "text-muted-foreground"}`} />
                   <div className="flex-1 min-w-0">
@@ -783,6 +785,7 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                       ) : (
                         <BadgeSelect
                           useFixed
+                          minWidth={150}
                           value={user.isActive ? "active" : "inactive"}
                           onChange={(val) => handleInlineStatusChange(user.id, val === "active")}
                           options={[
