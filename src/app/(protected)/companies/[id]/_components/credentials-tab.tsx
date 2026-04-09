@@ -1,19 +1,18 @@
-import { ShieldCheck } from "lucide-react";
+"use client";
+
+import { useState, useEffect, useTransition } from "react";
+import { ShieldCheck, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCredential } from "@/lib/actions/credential";
 import { CredentialForm } from "./credential-form";
 
 interface MaskedCredential {
-  id: string;
-  companyId: string;
   metaAppId: string;
   metaAppSecret: string;
   verifyToken: string;
   accessToken: string;
   phoneNumberId: string | null;
   wabaId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 interface CredentialsTabProps {
@@ -22,9 +21,36 @@ interface CredentialsTabProps {
   canEdit?: boolean;
 }
 
-export async function CredentialsTab({ companyId, webhookKey, canEdit = true }: CredentialsTabProps) {
-  const result = await getCredential(companyId);
-  const credential = result.success ? (result.data as MaskedCredential | null) : null;
+export function CredentialsTab({ companyId, webhookKey, canEdit = true }: CredentialsTabProps) {
+  const [credential, setCredential] = useState<MaskedCredential | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    startTransition(async () => {
+      const result = await getCredential(companyId);
+      if (result.success && result.data) {
+        const data = result.data as any;
+        setCredential({
+          metaAppId: data.metaAppId,
+          metaAppSecret: data.metaAppSecret,
+          verifyToken: data.verifyToken,
+          accessToken: data.accessToken,
+          phoneNumberId: data.phoneNumberId,
+          wabaId: data.wabaId,
+        });
+      }
+      setLoaded(true);
+    });
+  }, [companyId]);
+
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -43,19 +69,12 @@ export async function CredentialsTab({ companyId, webhookKey, canEdit = true }: 
         </CardContent>
       </Card>
 
-      {/* Formulario unificado — visualizacao + edicao no mesmo lugar */}
+      {/* Formulario unificado */}
       <CredentialForm
         companyId={companyId}
         webhookKey={webhookKey}
         canEdit={canEdit}
-        existingCredential={credential ? {
-          metaAppId: credential.metaAppId,
-          metaAppSecret: credential.metaAppSecret,
-          verifyToken: credential.verifyToken,
-          accessToken: credential.accessToken,
-          phoneNumberId: credential.phoneNumberId,
-          wabaId: credential.wabaId,
-        } : null}
+        existingCredential={credential}
       />
     </div>
   );
