@@ -8,7 +8,7 @@
 
 **Project:** Nexus Roteador Webhook
 **Generated:** 2026-04-04 08:42:01
-**Category:** Smart Home/IoT Dashboard
+**Category:** SaaS Platform
 
 ---
 
@@ -18,24 +18,25 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#2563EB` | `--color-primary` |
-| Secondary | `#3B82F6` | `--color-secondary` |
-| CTA/Accent | `#F97316` | `--color-cta` |
+| Primary (dark) | `#7c3aed` | `--color-primary` |
+| Primary (light) | `#6d28d9` | `--color-primary` |
+| Secondary | `#8b5cf6` | `--color-secondary` |
+| CTA/Accent | `#7c3aed` | `--color-cta` |
 | Background | `#F8FAFC` | `--color-background` |
 | Text | `#1E293B` | `--color-text` |
 
-**Color Notes:** Dark bg + green positive indicators
+**Color Notes:** Violet/purple primary (#7c3aed dark, #6d28d9 light). Dark bg + green positive indicators.
 
 ### Typography
 
-- **Heading Font:** Fira Code
-- **Body Font:** Fira Sans
-- **Mood:** dashboard, data, analytics, code, technical, precise
-- **Google Fonts:** [Fira Code + Fira Sans](https://fonts.google.com/share?selection.family=Fira+Code:wght@400;500;600;700|Fira+Sans:wght@300;400;500;600;700)
+- **Heading Font:** Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
+- **Body Font:** Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
+- **Mood:** saas, dashboard, clean, modern, professional
+- **Google Fonts:** Nenhuma — usa system font stack (sem import externo necessário)
 
-**CSS Import:**
+**CSS (nenhum import necessário — system fonts):**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+/* Usar diretamente via Tailwind: font-sans (--font-sans no tema) */
 ```
 
 ### Spacing Variables
@@ -68,7 +69,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #F97316;
+  background: #7c3aed;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -85,8 +86,8 @@
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #2563EB;
-  border: 2px solid #2563EB;
+  color: #7c3aed;
+  border: 2px solid #7c3aed;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -125,9 +126,9 @@
 }
 
 .input:focus {
-  border-color: #2563EB;
+  border-color: #7c3aed;
   outline: none;
-  box-shadow: 0 0 0 3px #2563EB20;
+  box-shadow: 0 0 0 3px #7c3aed20;
 }
 ```
 
