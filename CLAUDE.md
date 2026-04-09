@@ -44,8 +44,6 @@ Sempre responder em português brasileiro.
 ## Identidade Visual
 - **Cor primária:** Roxo/Violet (#7c3aed dark, #6d28d9 light) — extraído do logo Nexus AI
 - **Logo:** `public/logo-nexus-ai.png` (ícone N com gradiente roxo)
-- **Marca dark:** `public/marca-nexus-ai-dark.png`
-- **Marca light:** `public/marca-nexus-ai-light.png`
 - **Temas:** Dark (padrão), Light, Sistema — gerenciados por next-themes
 - **CSS variables:** Todas as cores via CSS custom properties em globals.css
 - **Selects:** Usar `CustomSelect` de `@/components/ui/custom-select.tsx` (padrão label + descrição)
@@ -63,11 +61,6 @@ Sempre responder em português brasileiro.
 - **dotcontext MCP:** Gerenciamento de contexto e memória do projeto
 - **superpowers:** Brainstorm, planejamento, desenvolvimento, testes, debugging
 - **ui-ux-pro-max:** OBRIGATÓRIO para TODO layout/UI — design system em `design-system/nexus-roteador-webhook/MASTER.md`
-
-## Blueprint
-Movido para repositório próprio: github.com/jvzanini/nexus-ai-blueprint
-Instalar como plugin do Claude Code para usar (`/nexus-ai-blueprint:criar`).
-Checkpoint ao finalizar features: "Essa feature é reutilizável? Documentar no blueprint."
 
 ## Regras
 - Testes direto em produção
