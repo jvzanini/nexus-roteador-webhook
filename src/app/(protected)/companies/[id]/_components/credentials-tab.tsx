@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCredential } from "@/lib/actions/credential";
@@ -22,6 +23,7 @@ interface CredentialsTabProps {
 }
 
 export function CredentialsTab({ companyId, webhookKey, canEdit = true }: CredentialsTabProps) {
+  const router = useRouter();
   const [credential, setCredential] = useState<MaskedCredential | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -75,6 +77,7 @@ export function CredentialsTab({ companyId, webhookKey, canEdit = true }: Creden
         webhookKey={webhookKey}
         canEdit={canEdit}
         existingCredential={credential}
+        onSuccess={() => router.refresh()}
       />
     </div>
   );

@@ -95,14 +95,10 @@ export function OverviewTab({ company }: OverviewTabProps) {
       <motion.div variants={itemVariants}>
         <Card className="bg-card border border-border rounded-xl">
           <CardContent className="py-4 px-5">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Slug</p>
-                <p className="text-sm text-foreground font-mono">/{company.slug}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Webhook Key</p>
-                <p className="text-sm text-foreground font-mono truncate">{company.webhookKey}</p>
+                <p className="text-xs text-muted-foreground mb-1">Slug da Empresa</p>
+                <p className="text-sm text-foreground font-mono">/{company.webhookKey}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Criada em</p>

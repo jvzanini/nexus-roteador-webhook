@@ -126,7 +126,15 @@ export function CommandPalette() {
     closeSearch();
     setQuery("");
     setResults(null);
-    router.push(href);
+    // Se já estamos na mesma base path (ex: /companies/xxx), forçar navegação completa
+    // para garantir que ?tab= funcione (router.push não re-renderiza tabs)
+    const currentPath = window.location.pathname;
+    const targetPath = href.split("?")[0];
+    if (currentPath === targetPath && href.includes("?")) {
+      window.location.href = href;
+    } else {
+      router.push(href);
+    }
   }
 
   function handleOpenChange(nextOpen: boolean) {

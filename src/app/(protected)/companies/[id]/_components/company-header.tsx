@@ -57,7 +57,7 @@ export function CompanyHeader({ company, canEdit = true, canDelete = false }: Co
               </h1>
               <CompanyStatusBadge isActive={company.isActive} />
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5 font-mono">/{company.slug}</p>
+            <p className="text-sm text-muted-foreground mt-0.5 font-mono">/{company.webhookKey}</p>
           </div>
         </div>
 
