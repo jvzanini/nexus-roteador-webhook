@@ -17,6 +17,7 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 3C:** CONCLUÍDA — controle de acesso completo (backend+frontend), segurança webhook-routes e logs, fix updateUser, excluir empresa, slug editável, viewer read-only, selects inline usuários
 - **Fase 3D:** CONCLUÍDA — sistema de permissões em duas camadas (platformRole + CompanyRole independentes), JWT refresh em tempo real, login usuário inativo, sidebar com role real
 - **Fase 3E:** CONCLUÍDA — toast estilo Portainer (pilha bottom-up, timers independentes via pointer-events), data minúscula dashboard, selects largura ajustada, ring inputs corrigido, coluna nível membros, limpeza arquivos obsoletos
+- **Busca Global:** CONCLUÍDA — command palette ⌘K, busca em 4 entidades (empresas/rotas/logs/usuários), deep-link tabs, tenant scoping
 
 ## Idioma
 Sempre responder em português brasileiro.
@@ -94,9 +95,8 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 
 ## Próximo Passo
 Continuar Fase 3:
-1. **Busca global** — busca unificada no header
-2. **Exportação CSV** — logs e métricas
-3. **Integração Meta API** — configurar webhook automaticamente no app Meta
+1. **Exportação CSV** — logs e métricas
+2. **Integração Meta API** — configurar webhook automaticamente no app Meta
 
 ## Documentação
 - **Spec geral:** `docs/superpowers/specs/2026-04-03-nexus-roteador-webhook-design.md` (v7)
