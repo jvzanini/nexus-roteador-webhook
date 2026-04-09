@@ -19,7 +19,7 @@ interface OverviewRoutesProps {
 export function OverviewRoutes({ routes, activeRoutes, totalRoutes }: OverviewRoutesProps) {
   return (
     <motion.div variants={itemVariants}>
-      <Card className="bg-card border border-border rounded-xl h-full">
+      <Card className="bg-card border border-border rounded-xl h-full flex flex-col">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-foreground/80 flex items-center gap-2">
             <Route className="h-4 w-4 text-violet-400" />
@@ -29,11 +29,11 @@ export function OverviewRoutes({ routes, activeRoutes, totalRoutes }: OverviewRo
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 overflow-hidden">
           {routes.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhuma rota configurada</p>
           ) : (
-            <div className="space-y-2 max-h-[160px] overflow-y-auto">
+            <div className="space-y-2 h-full overflow-y-auto">
               {routes.map((route) => (
                 <div key={route.id} className="flex items-center gap-2 text-sm">
                   <Circle

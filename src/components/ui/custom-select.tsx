@@ -57,7 +57,7 @@ export function CustomSelect({
         position: 'fixed' as const,
         top: rect.bottom + 4,
         left: rect.left,
-        width: Math.max(rect.width, 280),
+        width: Math.max(rect.width, 220),
       });
     }
     if (!disabled) setOpen(!open);
