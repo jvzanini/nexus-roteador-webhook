@@ -24,11 +24,15 @@ interface CompanyTabsProps {
   canDelete?: boolean;
   currentUserId?: string;
   currentUserIsSuperAdmin?: boolean;
+  defaultTab?: string;
 }
 
-export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, canDelete = false, currentUserId, currentUserIsSuperAdmin = false }: CompanyTabsProps) {
+export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, canDelete = false, currentUserId, currentUserIsSuperAdmin = false, defaultTab = "overview" }: CompanyTabsProps) {
+  const validTabs = ["overview", "credentials", "routes", "logs", "members"];
+  const tab = validTabs.includes(defaultTab) ? defaultTab : "overview";
+
   return (
-    <Tabs defaultValue="overview" className="space-y-6">
+    <Tabs defaultValue={tab} className="space-y-6">
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
       <TabsList className="bg-card border border-border rounded-lg p-1 gap-1 w-max sm:w-auto">
         <TabsTrigger

@@ -7,10 +7,12 @@ import { CompanyTabs } from "./_components/company-tabs";
 
 interface CompanyPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
-export default async function CompanyPage({ params }: CompanyPageProps) {
+export default async function CompanyPage({ params, searchParams }: CompanyPageProps) {
   const { id } = await params;
+  const { tab } = await searchParams;
   const result = await getCompanyById(id);
 
   if (!result.success || !result.data) {
@@ -42,7 +44,7 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
   return (
     <div className="space-y-6">
       <CompanyHeader company={company} canEdit={canEdit} canDelete={canDelete} />
-      <CompanyTabs company={company} canEdit={canEdit} canManageRoutes={canManageRoutes} canDelete={canDelete} currentUserId={userId} currentUserIsSuperAdmin={isSuperAdmin} />
+      <CompanyTabs company={company} canEdit={canEdit} canManageRoutes={canManageRoutes} canDelete={canDelete} currentUserId={userId} currentUserIsSuperAdmin={isSuperAdmin} defaultTab={tab} />
     </div>
   );
 }
