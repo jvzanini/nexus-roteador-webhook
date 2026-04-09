@@ -1,4 +1,4 @@
-# Busca Global — Design Spec
+# Busca Global — Design Spec v2
 
 **Data:** 2026-04-09
 **Feature:** Command palette de busca unificada
@@ -8,7 +8,7 @@
 
 ## 1. Visão Geral
 
-Command palette acessível de qualquer página protegida, permitindo buscar e navegar rapidamente entre empresas, rotas de webhook, logs e usuários. Inspirado no padrão `Cmd+K` moderno.
+Command palette acessível de qualquer página protegida, permitindo buscar e navegar rapidamente entre empresas, rotas de webhook, logs e usuários. Padrão `Cmd+K` moderno.
 
 **Dois pontos de acesso:**
 - Atalho de teclado: `⌘K` (Mac) / `Ctrl+K` (Windows/Linux)
@@ -18,32 +18,38 @@ Command palette acessível de qualquer página protegida, permitindo buscar e na
 
 ## 2. Decisões de Design
 
-### 2.1. Abordagem: Command Palette customizado (sem cmdk)
+### 2.1. Biblioteca: cmdk
 
-Construir o componente do zero usando os primitivos existentes do projeto (`Dialog` base-ui, `Input`, `ScrollArea`). Motivos:
-- Evita nova dependência
-- Controle total sobre o estilo e comportamento
-- O projeto já tem um Dialog maduro com animações e overlay
-- A complexidade é gerenciável (filtro de texto, agrupamento, navegação por teclado)
+Usar a lib `cmdk` (~3KB gzip) para o command menu. Motivos:
+- Navegação por teclado (↑↓, Enter, Escape) built-in
+- Agrupamento de resultados (`Command.Group`)
+- Acessibilidade completa (ARIA roles, focus management, screen reader)
+- Filtro client-side opcional (desabilitamos pois o filtro é server-side)
+- Amplamente adotado (Vercel, Linear, Raycast)
 
-### 2.2. Busca: Server Action única
+O modal usa o `Dialog` base-ui existente como wrapper. O `cmdk` cuida apenas da lista de comandos dentro dele.
 
-Uma Server Action `globalSearch(query)` em `src/lib/actions/search.ts` que:
-- Recebe o termo de busca (string, mínimo 2 caracteres)
-- Consulta as 4 entidades em paralelo (`Promise.all`)
-- Retorna resultados agrupados por tipo, limitados (max 5 por tipo)
-- Respeita permissões do usuário autenticado (tenant scoping)
+### 2.2. API Route para busca
 
-### 2.3. Busca server-side (não client-side)
+Usar API Route `GET /api/search?q=termo` em vez de Server Action. Motivos:
+- Server Actions são para mutations, não leituras
+- API Route permite `AbortController` no client para cancelar requests em voo
+- Semântica REST correta (GET para consulta)
+- Facilita debug no browser (Network tab)
 
-Motivo: logs podem ser milhões de registros, e mesmo empresas/rotas crescem. Buscar no servidor garante que:
-- Não carregamos dados desnecessários no client
-- A filtragem por permissão acontece no servidor
-- O banco faz o trabalho pesado com `ILIKE` / índices
+### 2.3. Busca server-side com Prisma
 
-### 2.4. Debounce de 300ms no client
+Todas as queries rodam no servidor. O client envia apenas o termo, o server:
+- Autentica via session
+- Aplica tenant scoping (membership)
+- Executa 4 queries em paralelo
+- Retorna resultados já formatados
 
-O input dispara a Server Action com debounce de 300ms para evitar chamadas excessivas enquanto o usuário digita.
+### 2.4. Debounce 300ms + AbortController
+
+- Debounce de 300ms no client antes de disparar a request
+- `AbortController` cancela a request anterior se o usuário continua digitando
+- Garante que resultados nunca chegam fora de ordem (race condition eliminada)
 
 ---
 
@@ -52,9 +58,15 @@ O input dispara a Server Action com debounce de 300ms para evitar chamadas exces
 | Entidade | Campos buscáveis | Resultado exibido | Navegação |
 |----------|------------------|-------------------|-----------|
 | **Empresa** | `name`, `slug` | Nome + slug | `/companies/{id}` |
-| **Rota** | `name`, `url` | Nome + URL (truncada) + empresa | `/companies/{companyId}?tab=routes` |
-| **Log** | `eventType`, `dedupeKey` | Tipo de evento + status + data | `/companies/{companyId}?tab=logs` |
-| **Usuário** | `name`, `email` | Nome + email + role | `/users` (com filtro) |
+| **Rota** | `name`, `url` | Nome + URL truncada + nome da empresa | `/companies/{companyId}?tab=routes` |
+| **Log** | `eventType` | Tipo de evento + status + data relativa | `/companies/{companyId}?tab=logs` |
+| **Usuário** | `name`, `email` | Nome + email + role label | `/users` |
+
+**Mudanças vs v1:**
+- Logs: removido `dedupeKey` (campo técnico, sem valor para busca do usuário)
+- Logs: usa `startsWith` em vez de `contains` para `eventType` (aproveita índice `(eventType, createdAt)`)
+- Rotas: resultado mostra nome da empresa dona para contexto
+- Usuário: link direto para `/users` (a página já tem lista com filtro visual)
 
 ---
 
@@ -65,52 +77,58 @@ A busca respeita a mesma hierarquia existente:
 | Role | Empresas | Rotas | Logs | Usuários |
 |------|----------|-------|------|----------|
 | **Super Admin** | Todas | Todas | Todos | Todos |
-| **Admin** | Com membership | Com membership | Com membership | Todos (via /users) |
+| **Admin** | Com membership | Com membership | Com membership | Todos |
 | **Manager** | Com membership | Com membership | Com membership | Não busca |
 | **Viewer** | Com membership | Com membership | Com membership | Não busca |
 
 - Empresas/Rotas/Logs: filtrados por `UserCompanyMembership` ativa (exceto super admin)
 - Usuários: apenas `super_admin` e `admin` veem resultados de usuários
+- A query de scoping é feita uma vez e reutilizada nas 4 buscas
 
 ---
 
-## 5. Arquitetura de Componentes
+## 5. Arquitetura
+
+### 5.1. Novos arquivos
 
 ```
 src/
-├── lib/actions/
-│   └── search.ts                    # Server Action globalSearch()
+├── app/api/search/
+│   └── route.ts              # GET /api/search?q=termo
 ├── components/layout/
-│   ├── command-palette.tsx           # Componente principal (modal)
-│   └── sidebar.tsx                   # Adicionar botão de busca
-└── app/(protected)/
-    └── layout.tsx                    # Montar CommandPalette no layout
+│   └── command-palette.tsx    # Componente principal (client)
 ```
 
-### 5.1. `CommandPalette` (client component)
+### 5.2. Arquivos modificados
 
-**Estado:**
-- `open: boolean` — controla visibilidade do modal
-- `query: string` — texto digitado
-- `results: SearchResults` — resultados agrupados
-- `loading: boolean` — indicador de carregamento
-- `activeIndex: number` — item selecionado por teclado
+```
+src/
+├── components/layout/
+│   └── sidebar.tsx            # Adicionar botão "Buscar" + callback
+├── app/(protected)/
+│   └── layout.tsx             # Montar CommandPalette
+└── app/(protected)/companies/[id]/_components/
+    └── company-tabs.tsx       # Suporte a ?tab= via query param
+```
 
-**Comportamento:**
-- Abre com `⌘K` / `Ctrl+K` (listener global `keydown`)
-- Abre com clique no botão da sidebar (via callback prop)
-- Input com autofocus, placeholder "Buscar empresas, rotas, logs..."
-- Debounce de 300ms antes de chamar `globalSearch()`
-- Resultados agrupados por seções com headers (Empresas, Rotas, Logs, Usuários)
-- Navegação por setas ↑↓, Enter para navegar, Escape para fechar
-- Estado vazio (sem query): mensagem "Digite para buscar..."
-- Sem resultados: mensagem "Nenhum resultado encontrado"
-- Loading: spinner inline no input
+### 5.3. Dependência nova
 
-### 5.2. `globalSearch()` Server Action
+```
+cmdk (^1.0.0)
+```
 
+---
+
+## 6. API Route — `GET /api/search`
+
+### Request
+```
+GET /api/search?q=acme
+```
+
+### Response
 ```typescript
-interface SearchResults {
+interface SearchResponse {
   companies: SearchItem[];
   routes: SearchItem[];
   logs: SearchItem[];
@@ -119,108 +137,215 @@ interface SearchResults {
 
 interface SearchItem {
   id: string;
-  title: string;
-  subtitle: string;
-  href: string;
-  icon: string; // nome do ícone Lucide
-  meta?: string; // info adicional (badge de status, data, etc.)
+  title: string;       // nome principal
+  subtitle: string;    // info secundária
+  href: string;        // URL de navegação
+  type: 'company' | 'route' | 'log' | 'user';
+  meta?: string;       // badge extra (status, role, data)
 }
 ```
 
-**Lógica:**
-1. Autenticar com `getCurrentUser()`
-2. Sanitizar query (trim, lowercase)
-3. Montar filtro de empresas acessíveis (membership scoping)
-4. Executar 4 queries em paralelo com `Promise.all`:
-   - Empresas: `WHERE (name ILIKE '%query%' OR slug ILIKE '%query%') AND scoping`
-   - Rotas: `WHERE (name ILIKE '%query%' OR url ILIKE '%query%') AND company IN scoped`
-   - Logs (InboundWebhook): `WHERE (eventType ILIKE '%query%' OR dedupeKey ILIKE '%query%') AND company IN scoped`
-   - Usuários (se admin+): `WHERE (name ILIKE '%query%' OR email ILIKE '%query%')`
-5. Limitar 5 resultados por tipo
-6. Mapear para `SearchItem[]` com href correto
+O campo `type` permite ao client determinar o ícone correto sem receber nomes de ícones do server:
+- `company` → `Building2`
+- `route` → `Route`
+- `log` → `FileText`
+- `user` → `User`
 
-**Prisma queries usam `contains` com `mode: 'insensitive'`** (equivalente a ILIKE).
+### Lógica
+
+1. Extrair session via `auth()`
+2. Validar: query deve ter >= 2 caracteres, retorna 400 se não
+3. Sanitizar query: `trim()`
+4. Montar lista de `companyIds` acessíveis (membership scoping):
+   - Super admin: sem filtro
+   - Demais: `SELECT companyId FROM UserCompanyMembership WHERE userId = ? AND isActive = true`
+5. Executar queries em paralelo (`Promise.all`):
+   - **Empresas**: `name contains query OR slug contains query` (mode insensitive), limit 5
+   - **Rotas**: `name contains query OR url contains query` (mode insensitive), filtro por companyIds, include company.name, limit 5
+   - **Logs** (InboundWebhook): `eventType startsWith query` (mode insensitive), filtro por companyIds, orderBy receivedAt desc, limit 5
+   - **Usuários** (se role permite): `name contains query OR email contains query` (mode insensitive), limit 5
+6. Mapear resultados para `SearchItem[]`
+7. Retornar JSON
+
+### Performance
+
+- `contains` (ILIKE '%x%'): usado em empresas, rotas e usuários — volume pequeno, sem problema
+- `startsWith` (ILIKE 'x%'): usado em logs — aproveita índice `(eventType, createdAt)`, performante mesmo com milhões de registros
+- `Promise.all`: tempo total = query mais lenta
+- Limit 5 por tipo: máximo 20 resultados totais
 
 ---
 
-## 6. UI / Layout
+## 7. Componente `CommandPalette`
 
-### 6.1. Botão na Sidebar
-
-Posicionado entre o logo e a navegação:
-- Ícone `Search` (Lucide) + texto "Buscar" + badge `⌘K`
-- Estilo: similar aos nav items mas com fundo sutil diferenciado
-- Ao clicar, abre o command palette
-
-### 6.2. Modal Command Palette
-
-- Usa `Dialog` existente do projeto (base-ui) com customizações:
-  - Posição: topo da tela (não centralizado), `top-[20%]` em vez de `top-1/2`
-  - Largura: `max-w-lg` (512px)
-  - Sem botão de fechar (fecha com Escape ou clique fora)
-  - Sem padding padrão do DialogContent (layout customizado)
-- Input no topo com ícone Search, borda inferior como separador
-- Área de resultados com scroll (max-height ~400px)
-- Cada grupo tem header cinza com nome da seção e contagem
-- Cada item: ícone + título + subtitle, hover com background
-
-### 6.3. Item de resultado
-
-```
-[ícone] Título                    [meta/badge]
-        Subtítulo em cinza
+### Props
+```typescript
+interface CommandPaletteProps {
+  // Nenhuma prop necessária — usa listener global de teclado
+  // Exposto via ref ou contexto para o botão da sidebar acionar
+}
 ```
 
-- Empresa: `Building2` + nome + slug como subtitle
-- Rota: ícone da rota (ou `Route`) + nome + URL truncada como subtitle
-- Log: `FileText` + eventType + status badge + data
-- Usuário: `User` + nome + email como subtitle + role badge
+### Estado interno
+- `open: boolean` — visibilidade do modal
+- `query: string` — texto digitado
+- `results: SearchResponse | null` — resultados da API
+- `loading: boolean` — indicador de carregamento
 
-### 6.4. Animações
+### Comportamento
 
-- Modal: fade-in + slide-down sutil (reutiliza animações do Dialog)
-- Resultados: fade-in rápido quando chegam
-- Item ativo (teclado): background highlight instantâneo (sem transição lenta)
+**Abertura:**
+- `⌘K` / `Ctrl+K`: listener global `keydown`, previne comportamento padrão do browser
+- Botão na sidebar: callback via contexto React (`SearchContext`) compartilhado no layout
+- Mobile: ao abrir a palette, fechar a sidebar mobile se estiver aberta
+
+**Busca:**
+- Input controlado com `onChange`
+- Debounce 300ms via `setTimeout` + cleanup
+- Ao disparar fetch, aborta request anterior via `AbortController`
+- Mínimo 2 caracteres para buscar
+- Loading: ícone `Loader2` com animação `spin` no lugar do ícone Search no input
+
+**Resultados:**
+- Agrupados via `Command.Group` do cmdk (Empresas, Rotas, Logs, Usuários)
+- Header de cada grupo: nome da seção + contagem entre parênteses
+- Grupos vazios são ocultados
+- Navegação ↑↓ gerenciada automaticamente pelo cmdk
+
+**Navegação:**
+- Click ou Enter no item: `router.push(href)`, fecha o modal
+- Escape: fecha o modal, limpa a query
+
+**Estados:**
+- Sem query: texto "Digite para buscar..." centralizado
+- Loading: spinner inline no input
+- Sem resultados: "Nenhum resultado para '{query}'"
+- Com resultados: lista agrupada
 
 ---
 
-## 7. Performance
+## 8. UI / Layout
 
-- **Debounce 300ms**: evita queries a cada keystroke
-- **Mínimo 2 caracteres**: não busca com 1 char (resultados demais)
-- **Limit 5 por tipo**: máximo 20 resultados totais
-- **Promise.all**: queries paralelas, tempo total = query mais lenta
-- **Sem cache client-side**: resultados sempre frescos (dados mudam frequentemente)
-- **Índices existentes**: empresas e rotas já têm índices adequados. Logs usam índice `(companyId, createdAt)` — a busca por `eventType` pode ser mais lenta em volumes grandes, mas aceitável com limit 5
+### 8.1. Botão na Sidebar
+
+Posicionado entre o logo e a nav (com separador visual `border-b`):
+
+```
+[Search icon] Buscar                    ⌘K
+```
+
+- Estilo: fundo `bg-muted/30`, borda `border-border`, rounded
+- Texto `Buscar` à esquerda, badge `⌘K` à direita em `text-xs text-muted-foreground`
+- Hover: `bg-muted/50`
+- Aparece tanto no desktop quanto no mobile sidebar
+
+### 8.2. Modal
+
+- Wrapper: `Dialog` base-ui com overlay `bg-black/60 backdrop-blur-sm`
+- Posição: `top-[15%]` (não centralizado verticalmente — padrão command palette)
+- Largura: `max-w-lg` (512px), mobile: `max-w-[calc(100%-2rem)]`
+- Sem botão X (fecha com Escape ou clique fora)
+- `showCloseButton={false}` no DialogContent
+- Padding: zero no DialogContent (layout interno customizado)
+- Animação: reutiliza fade-in + zoom do Dialog existente
+
+### 8.3. Layout interno do modal
+
+```
+┌─────────────────────────────────────┐
+│ [🔍] Buscar empresas, rotas, logs..│  ← input com ícone
+├─────────────────────────────────────┤
+│ Empresas (2)                        │  ← Command.Group heading
+│ ┌─────────────────────────────────┐ │
+│ │ [Building2] Acme Corp           │ │  ← Command.Item (hover/active)
+│ │              acme-corp          │ │
+│ ├─────────────────────────────────┤ │
+│ │ [Building2] Acme Labs           │ │
+│ │              acme-labs          │ │
+│ └─────────────────────────────────┘ │
+│ Rotas (1)                           │
+│ ┌─────────────────────────────────┐ │
+│ │ [Route] Webhook Principal       │ │
+│ │          https://api.acm... Acme│ │
+│ └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
+
+- Input: padding generoso, ícone Search à esquerda, borda inferior como separador
+- Área de resultados: `max-h-[360px]` com overflow scroll
+- Item: padding `px-4 py-3`, dois blocos de texto (título + subtitle)
+- Item ativo (teclado/hover): `bg-accent/50` sem transição (instantâneo)
+- Meta badge (quando presente): alinhado à direita, `text-xs`
+
+### 8.4. Ícones por tipo de resultado
+
+Determinados no client pelo campo `type`:
+- `company` → `Building2`
+- `route` → `Route`
+- `log` → `FileText`
+- `user` → `User`
+
+Ícone em `text-muted-foreground`, `h-4 w-4`.
 
 ---
 
-## 8. Responsividade
+## 9. Deep-link para tabs de empresa
 
-- **Desktop**: modal centralizado com `max-w-lg`
-- **Tablet**: igual desktop, modal com `max-w-[calc(100%-2rem)]`
-- **Mobile**: modal quase fullscreen, input maior para touch, botão de busca na sidebar mobile também funciona
-- Atalho `⌘K` funciona em todos os tamanhos (mas mobile depende de teclado físico — por isso o botão na sidebar é essencial)
+**Mudança necessária** em `company-tabs.tsx`: aceitar prop `defaultTab` controlada por query param.
+
+No `page.tsx` da empresa:
+- Ler `searchParams.tab` 
+- Passar como `defaultTab` para `CompanyTabs`
+- Valores válidos: `overview`, `credentials`, `routes`, `logs`, `members`
+- Fallback: `overview`
+
+Isso permite que a busca global leve direto para `/companies/{id}?tab=routes` e a aba correta já abra.
 
 ---
 
-## 9. Fluxo do Usuário
+## 10. Contexto React para comunicação Sidebar ↔ Palette
 
-1. Usuário pressiona `⌘K` ou clica no botão "Buscar" na sidebar
+Um `SearchProvider` simples no layout protegido:
+
+```typescript
+const SearchContext = createContext<{
+  openSearch: () => void;
+}>({ openSearch: () => {} });
+```
+
+- `CommandPalette` registra `openSearch` via contexto
+- `Sidebar` consome o contexto e chama `openSearch()` no clique do botão
+- Sem prop drilling, sem estado no layout
+
+---
+
+## 11. Responsividade
+
+- **Desktop (≥1024px)**: modal `max-w-lg`, centralizado horizontalmente, `top-[15%]`
+- **Tablet (768-1023px)**: igual desktop
+- **Mobile (<768px)**: modal `max-w-[calc(100%-2rem)]`, `top-[10%]`, ao abrir palette fecha sidebar mobile
+- Atalho `⌘K` funciona em desktop/tablet; no mobile o botão na sidebar é o acesso principal
+
+---
+
+## 12. Fluxo do Usuário
+
+1. Pressiona `⌘K` ou clica "Buscar" na sidebar
 2. Modal abre com input focado
-3. Digita "acme" → debounce 300ms → Server Action executa
+3. Digita "acme" → espera 300ms → request para `GET /api/search?q=acme`
 4. Resultados aparecem agrupados: "Empresas (1)", "Rotas (2)"
-5. Usa setas ↑↓ para navegar entre resultados
-6. Pressiona Enter → navega para a página do item selecionado
-7. Modal fecha automaticamente após navegação
+5. Navega com ↑↓, seleciona com Enter
+6. Navega para `/companies/abc123`, modal fecha
+7. (Se resultado era uma rota): navega para `/companies/abc123?tab=routes`, aba já abre
 
 ---
 
-## 10. Escopo Excluído (YAGNI)
+## 13. Escopo Excluído (YAGNI)
 
-- **Histórico de buscas recentes**: não implementar agora
-- **Ações na palette** (criar empresa, etc.): apenas busca/navegação
-- **Busca fuzzy**: usar `contains` simples, sem fuzzy matching
-- **Filtros por tipo na palette**: busca tudo de uma vez, sem toggles
-- **Cache de resultados**: dados mudam frequentemente, sempre buscar fresco
-- **Busca em credenciais/notificações**: fora do escopo conforme decisão
+- Histórico de buscas recentes
+- Ações na palette (criar empresa, logout, etc.)
+- Busca fuzzy (contains simples é suficiente)
+- Filtros por tipo na palette (toggles empresa/rota/etc.)
+- Cache de resultados no client
+- Busca em credenciais ou notificações
+- Busca full-text (pg_trgm, tsvector) — contains/startsWith é suficiente para o volume atual
