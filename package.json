@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:clean": "node scripts/clean-build.js && next build",
+    "clean": "node scripts/clean-build.js",
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
