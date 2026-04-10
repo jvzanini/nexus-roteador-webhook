@@ -113,31 +113,6 @@ export async function changePassword(
 }
 
 /**
- * Atualiza o tema do usuário (aplicação imediata).
- */
-export async function updateTheme(
-  theme: "dark" | "light" | "system"
-): Promise<ActionResult> {
-  try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) return { success: false, error: "Não autenticado" };
-
-    await prisma.user.update({
-      where: { id: currentUser.id },
-      data: { theme },
-    });
-
-    // Não chamar revalidatePath — o next-themes controla a UI via localStorage.
-    // Persistência no banco é apenas para sync futuro entre dispositivos.
-
-    return { success: true };
-  } catch (error) {
-    console.error("[updateTheme]", error);
-    return { success: false, error: "Erro ao atualizar tema" };
-  }
-}
-
-/**
  * Solicita alteração de e-mail. Envia verificação para o novo endereço.
  */
 export async function requestEmailChange(

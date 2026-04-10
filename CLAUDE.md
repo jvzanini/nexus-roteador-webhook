@@ -17,7 +17,9 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 3C:** CONCLUÍDA — controle de acesso completo (backend+frontend), segurança webhook-routes e logs, fix updateUser, excluir empresa, slug editável, viewer read-only, selects inline usuários
 - **Fase 3D:** CONCLUÍDA — sistema de permissões em duas camadas (platformRole + CompanyRole independentes), JWT refresh em tempo real, login usuário inativo, sidebar com role real
 - **Fase 3E:** CONCLUÍDA — toast estilo Portainer (pilha bottom-up, timers independentes via pointer-events), data minúscula dashboard, selects largura ajustada, ring inputs corrigido, coluna nível membros, limpeza arquivos obsoletos
-- **Busca Global:** CONCLUÍDA — command palette ⌘K, busca em 4 entidades (empresas/rotas/logs/usuários), deep-link tabs, tenant scoping
+- **Busca Global:** CONCLUÍDA — command palette ⌘K, busca em 4 entidades (empresas/rotas/logs/usuários), deep-link tabs, tenant scoping, contexto React, AbortController + debounce 300ms
+- **Ajustes pós-Busca:** CONCLUÍDOS — slug salva webhookKey (bug fix), overview simplificado (remove Webhook Key), header/overview dinâmicos, deep-link via window.history.replaceState, copiar URL rota, ícone empresa nas tags, card Rotas flex-1 alinhado
+- **Tema sem flicker:** CONCLUÍDO — ThemeInitializer removido (brigava com next-themes), sidebar com mount guard, tema via API route `/api/user/theme` (fetch, não server action), light mode contraste revisto globalmente, badges de role theme-aware via CSS overrides
 
 ## Idioma
 Sempre responder em português brasileiro.
@@ -117,3 +119,18 @@ Continuar Fase 3:
 - Progress bar CSS: `::before` com animação toast-shrink (4s)
 - Animação entrada: slide-up com cubic-bezier spring
 - Animação saída: colapso suave (height/opacity/margin transition)
+
+## Tema (dark/light/system)
+- **next-themes é a fonte única de verdade** — não criar wrappers que setem tema via session/JWT
+- Persistência no banco via `POST /api/user/theme` (fetch, NÃO server action)
+  - Server actions disparam re-render implícito do server component → causa flicker
+- Qualquer componente que lê `useTheme()` deve usar `mounted` state guard antes de renderizar UI que depende do tema
+- CSS overrides globais em `globals.css` (`:root:not(.dark) .text-*-400`) tornam cores dark-only theme-aware no light mode
+- Badges de role em `src/lib/constants/roles.ts` usam padrão `text-*-600 dark:text-*-400`
+
+## Build Local (iCloud Drive)
+Projeto está em `~/Desktop` que é sincronizado com iCloud Drive. Durante builds repetidos, iCloud cria arquivos de conflito (`name 2.json`, `node_modules 2/`, etc) em `.next` que quebram `rm -rf` padrão.
+- `npm run clean` — limpa conflitos + remove `.next`
+- `npm run build:clean` — limpa + build (use localmente quando travar)
+- `npm run build` — build padrão (usado no CI, sem problema de iCloud)
+- Script em `scripts/clean-build.js`

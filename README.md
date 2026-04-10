@@ -114,7 +114,7 @@ src/
 │   ├── dashboard/        # Stats, graficos, filtros, entregas recentes
 │   ├── layout/           # Sidebar, notification bell
 │   ├── login/            # Branding, formulario login
-│   ├── providers/        # ThemeProvider, SessionProvider, ThemeInitializer
+│   ├── providers/        # ThemeProvider, SessionProvider
 │   ├── routes/           # Cards de rota, formularios, lista
 │   └── ui/               # Componentes base (shadcn + CustomSelect)
 ├── lib/
