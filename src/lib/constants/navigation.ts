@@ -6,6 +6,7 @@ import {
   Building2,
   Users,
   Settings,
+  FileBarChart2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,6 +25,7 @@ export const MAIN_NAV_ITEMS: NavItem[] = [
 
 export const RESTRICTED_NAV_ITEMS: NavItem[] = [
   { label: "Usuários", href: "/users", icon: Users, allowedRoles: ["super_admin", "admin"] },
+  { label: "Relatórios", href: "/relatorios", icon: FileBarChart2, allowedRoles: ["super_admin", "admin", "manager"] },
   { label: "Configurações", href: "/settings", icon: Settings, allowedRoles: ["super_admin"] },
 ];
 
