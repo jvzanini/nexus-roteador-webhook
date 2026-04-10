@@ -242,7 +242,7 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
   async function handleSaveWebhookConfig() {
     startTransition(async () => {
       if (slug.trim() && slug.trim() !== webhookKey) {
-        const slugResult = await updateCompany(companyId, { slug: slug.trim() });
+        const slugResult = await updateCompany(companyId, { webhookKey: slug.trim() });
         if (!slugResult.success) {
           toast.error(slugResult.error || "Erro ao atualizar slug");
           return;

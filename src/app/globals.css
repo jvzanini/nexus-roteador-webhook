@@ -50,7 +50,7 @@
 
 /* ===== LIGHT MODE (default :root) ===== */
 :root {
-  --background: #fafafa;
+  --background: #f8f8fa;
   --foreground: #18181b;
   --card: #ffffff;
   --card-foreground: #18181b;
@@ -58,15 +58,15 @@
   --popover-foreground: #18181b;
   --primary: #6d28d9;
   --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
+  --secondary: #f0f0f3;
   --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
+  --muted: #f0f0f3;
+  --muted-foreground: #52525b;
+  --accent: #ede9fe;
   --accent-foreground: #18181b;
   --destructive: #ef4444;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
+  --border: #d4d4d8;
+  --input: #d4d4d8;
   --ring: #6d28d9;
   --chart-1: #7c3aed;
   --chart-2: #8b5cf6;

@@ -3,17 +3,22 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut,
   Menu,
   X,
   Search,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import { getNavItems } from '@/lib/constants/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'next-auth/react';
+import { updateTheme } from '@/lib/actions/profile';
 import { useSearch } from '@/components/layout/search-context';
 
 interface SidebarProps {
@@ -31,6 +36,22 @@ export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { openSearch } = useSearch();
+  const { theme, setTheme } = useTheme();
+
+  const THEME_CYCLE = ['dark', 'light', 'system'] as const;
+  const THEME_ICONS = { dark: Moon, light: Sun, system: Monitor } as const;
+  const THEME_LABELS = { dark: 'Modo escuro', light: 'Modo claro', system: 'Sistema' } as const;
+
+  function cycleTheme() {
+    const current = theme ?? 'dark';
+    const idx = THEME_CYCLE.indexOf(current as typeof THEME_CYCLE[number]);
+    const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+    setTheme(next);
+    updateTheme(next);
+  }
+
+  const currentTheme = (theme ?? 'dark') as keyof typeof THEME_ICONS;
+  const ThemeIcon = THEME_ICONS[currentTheme] ?? Moon;
 
   const allMenuItems = getNavItems(user.platformRole);
 
@@ -119,6 +140,17 @@ export function Sidebar({ user }: SidebarProps) {
             <p className="text-[11px] text-muted-foreground truncate">{user.role}</p>
           </div>
         </Link>
+
+        {/* Tema */}
+        <Button
+          variant="ghost"
+          onClick={cycleTheme}
+          className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 cursor-pointer transition-all duration-200"
+          size="sm"
+        >
+          <ThemeIcon className="h-4 w-4" />
+          {THEME_LABELS[currentTheme]}
+        </Button>
 
         {/* Logout */}
         <Button
