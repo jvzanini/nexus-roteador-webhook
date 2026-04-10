@@ -28,7 +28,6 @@ import {
   getProfile,
   updateProfile,
   changePassword,
-  updateTheme,
   requestEmailChange,
 } from "@/lib/actions/profile";
 
@@ -214,13 +213,12 @@ export function ProfileContent() {
   function handleThemeChange(theme: "dark" | "light" | "system") {
     setCurrentTheme(theme);
     setNextTheme(theme);
-    startTransition(async () => {
-      const result = await updateTheme(theme);
-      if (!result.success) {
-        toast.error(result.error || "Erro ao atualizar tema");
-      }
-      // Não chamar updateSession — next-themes cuida da UI via localStorage
-    });
+    // fetch em vez de server action — evita re-render do server component e flicker
+    fetch('/api/user/theme', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme }),
+    }).catch(() => { /* ignore — tema já foi aplicado no client */ });
   }
 
   if (loading) {

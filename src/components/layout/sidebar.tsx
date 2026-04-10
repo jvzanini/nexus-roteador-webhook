@@ -18,7 +18,6 @@ import { getNavItems } from '@/lib/constants/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'next-auth/react';
-import { updateTheme } from '@/lib/actions/profile';
 import { useSearch } from '@/components/layout/search-context';
 
 interface SidebarProps {
@@ -54,7 +53,12 @@ export function Sidebar({ user }: SidebarProps) {
     const idx = THEME_CYCLE.indexOf(current as typeof THEME_CYCLE[number]);
     const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
     setTheme(next);
-    updateTheme(next);
+    // fetch em vez de server action — evita re-render do server component e flicker
+    fetch('/api/user/theme', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme: next }),
+    }).catch(() => { /* ignore — tema já foi aplicado no client */ });
   }
 
   const currentTheme = (theme ?? 'dark') as keyof typeof THEME_ICONS;
