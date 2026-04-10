@@ -111,27 +111,27 @@ function getRoleBadge(role: string) {
   switch (role) {
     case "Super Admin":
       return {
-        bg: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+        bg: "bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400",
         icon: Crown,
       };
     case "Admin":
       return {
-        bg: "bg-blue-500/10 border-blue-500/20 text-blue-400",
+        bg: "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400",
         icon: ShieldCheck,
       };
     case "Gerente":
       return {
-        bg: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+        bg: "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400",
         icon: Shield,
       };
     case "Visualizador":
       return {
-        bg: "bg-zinc-800 border-zinc-700 text-zinc-400",
+        bg: "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400",
         icon: Eye,
       };
     default:
       return {
-        bg: "bg-zinc-800 border-zinc-700 text-zinc-500",
+        bg: "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-500",
         icon: UserX,
       };
   }
@@ -282,7 +282,7 @@ function BadgeSelect({
                   onClick={() => { onChange(option.value); setOpen(false); }}
                   className={`flex w-full items-center gap-3 px-4 py-2.5 text-left cursor-pointer transition-all hover:bg-accent ${value === option.value ? "bg-accent/50" : ""}`}
                 >
-                  <OptionIcon className={`h-4 w-4 shrink-0 ${option.bg.includes("purple") ? "text-purple-400" : option.bg.includes("blue") ? "text-blue-400" : option.bg.includes("amber") ? "text-amber-400" : option.bg.includes("emerald") ? "text-emerald-400" : option.bg.includes("red") ? "text-red-400" : "text-muted-foreground"}`} />
+                  <OptionIcon className={`h-4 w-4 shrink-0 ${option.bg.includes("purple") ? "text-purple-600 dark:text-purple-400" : option.bg.includes("blue") ? "text-blue-600 dark:text-blue-400" : option.bg.includes("amber") ? "text-amber-600 dark:text-amber-400" : option.bg.includes("emerald") ? "text-emerald-600 dark:text-emerald-400" : option.bg.includes("red") ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`} />
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-medium text-foreground">{option.label}</span>
                     {option.description && (
@@ -586,10 +586,10 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
               value: r.value,
               label: r.label,
               description: r.description,
-              bg: r.value === "super_admin" ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
-                : r.value === "admin" ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                : r.value === "manager" ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                : "bg-zinc-800 border-zinc-700 text-zinc-400",
+              bg: r.value === "super_admin" ? "bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400"
+                : r.value === "admin" ? "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400"
+                : r.value === "manager" ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
+                : "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400",
               icon: r.value === "super_admin" ? Crown
                 : r.value === "admin" ? ShieldCheck
                 : r.value === "manager" ? Shield
@@ -597,10 +597,10 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
             }))}
             getBadgeStyle={(val) => {
               switch (val) {
-                case "super_admin": return { bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", icon: Crown };
-                case "admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
-                case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
-                default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
+                case "super_admin": return { bg: "bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400", icon: Crown };
+                case "admin": return { bg: "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400", icon: ShieldCheck };
+                case "manager": return { bg: "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400", icon: Shield };
+                default: return { bg: "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400", icon: Eye };
               }
             }}
           />
@@ -740,11 +740,11 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                         }
 
                         const roleSelectOptions = (isSuperAdmin ? [
-                          { value: "super_admin", label: "Super Admin", description: "Acesso total a toda a plataforma", bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", icon: Crown },
+                          { value: "super_admin", label: "Super Admin", description: "Acesso total a toda a plataforma", bg: "bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400", icon: Crown },
                         ] : []).concat([
-                          { value: "admin", label: "Admin", description: "Gerencia empresas e usuários", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck },
-                          { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks", bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield },
-                          { value: "viewer", label: "Visualizador", description: "Apenas visualização", bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye },
+                          { value: "admin", label: "Admin", description: "Gerencia empresas e usuários", bg: "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400", icon: ShieldCheck },
+                          { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks", bg: "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400", icon: Shield },
+                          { value: "viewer", label: "Visualizador", description: "Apenas visualização", bg: "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400", icon: Eye },
                         ]);
 
                         return (
@@ -755,10 +755,10 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                             options={roleSelectOptions}
                             getBadgeStyle={(val) => {
                               switch (val) {
-                                case "super_admin": return { bg: "bg-purple-500/10 border-purple-500/20 text-purple-400", icon: Crown };
-                                case "admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
-                                case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
-                                default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
+                                case "super_admin": return { bg: "bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400", icon: Crown };
+                                case "admin": return { bg: "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400", icon: ShieldCheck };
+                                case "manager": return { bg: "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400", icon: Shield };
+                                default: return { bg: "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400", icon: Eye };
                               }
                             }}
                           />
@@ -789,12 +789,12 @@ export function UsersContent({ isSuperAdmin, currentUserId }: UsersContentProps)
                           value={user.isActive ? "active" : "inactive"}
                           onChange={(val) => handleInlineStatusChange(user.id, val === "active")}
                           options={[
-                            { value: "active", label: "Ativo", bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", icon: UserCheck },
-                            { value: "inactive", label: "Inativo", bg: "bg-red-500/10 border-red-500/20 text-red-400", icon: UserX },
+                            { value: "active", label: "Ativo", bg: "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400", icon: UserCheck },
+                            { value: "inactive", label: "Inativo", bg: "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400", icon: UserX },
                           ]}
                           getBadgeStyle={(val) => val === "active"
-                            ? { bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", icon: UserCheck }
-                            : { bg: "bg-red-500/10 border-red-500/20 text-red-400", icon: UserX }
+                            ? { bg: "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400", icon: UserCheck }
+                            : { bg: "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400", icon: UserX }
                           }
                         />
                       )}

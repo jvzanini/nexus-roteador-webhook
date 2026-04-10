@@ -62,7 +62,7 @@ const companyRoleSelectOptions = COMPANY_ROLE_OPTIONS.map((opt) => ({
 function getCompanyRoleBadgeStyle(val: string) {
   const opt = COMPANY_ROLE_OPTIONS.find((o) => o.value === val);
   const icon = ROLE_ICONS[val]?.component ?? Eye;
-  return { bg: opt?.bg ?? "bg-zinc-800 border-zinc-700 text-zinc-400", icon };
+  return { bg: opt?.bg ?? "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400", icon };
 }
 
 const containerVariants = {
@@ -357,7 +357,7 @@ export function MembersTab({ companyId, canEdit = true, currentUserId, currentUs
                 if (isViewerPlatform) {
                   // Viewer na plataforma = fixo como viewer, sem opcao de mudar
                   return (
-                    <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-zinc-800 text-zinc-400 border-zinc-700">
+                    <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700">
                       <Eye className="size-3" />
                       Visualizador
                     </span>
@@ -452,7 +452,7 @@ export function MembersTab({ companyId, canEdit = true, currentUserId, currentUs
                   <TableCell className="px-4 py-2">
                     {member.isSuperAdmin || member.userId === currentUserId ? (
                       member.isSuperAdmin ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-purple-500/10 text-purple-400 border-purple-500/20">
+                        <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30">
                           <Crown className="size-3" />
                           Super Admin
                         </span>
@@ -471,15 +471,15 @@ export function MembersTab({ companyId, canEdit = true, currentUserId, currentUs
                           }
                         }}
                         options={[
-                          { value: "company_admin", label: "Admin", description: "Gerencia a empresa", bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck },
-                          { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks", bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield },
-                          { value: "viewer", label: "Visualizador", description: "Apenas visualização", bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye },
+                          { value: "company_admin", label: "Admin", description: "Gerencia a empresa", bg: "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400", icon: ShieldCheck },
+                          { value: "manager", label: "Gerente", description: "Gerencia rotas e webhooks", bg: "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400", icon: Shield },
+                          { value: "viewer", label: "Visualizador", description: "Apenas visualização", bg: "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400", icon: Eye },
                         ]}
                         getBadgeStyle={(val) => {
                           switch (val) {
-                            case "company_admin": return { bg: "bg-blue-500/10 border-blue-500/20 text-blue-400", icon: ShieldCheck };
-                            case "manager": return { bg: "bg-amber-500/10 border-amber-500/20 text-amber-400", icon: Shield };
-                            default: return { bg: "bg-zinc-800 border-zinc-700 text-zinc-400", icon: Eye };
+                            case "company_admin": return { bg: "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400", icon: ShieldCheck };
+                            case "manager": return { bg: "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400", icon: Shield };
+                            default: return { bg: "bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400", icon: Eye };
                           }
                         }}
                       />
