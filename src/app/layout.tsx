@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers/theme-provider";
+import { getResolvedThemeFromCookie } from "@/lib/theme";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,19 +21,22 @@ export const metadata: Metadata = {
   description: "Roteador de webhooks da Meta para multiplos destinos",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const resolvedTheme = await getResolvedThemeFromCookie();
+
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} ${resolvedTheme} h-full antialiased`}
+      style={{ colorScheme: resolvedTheme }}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <Providers>
+        <Providers initialTheme={resolvedTheme}>
           {children}
           <Toaster />
         </Providers>

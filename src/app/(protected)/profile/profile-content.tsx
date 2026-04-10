@@ -22,7 +22,7 @@ import {
   Monitor,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/providers/theme-provider";
 import { useSession } from "next-auth/react";
 import {
   getProfile,
@@ -86,14 +86,13 @@ function resizeImage(file: File, maxSize: number): Promise<string> {
 export function ProfileContent() {
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
-  const { setTheme: setNextTheme } = useTheme();
+  const { theme: currentTheme, setTheme } = useTheme();
   const { update: updateSession } = useSession();
 
   // Profile data
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [currentTheme, setCurrentTheme] = useState<string>("dark");
   const [createdAt, setCreatedAt] = useState<string>("");
 
   // Email change
@@ -116,7 +115,6 @@ export function ProfileContent() {
         setName(result.data.name);
         setEmail(result.data.email);
         setAvatarUrl(result.data.avatarUrl);
-        setCurrentTheme(result.data.theme);
         setCreatedAt(
           new Date(result.data.createdAt).toLocaleDateString("pt-BR", {
             day: "2-digit",
@@ -211,14 +209,7 @@ export function ProfileContent() {
   }
 
   function handleThemeChange(theme: "dark" | "light" | "system") {
-    setCurrentTheme(theme);
-    setNextTheme(theme);
-    // fetch em vez de server action — evita re-render do server component e flicker
-    fetch('/api/user/theme', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ theme }),
-    }).catch(() => { /* ignore — tema já foi aplicado no client */ });
+    setTheme(theme);
   }
 
   if (loading) {

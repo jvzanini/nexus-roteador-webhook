@@ -1,8 +1,14 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { prisma } from '@/lib/prisma';
+import {
+  THEME_COOKIE,
+  THEME_PREF_COOKIE,
+  THEME_COOKIE_MAX_AGE,
+} from '@/lib/theme';
 
 export async function loginAction(
   formData: FormData,
@@ -14,10 +20,28 @@ export async function loginAction(
     // Verificar se o usuário está inativo antes de tentar login
     const existingUser = await prisma.user.findUnique({
       where: { email },
-      select: { isActive: true },
+      select: { isActive: true, theme: true },
     });
     if (existingUser && !existingUser.isActive) {
       return { error: 'Sua conta está inativa. Entre em contato com o administrador.' };
+    }
+
+    // Sincroniza cookies de tema a partir do DB para que o SSR renderize
+    // com o tema correto já no primeiro byte pós-login (evita flash).
+    if (existingUser) {
+      const pref = existingUser.theme ?? 'dark';
+      const resolved = pref === 'light' ? 'light' : 'dark'; // "system" resolvido no client
+      const cookieStore = await cookies();
+      cookieStore.set(THEME_PREF_COOKIE, pref, {
+        path: '/',
+        maxAge: THEME_COOKIE_MAX_AGE,
+        sameSite: 'lax',
+      });
+      cookieStore.set(THEME_COOKIE, resolved, {
+        path: '/',
+        maxAge: THEME_COOKIE_MAX_AGE,
+        sameSite: 'lax',
+      });
     }
 
     await signIn('credentials', {

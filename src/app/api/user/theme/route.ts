@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * POST /api/user/theme
- * Atualiza o tema do usuário sem disparar re-render do server component.
- * Usado pela sidebar e perfil para persistir preferência sem causar flicker.
+ * Persiste preferência de tema no banco e sincroniza cookies server-side.
+ * Os cookies são a fonte de verdade para o SSR — o layout os lê para
+ * renderizar o html já com a classe correta, sem flicker.
  */
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -21,11 +22,13 @@ export async function POST(request: NextRequest) {
   }
 
   const userId = (session.user as any).id;
-
   await prisma.user.update({
     where: { id: userId },
     data: { theme },
   });
 
+  // Client já gravou cookies via document.cookie; o server só confirma o POST.
+  // Não sobrescrevemos via Set-Cookie para não causar nenhuma corrida
+  // entre Set-Cookie tardio e o que o cliente já aplicou na UI.
   return NextResponse.json({ success: true });
 }

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/providers/theme-provider';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut,
@@ -36,33 +36,18 @@ export function Sidebar({ user }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { openSearch } = useSearch();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // next-themes requer aguardar mount antes de renderizar UI dependente de tema
-  // para evitar hydration mismatch e flickering.
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const THEME_CYCLE = ['dark', 'light', 'system'] as const;
   const THEME_ICONS = { dark: Moon, light: Sun, system: Monitor } as const;
   const THEME_LABELS = { dark: 'Modo escuro', light: 'Modo claro', system: 'Sistema' } as const;
 
   function cycleTheme() {
-    const current = theme ?? 'dark';
-    const idx = THEME_CYCLE.indexOf(current as typeof THEME_CYCLE[number]);
+    const idx = THEME_CYCLE.indexOf(theme);
     const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
     setTheme(next);
-    // fetch em vez de server action — evita re-render do server component e flicker
-    fetch('/api/user/theme', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ theme: next }),
-    }).catch(() => { /* ignore — tema já foi aplicado no client */ });
   }
 
-  const currentTheme = (theme ?? 'dark') as keyof typeof THEME_ICONS;
-  const ThemeIcon = THEME_ICONS[currentTheme] ?? Moon;
+  const ThemeIcon = THEME_ICONS[theme] ?? Moon;
 
   const allMenuItems = getNavItems(user.platformRole);
 
@@ -152,20 +137,16 @@ export function Sidebar({ user }: SidebarProps) {
           </div>
         </Link>
 
-        {/* Tema — renderiza apenas após mount para evitar hydration mismatch */}
-        {mounted ? (
-          <Button
-            variant="ghost"
-            onClick={cycleTheme}
-            className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 cursor-pointer transition-all duration-200"
-            size="sm"
-          >
-            <ThemeIcon className="h-4 w-4" />
-            {THEME_LABELS[currentTheme]}
-          </Button>
-        ) : (
-          <div className="w-full h-9" aria-hidden="true" />
-        )}
+        {/* Tema — Context lê cookie no SSR, sem mount guard necessário */}
+        <Button
+          variant="ghost"
+          onClick={cycleTheme}
+          className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 cursor-pointer transition-all duration-200"
+          size="sm"
+        >
+          <ThemeIcon className="h-4 w-4" />
+          {THEME_LABELS[theme]}
+        </Button>
 
         {/* Logout */}
         <Button

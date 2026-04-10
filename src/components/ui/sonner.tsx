@@ -1,12 +1,12 @@
 "use client"
 
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/providers/theme-provider"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 import { useEffect, useCallback, useRef } from "react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const { resolvedTheme } = useTheme()
   const processedToasts = useRef(new Set<Element>())
 
   const applyStackStyles = useCallback(() => {
@@ -102,7 +102,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={resolvedTheme as ToasterProps["theme"]}
       className="toaster group"
       closeButton
       visibleToasts={4}
