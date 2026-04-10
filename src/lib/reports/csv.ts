@@ -19,7 +19,10 @@ export function escapeCsvCell(value: unknown): string {
   }
 
   const needsQuoting =
-    str.includes(",") || str.includes('"') || str.includes("\n");
+    str.includes(",") ||
+    str.includes('"') ||
+    str.includes("\n") ||
+    str.includes("\r");
 
   if (needsQuoting) {
     return `"${str.replace(/"/g, '""')}"`;

@@ -22,13 +22,17 @@ describe("escapeCsvCell", () => {
     expect(escapeCsvCell("linha1\nlinha2")).toBe('"linha1\nlinha2"');
   });
 
+  it("envolve em aspas quando tem carriage return isolado", () => {
+    expect(escapeCsvCell("linha1\rlinha2")).toBe('"linha1\rlinha2"');
+  });
+
   it("previne CSV formula injection prefixando com aspa simples", () => {
     expect(escapeCsvCell("=SUM(A1:A10)")).toBe("'=SUM(A1:A10)");
     expect(escapeCsvCell("+cmd|calc")).toBe("'+cmd|calc");
     expect(escapeCsvCell("-1+1")).toBe("'-1+1");
     expect(escapeCsvCell("@import")).toBe("'@import");
     expect(escapeCsvCell("\tfoo")).toBe("'\tfoo");
-    expect(escapeCsvCell("\rfoo")).toBe("'\rfoo");
+    expect(escapeCsvCell("\rfoo")).toBe(`"'${"\r"}foo"`);
   });
 
   it("aplica formula guard antes do escape de aspas", () => {
