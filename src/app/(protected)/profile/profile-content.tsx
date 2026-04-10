@@ -216,11 +216,10 @@ export function ProfileContent() {
     setNextTheme(theme);
     startTransition(async () => {
       const result = await updateTheme(theme);
-      if (result.success) {
-        await updateSession();
-      } else {
+      if (!result.success) {
         toast.error(result.error || "Erro ao atualizar tema");
       }
+      // Não chamar updateSession — next-themes cuida da UI via localStorage
     });
   }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -37,6 +37,13 @@ export function Sidebar({ user }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { openSearch } = useSearch();
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // next-themes requer aguardar mount antes de renderizar UI dependente de tema
+  // para evitar hydration mismatch e flickering.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const THEME_CYCLE = ['dark', 'light', 'system'] as const;
   const THEME_ICONS = { dark: Moon, light: Sun, system: Monitor } as const;
@@ -141,16 +148,20 @@ export function Sidebar({ user }: SidebarProps) {
           </div>
         </Link>
 
-        {/* Tema */}
-        <Button
-          variant="ghost"
-          onClick={cycleTheme}
-          className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 cursor-pointer transition-all duration-200"
-          size="sm"
-        >
-          <ThemeIcon className="h-4 w-4" />
-          {THEME_LABELS[currentTheme]}
-        </Button>
+        {/* Tema — renderiza apenas após mount para evitar hydration mismatch */}
+        {mounted ? (
+          <Button
+            variant="ghost"
+            onClick={cycleTheme}
+            className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 cursor-pointer transition-all duration-200"
+            size="sm"
+          >
+            <ThemeIcon className="h-4 w-4" />
+            {THEME_LABELS[currentTheme]}
+          </Button>
+        ) : (
+          <div className="w-full h-9" aria-hidden="true" />
+        )}
 
         {/* Logout */}
         <Button

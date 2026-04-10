@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { Sidebar } from '@/components/layout/sidebar';
-import { ThemeInitializer } from '@/components/providers/theme-initializer';
 import { PLATFORM_ROLE_LABELS } from '@/lib/constants/roles';
 import { SearchProvider } from '@/components/layout/search-context';
 import { CommandPalette } from '@/components/layout/command-palette';
@@ -35,7 +34,6 @@ export default async function ProtectedLayout({
   return (
     <SearchProvider>
       <div className="flex h-screen overflow-hidden bg-background">
-        <ThemeInitializer theme={(session.user as any)?.theme ?? null} />
         <Sidebar user={user} />
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-7xl px-4 pt-16 pb-8 sm:px-6 sm:pt-8 sm:pb-8 lg:px-8">

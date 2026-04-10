@@ -127,9 +127,8 @@ export async function updateTheme(
       data: { theme },
     });
 
-    // Não usar revalidatePath aqui — causaria re-render que faria o
-    // ThemeInitializer reaplicar o tema stale do JWT da session e causar flicker.
-    // A mudança já foi persistida no banco; o next-themes cuida da UI via localStorage.
+    // Não chamar revalidatePath — o next-themes controla a UI via localStorage.
+    // Persistência no banco é apenas para sync futuro entre dispositivos.
 
     return { success: true };
   } catch (error) {
