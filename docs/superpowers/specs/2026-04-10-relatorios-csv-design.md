@@ -1,60 +1,69 @@
 # Módulo de Relatórios CSV — Design
 
 **Data:** 2026-04-10
-**Status:** Aprovado (v1)
+**Status:** Aprovado (v2 — revisto após review crítico e verificação de schema)
 **Autor:** brainstorm colaborativo
 
 ---
 
 ## 1. Objetivo
 
-Permitir que admins e super admins exportem dados do sistema em arquivos CSV prontos para análise externa (Excel, Google Sheets, scripts Python). Escopo do v1: logs de webhook, empresas, rotas e usuários.
+Permitir que admins, managers e super admins exportem dados do sistema em arquivos CSV prontos para análise externa (Excel, Google Sheets, scripts). Escopo do v1: logs de webhook, empresas, rotas e usuários.
 
 ## 2. Não-objetivos (YAGNI)
 
-Deliberadamente fora do v1:
-
-- Métricas do dashboard em CSV (quem vê o gráfico raramente precisa do CSV dos mesmos números; pode virar v2 sob demanda)
+- Métricas do dashboard em CSV (dashboard já exibe; duplicação sem valor)
 - Agendamento de relatórios recorrentes
 - Envio por e-mail
 - Formatos adicionais (XLSX, JSON, PDF)
 - Histórico de exportações
 - Gráficos embedados
+- Export de `DeliveryAttempt` individual (granularidade máxima) — se pedido, vira v2
+- Export de audit logs — fora do v1
 
 ## 3. Escopo funcional
 
-Quatro tipos de relatório, cada um com filtros dedicados e export em CSV UTF-8.
+Quatro tipos de relatório. Todos os tipos respeitam as regras de permissão (seção 6) antes de qualquer query.
 
 ### 3.1 Logs de webhook
 
-**Filtros**
-- Período (obrigatório) — default: últimos 30 dias
+> **Modelo real do projeto:** logs são hierárquicos.
+> `InboundWebhook` (1 recebimento da Meta) → `RouteDelivery[]` (1 entrega por rota elegível) → `DeliveryAttempt[]` (tentativas/retries).
+
+**Granularidade escolhida: 1 linha por `RouteDelivery`** (join com inbound + route + última tentativa). Isso dá o registro mais útil para auditoria — "evento X foi para rota Y com status Z em W ms" — sem a explosão de volume de DeliveryAttempt.
+
+**Filtros** (reutilizam o `LogFiltersSchema` de `src/lib/actions/logs.ts`)
+- Período (obrigatório) — default: últimos 30 dias, teto máximo de 90 dias por export
 - Empresa (opcional, select) — limitado às empresas visíveis ao usuário
-- Status (opcional) — `success` | `error` | `pending`
-- Tipo de evento (opcional) — select com os eventos do WhatsApp Cloud (messages, statuses, message_template_status_update, etc.)
+- Rota (opcional, select) — populado dinamicamente quando uma empresa é selecionada
+- Status (opcional, multi-select) — enum `DeliveryStatus`: `pending | delivering | delivered | retrying | failed`
+- Tipo de evento (opcional, multi-select) — populado dinamicamente via `getAvailableEventTypes(companyId)` quando empresa é selecionada; oculto se nenhuma empresa foi escolhida
 
 **Colunas**
-- Data/hora (ISO `yyyy-MM-dd HH:mm:ss`)
-- Empresa
-- Rota
-- Tipo de evento
-- Status
-- URL destino
-- Duração (ms)
-- Código HTTP de resposta
-- Mensagem de erro (se houver)
+- Data de recebimento (`inboundWebhook.receivedAt`, ISO)
+- Empresa (`company.name`)
+- Rota (`route.name`)
+- URL destino (`route.url`)
+- Tipo de evento (`inboundWebhook.eventType`)
+- Status da entrega (`delivery.status`)
+- Total de tentativas (`delivery.totalAttempts`)
+- Duração da última tentativa (ms) (`lastAttempt.durationMs`)
+- HTTP final (`delivery.finalHttpStatus`)
+- Entregue em (`delivery.deliveredAt`, ISO)
+- Última tentativa em (`delivery.lastAttemptAt`, ISO)
+- Erro da última tentativa (`lastAttempt.errorMessage`)
 
 ### 3.2 Empresas
 
-**Filtros**
-- Nenhum (lista pequena na prática)
+**Filtros**: nenhum (lista pequena na prática).
 
 **Colunas**
 - Nome
 - Slug
-- Status (ativa/inativa)
 - Webhook key
-- Criada em
+- Status (ativa/inativa)
+- Logo URL (se houver — URL, não base64)
+- Data de criação (ISO)
 - Total de rotas
 - Total de membros
 
@@ -67,100 +76,124 @@ Quatro tipos de relatório, cada um com filtros dedicados e export em CSV UTF-8.
 - Empresa
 - Nome da rota
 - URL destino
-- Eventos inscritos (lista separada por `; `)
-- Status
-- Criada em
+- Eventos inscritos (JSON serializado como lista legível `evento1; evento2; evento3`)
+- Status (ativa/inativa)
+- Timeout (ms)
+- Data de criação (ISO)
+
+**Não exportados por segurança**: `secretKey`, `headers` (podem conter credenciais).
 
 ### 3.4 Usuários
 
 **Filtros**
-- Platform role (opcional, select) — `super_admin` | `admin` | `manager` | `viewer`
+- Platform role (opcional, select) — `super_admin | admin | manager | viewer`
 
 **Colunas**
 - Nome
 - E-mail
 - Platform role
+- Super admin (sim/não)
 - Status (ativo/inativo)
-- Empresas vinculadas (lista `nome (CompanyRole); ...`)
-- Criado em
+- Empresas vinculadas (lista `nome (companyRole); ...`) — **filtrada pelas empresas visíveis ao exportador**
+- Data de criação (ISO)
 
-Coluna `avatarUrl` explicitamente excluída — base64 inline explodiria o arquivo.
+**Não exportado**: `avatarUrl` (base64 inline explodiria o arquivo), `password` (óbvio).
 
 ## 4. UI
 
 ### 4.1 Navegação
 
-Novo item **Relatórios** na sidebar, visível apenas para `platformRole` `super_admin` ou `admin`. Posição: após **Usuários** e antes de **Configurações** (mesmo cluster administrativo).
+Novo item **Relatórios** em `src/lib/constants/navigation.ts`, adicionado ao `RESTRICTED_NAV_ITEMS` com `allowedRoles: ["super_admin", "admin", "manager"]`. Posição: após **Usuários**, antes de **Configurações**.
 
 ### 4.2 Página `/relatorios`
 
-Server component que:
-1. Faz auth check — redireciona para `/dashboard` se role < admin
-2. Carrega lista de empresas visíveis (para popular selects)
-3. Renderiza `ReportsContent` client component
+**Server component** (`page.tsx`):
+1. `getCurrentUser()` — se `platformRole < manager`, `redirect('/dashboard')`
+2. Calcula `accessibleCompanyIds` via `getAccessibleCompanyIds(user)` (já existe em `src/lib/tenant.ts`)
+3. Busca empresas visíveis para popular os selects
+4. Renderiza `ReportsContent` com `initialData` tipado
 
-`ReportsContent` exibe **lista vertical de 4 blocos** (um por tipo de relatório). Sem modal. Cada bloco tem:
+**Client component** (`reports-content.tsx`):
+Lista vertical de blocos (um por tipo de relatório), sem modal. A lista é filtrada pelo role do usuário:
 
-- Ícone + título + descrição curta
-- Seção de filtros inline (inputs/selects relevantes ao tipo)
-- Texto de contagem estimada: "~N registros serão exportados" (recalcula on-change de filtros, debounce 300ms)
-- Botão **Baixar CSV** à direita, com estado de loading
+- `super_admin` / `admin`: 4 blocos (Logs, Empresas, Rotas, Usuários)
+- `manager`: 3 blocos (Logs, Empresas, Rotas) — **sem Usuários**
 
-Quando o usuário muda filtros, uma query `count()` é chamada no backend para atualizar a estimativa. Ao clicar **Baixar**, o browser inicia o download via navegação para a rota `/api/reports/{tipo}?...`.
+Cada bloco tem:
+- Ícone (Lucide: `FileText`, `Building2`, `Route`, `Users`) + título + descrição
+- Seção de filtros inline em grid `sm:grid-cols-2`
+- Texto de contagem estimada: `~N registros · ~S MB` (recalcula on-change de filtros via debounce 300 ms)
+- Botão **Baixar CSV** à direita
+  - Disabled quando: estimativa ainda carregando, ou contagem = 0, ou contagem > 50.000
+  - Quando contagem > 50.000: exibe aviso "Refine os filtros — limite de 50.000 registros por export"
+- Estado de loading durante estimativa e durante o click (cancela se usuário navegar)
 
 ### 4.3 Design visual
 
-- Seguir design system do projeto (`bg-card/50`, border, motion stagger)
-- Cada bloco é um `Card` com padding generoso
-- Usar ícones Lucide: `FileText` (logs), `Building2` (empresas), `Route` (rotas), `Users` (usuários)
+- Seguir design system: `Card` com `bg-card/50`, `border-border`, motion stagger nas entradas
+- Cada bloco com padding generoso
 - Filtros usam `CustomSelect` e `Input` existentes
-- Layout responsivo — filtros em grid `sm:grid-cols-2` para telas maiores
+- Layout responsivo
 
 ## 5. Arquitetura técnica
 
 ```
 src/app/(protected)/relatorios/
-  page.tsx                    # server: auth + role check + lista empresas
-  reports-content.tsx         # client: 4 blocos + filtros + botão baixar
+  page.tsx                    # server: auth + role + lista empresas
+  reports-content.tsx         # client: blocos + filtros + baixar
 
 src/app/api/reports/
   [type]/route.ts             # GET: stream CSV por tipo
-  [type]/count/route.ts       # GET: retorna contagem estimada (JSON)
+  [type]/count/route.ts       # GET: retorna { count, estimatedBytes }
 
 src/lib/reports/
-  csv.ts                      # serialização: escape RFC 4180, BOM UTF-8
+  csv.ts                      # serialização + formula-injection guard + BOM
   generators/
-    logs.ts                   # async iterable via cursor
+    logs.ts                   # async iterable via batches (RouteDelivery)
     companies.ts
     routes.ts
     users.ts
-  filters.ts                  # parse + validação de query params (zod)
-  access.ts                   # resolve empresas visíveis por usuário
+  filters.ts                  # schemas zod por tipo + parse de query params
+  estimate.ts                 # count + estimativa de bytes por tipo
+  rate-limit.ts               # Redis SET NX EX
 
 src/lib/reports/__tests__/
-  csv.test.ts                 # testes unitários do escape
+  csv.test.ts                 # testes unitários (escape + formula-injection)
 ```
 
-### 5.1 Geradores (async iterables)
+### 5.1 Geradores como async iterables
 
-Cada gerador exporta uma função `async function* generateX(filters, accessScope): AsyncIterable<string[]>` que yielda arrays de células já formatadas como strings. Primeira iteração é sempre o header.
+Cada gerador exporta uma função com assinatura:
 
-Logs usa **cursor pagination em batches de 500** para evitar carregar tudo em memória. Empresas/rotas/usuários são pequenos suficientes para query única.
+```ts
+async function* generateX(
+  filters: XFilters,
+  accessibleCompanyIds: string[] | undefined
+): AsyncIterable<string[]>
+```
+
+Yielda arrays de células pré-formatadas como strings. Primeira iteração é sempre o header.
+
+**Logs** usa **batches de 500 via cursor pagination** no `RouteDelivery` (não `InboundWebhook`), fazendo join com inbound + route + company + último attempt. Ordenação por `routeDelivery.createdAt desc`. Respeita o teto de 50.000 linhas — ao atingir, emite linha final de aviso e para.
+
+**Empresas / Rotas / Usuários** são suficientemente pequenos para query única (uma para todos os dados, com `take: 50000`).
 
 ### 5.2 Streaming HTTP
 
-A route handler monta um `ReadableStream` que:
+Route handler monta um `ReadableStream`:
 1. Emite BOM UTF-8 (`\uFEFF`)
-2. Emite header row
+2. Emite header row CSV-encoded + CRLF
 3. Itera o gerador, emitindo cada linha CSV-encoded + CRLF
+4. Se o gerador atingir o teto: emite linha final `["_aviso","Limite de 50.000 registros atingido — refine os filtros","","..."]`
 
 Headers de resposta:
 - `Content-Type: text/csv; charset=utf-8`
-- `Content-Disposition: attachment; filename="nexus-{tipo}-{range}.csv"`
+- `Content-Disposition: attachment; filename="<nome>"`
+- `Cache-Control: no-store` (relatório é sempre fresh)
 
-Nome do arquivo inclui range quando aplicável (logs):
-- Logs: `nexus-logs-2026-03-01_2026-03-31.csv`
-- Outros: `nexus-{tipo}-2026-04-10.csv` (data de exportação)
+**Nome do arquivo**:
+- Logs: `nexus-logs-<dataInicio>_<dataFim>.csv` (ex: `nexus-logs-2026-03-01_2026-03-31.csv`)
+- Outros: `nexus-<tipo>-<dataExportacao>.csv`
 
 ### 5.3 Formato CSV
 
@@ -168,54 +201,108 @@ Nome do arquivo inclui range quando aplicável (logs):
 - **Separador:** vírgula
 - **Quebra de linha:** CRLF (`\r\n`)
 - **Escape RFC 4180:** valores contendo `,`, `"` ou `\n` são envolvidos em aspas; aspas internas são duplicadas (`"` → `""`)
-- **Datas:** ISO `yyyy-MM-dd HH:mm:ss` (amigável a Excel BR e scripts)
-- **Cabeçalhos:** em português
+- **Proteção contra CSV Formula Injection (CWE-1236):** qualquer célula cujo conteúdo comece com `=`, `+`, `-`, `@`, `\t` ou `\r` é prefixada com `'` antes do escape RFC 4180. Implementado no `escapeCsvCell()` de `csv.ts`.
+- **Datas:** ISO `yyyy-MM-dd HH:mm:ss` (compatível com Excel BR E scripts/grep/sort)
+- **Cabeçalhos:** em português, padrão "Data de criação" (não "Criado em" / "Criada em")
 
 ## 6. Permissões e acesso
 
-### 6.1 Camada de plataforma
+### 6.1 Três camadas de verificação
 
-- `super_admin`: acesso total, exporta qualquer empresa
-- `admin`: acesso à página, mas filtrado por membership (ver abaixo)
-- `manager`, `viewer`: sem acesso — item da sidebar oculto, página redireciona, API retorna 403
+| Camada | Quando | Ação |
+|---|---|---|
+| **Plataforma** | Entrada na página + início do download/count | Se `platformRole < manager`: bloqueado (redirect ou 403) |
+| **Por tipo de relatório** | Antes de cada gerador | `manager` não acessa **Usuários** (o tipo não aparece na UI e a API retorna 403) |
+| **Por empresa (tenant scoping)** | Em cada query do gerador | Usa `getAccessibleCompanyIds(user)` de `tenant.ts`. Se `undefined` (super_admin): sem filtro. Senão: `WHERE companyId IN (...)` |
 
-### 6.2 Camada de empresa (admin não-super)
+### 6.2 Regras detalhadas por relatório
 
-Um admin só vê e exporta dados de empresas onde tem `CompanyRole` `company_admin` ou `manager`. Implementação:
+- **Logs**: filtra `routeDelivery.companyId IN accessibleCompanyIds` (exceto super_admin)
+- **Empresas**: `WHERE company.id IN accessibleCompanyIds` (exceto super_admin)
+- **Rotas**: `WHERE route.companyId IN accessibleCompanyIds` (exceto super_admin)
+- **Usuários**:
+  - Manager: sem acesso ao relatório
+  - Admin: lista usuários que têm pelo menos uma membership em empresa do `accessibleCompanyIds` do admin
+  - Super admin: todos os usuários
+  - **Lista "empresas vinculadas" é filtrada** pelas empresas visíveis ao exportador (não vazar nomes de empresas onde o admin não é membro)
 
-- `resolveAccessScope(user)` retorna `{ isSuperAdmin: true }` ou `{ companyIds: string[] }`
-- Todos os geradores aplicam filtro: logs, rotas e members WHERE companyId IN accessibleIds
-- Relatório de **Empresas**: admin vê só as que é membro ≥ manager
-- Relatório de **Usuários**: admin vê apenas usuários que são membros das mesmas empresas que ele (não vazar lista de usuários sem relação)
+### 6.3 Count endpoint
 
-### 6.3 Redirecionamento
-
-`/relatorios/page.tsx` chama `getCurrentUser()`; se role < admin, `redirect('/dashboard')`.
+`/api/reports/[type]/count/route.ts` compartilha o mesmo middleware de verificação: role check + access scope. Bloqueio e filtragem **idênticos** ao download.
 
 ## 7. Limites e performance
 
-- **Teto de 50.000 linhas por export.** Ao atingir, o gerador emite uma linha final `"_aviso","Limite de 50.000 registros atingido — refine os filtros para obter o restante","","..."` e para.
-- **1 export simultâneo por usuário.** Guardado em memória no servidor (`Map<userId, boolean>`); se já tem um em curso, API retorna 429. Aceitável para single-instance; se escalarmos horizontalmente, migrar para Redis.
-- **Contagem estimada** (`/api/reports/{type}/count`) usa `prisma.count()` simples; rápido mesmo em tabelas grandes. Debounce de 300ms no client.
-- Batches Prisma de 500 para logs — trade-off entre round-trips e memória. Total ~100 queries para 50k linhas, aceitável.
+### 7.1 Teto duro: 50.000 linhas por export
 
-## 8. Tratamento de erros
+Implementado no gerador — para de yieldar ao atingir. Ao final, emite uma linha de aviso para o usuário perceber que foi truncado.
 
-- Filtros inválidos (zod) → 400 com mensagem
-- Sem permissão → 403
-- Export já em curso → 429
-- Erro durante streaming → stream é fechado; usuário recebe arquivo incompleto (trade-off aceitável do streaming)
-- Log de erros via `console.error` com prefixo `[reports]`
+### 7.2 Limite de período em logs: 90 dias
 
-## 9. Testes
+Filtros de data em logs são validados pelo schema zod — se o range for maior que 90 dias, retorna 400. Evita usuário tentar exportar "o ano inteiro" e travar o servidor.
 
-- **Unitários:** `csv.ts` — escape RFC 4180 cobrindo vírgulas, aspas, quebras, células vazias, BOM
-- **Integração manual:** cada tipo de relatório exportado ao menos uma vez em produção com filtros variados
-- Sem testes E2E no v1
+### 7.3 Rate limit via Redis (1 export simultâneo por usuário)
 
-## 10. Migrations / schema
+```ts
+const key = `report:export:${userId}`;
+const acquired = await redis.set(key, "1", "EX", 300, "NX");
+if (acquired !== "OK") return 429; // export em curso
+// ... stream ...
+await redis.del(key); // em try/finally para liberar em erro
+```
 
-**Nenhuma mudança no schema.** Usa modelos existentes (`WebhookLog`, `Company`, `WebhookRoute`, `User`, `CompanyMembership`).
+- TTL de 5 minutos (cobre o pior cenário de export lento; se o stream crashar e não der `del`, libera sozinho)
+- Funciona em multi-réplica (Docker Swarm pode escalar sem quebrar)
+- Reutiliza o `redis` client de `src/lib/redis.ts`
+
+### 7.4 Batches Prisma de 500 em logs
+
+Trade-off entre round-trips e memória. ~100 queries para 50.000 linhas. Aceitável. Se virar gargalo em prod, aumentar para 1000.
+
+### 7.5 Estimativa rápida (count endpoint)
+
+- `prisma.count()` com os mesmos filtros + access scope
+- Estimativa de bytes: `count * avgBytesPerRow[tipo]` (constantes empíricas: logs ≈ 250 B, empresas ≈ 200 B, rotas ≈ 180 B, usuários ≈ 220 B)
+- Exibido no client como `~N registros · ~S MB`
+- Debounce 300 ms no client
+
+## 8. Segurança
+
+1. **Autenticação obrigatória** em todas as rotas (`auth()` do NextAuth)
+2. **Role check no entry** (`/relatorios` page + cada API route)
+3. **Tenant scoping via `getAccessibleCompanyIds`** em todas as queries dos geradores
+4. **CSV Formula Injection mitigado** em `escapeCsvCell` (ver 5.3)
+5. **Rate limit** via Redis evita abuso (1 export por usuário)
+6. **Rotas não exportam secrets** (`secretKey`, `headers` do `WebhookRoute`; `password`, `theme`, `avatarUrl` do `User`; `accessToken` do `CompanyCredential` — que aliás não tem relatório)
+7. **Cookies de autenticação** carregados automaticamente pelo browser no download (via `fetch` com `credentials: 'include'` no count; navegação direta no download)
+
+## 9. Tratamento de erros
+
+| Situação | Resposta |
+|---|---|
+| Não autenticado | 401 |
+| Role insuficiente | 403 |
+| Filtros inválidos (zod) | 400 com mensagem |
+| Range de data > 90 dias (logs) | 400 |
+| Export já em curso (Redis rate limit) | 429 "Aguarde o export em andamento terminar" |
+| Erro durante streaming (DB falha mid-stream) | Stream fechado; frontend mostra toast. Arquivo fica truncado — trade-off aceitável do streaming (documentar) |
+| Tipo de relatório inválido (`/api/reports/foo`) | 404 |
+
+Logs de erro via `console.error` com prefixo `[reports:<tipo>]` para facilitar grep em produção.
+
+## 10. Testes
+
+**Unitários** (`src/lib/reports/__tests__/csv.test.ts`):
+- `escapeCsvCell` com vírgula, aspas, quebras de linha, célula vazia
+- CSV Formula Injection: células começando com `=`, `+`, `-`, `@`, `\t`, `\r` são prefixadas com `'`
+- BOM UTF-8 presente no início
+
+**Integração manual em produção** (documentado na seção 12 — sequência de entrega):
+- Cada tipo exportado ao menos uma vez com filtros variados
+- Teste de permissão: manager não vê Usuários; admin não vê empresas fora do scope; super_admin vê tudo
+- Teste de rate limit: dois clicks rápidos no mesmo tipo → segundo retorna 429
+- Teste de formula injection: criar empresa com nome `=HYPERLINK(...)` e confirmar que vira `'=HYPERLINK(...)` no CSV
+
+Sem testes E2E no v1.
 
 ## 11. Arquivos afetados
 
@@ -225,23 +312,35 @@ Um admin só vê e exporta dados de empresas onde tem `CompanyRole` `company_adm
 - `src/app/api/reports/[type]/route.ts`
 - `src/app/api/reports/[type]/count/route.ts`
 - `src/lib/reports/csv.ts`
-- `src/lib/reports/generators/{logs,companies,routes,users}.ts`
 - `src/lib/reports/filters.ts`
-- `src/lib/reports/access.ts`
+- `src/lib/reports/estimate.ts`
+- `src/lib/reports/rate-limit.ts`
+- `src/lib/reports/generators/logs.ts`
+- `src/lib/reports/generators/companies.ts`
+- `src/lib/reports/generators/routes.ts`
+- `src/lib/reports/generators/users.ts`
 - `src/lib/reports/__tests__/csv.test.ts`
 
 **Modificados**
-- `src/lib/constants/navigation.ts` — adicionar item **Relatórios** para admin+
+- `src/lib/constants/navigation.ts` — adicionar item **Relatórios** em `RESTRICTED_NAV_ITEMS` com `allowedRoles: ["super_admin", "admin", "manager"]`
+
+**Reutilizados sem modificação**
+- `src/lib/tenant.ts` (`getAccessibleCompanyIds`)
+- `src/lib/actions/logs.ts` (`getAvailableEventTypes`, `LogFiltersSchema` como referência)
+- `src/lib/redis.ts` (client Redis para rate limit)
+- `src/lib/auth.ts` (`getCurrentUser`)
+- `src/components/ui/custom-select.tsx`, `Card`, `Button`, `Input`
 
 ## 12. Sequência de entrega
 
-1. Helpers CSV + testes unitários (base)
-2. Access scope resolver
-3. Gerador de **Empresas** (mais simples, valida arquitetura)
-4. API route streaming + count + UI de um tipo funcionando ponta-a-ponta
-5. Geradores restantes (rotas, usuários, logs)
-6. Navegação e polish de UI
-7. QA manual em produção
+1. **Base CSV**: `csv.ts` com escape + formula-injection guard + testes unitários
+2. **Rate limit**: `rate-limit.ts` com Redis
+3. **Gerador mais simples (Empresas)** + estimate + API route (valida arquitetura ponta-a-ponta)
+4. **UI skeleton**: página `/relatorios` com um bloco funcional (Empresas)
+5. **Navegação**: item na sidebar
+6. **Geradores restantes**: Rotas, Usuários, Logs (logs por último — mais complexo)
+7. **Polish de UI**: estados de loading, mensagens de erro, motion
+8. **QA manual em produção** (checklist da seção 10)
 
 ---
 
@@ -249,10 +348,16 @@ Um admin só vê e exporta dados de empresas onde tem `CompanyRole` `company_adm
 
 | Decisão | Racional |
 |---|---|
-| Sem modal, filtros inline | Menos cliques, menos componentes, UX mais direta |
-| Cortar métricas do dashboard | YAGNI — dashboard já exibe, CSV duplicaria sem valor |
-| ISO date em vez de BR | Compatível com Excel BR E scripts/grep |
-| Limite 50k linhas | Protege servidor e evita downloads acidentais gigantes |
-| 1 export por usuário | Evita abuso; rate limit simples |
-| Access scope por CompanyRole | Respeita regra de duas camadas já existente |
+| 1 linha por `RouteDelivery` (não Inbound nem Attempt) | Granularidade útil para auditoria sem explosão de volume |
+| Managers incluídos em Relatórios (sem Usuários) | Manager da empresa X precisa exportar logs da X; negar seria frustrante |
+| Logs limitados a 90 dias por export | Evita abuso e travamento do DB |
+| Sem modal, filtros inline | Menos cliques, UX mais direta |
+| Cortar métricas do dashboard | YAGNI — dashboard já exibe |
+| ISO date em vez de BR | Compatível com Excel BR E scripts |
+| Teto 50k linhas + aviso inline | Protege servidor e avisa o usuário |
+| Rate limit via Redis (não Map em memória) | Funciona em multi-réplica do Docker Swarm |
+| Proteção contra CSV Formula Injection | CWE-1236 — risco real quando dados vêm de input de usuário |
+| Eventos populados dinamicamente | Evita hardcoded desatualizado conforme Meta adiciona eventos |
+| Lista "empresas vinculadas" filtrada pelo scope do exportador | Evita vazar nomes de empresas que o admin não deveria ver |
+| Reutilizar `tenant.ts` existente | Não duplicar lógica de access scope |
 | Sem histórico de exports | YAGNI; logs do servidor bastam para auditoria |
