@@ -1,133 +1,86 @@
-/**
- * Normalizacao multi-evento de callbacks da Meta WhatsApp Cloud API.
- *
- * Um callback da Meta pode conter multiplos itens logicos (ex: 3 mensagens
- * no mesmo POST, ou 2 statuses). Este modulo divide o callback em N eventos
- * normalizados individuais, cada um com eventType e payload isolado.
- *
- * Spec referencia: Secao 2, passo 5 da spec v7.
- */
+import type { NormalizedEvent } from "@nexusai360/webhook-routing";
 
-export interface NormalizedEvent {
-  /** Tipo normalizado: messages.text, messages.image, statuses.delivered, account_update, etc. */
-  eventType: string;
-
-  /** WABA ID do entry (entry.id) */
-  wabaId: string;
-
-  /** Payload isolado do evento individual */
-  payload: Record<string, unknown>;
-}
+export type { NormalizedEvent };
 
 interface MetaWebhookPayload {
-  object: string;
-  entry?: MetaEntry[];
-}
-
-interface MetaEntry {
-  id: string;
-  changes: MetaChange[];
-}
-
-interface MetaChange {
-  field: string;
-  value: Record<string, unknown>;
-}
-
-interface MetaMessage {
-  id: string;
-  from: string;
-  timestamp: string;
-  type: string;
-  [key: string]: unknown;
-}
-
-interface MetaStatus {
-  id: string;
-  status: string;
-  timestamp: string;
-  recipient_id: string;
-  [key: string]: unknown;
+  object?: string;
+  entry?: Array<{
+    id?: string;
+    changes?: Array<{
+      field?: string;
+      value?: any;
+    }>;
+  }>;
 }
 
 /**
- * Recebe o callback JSON completo da Meta e retorna array de eventos normalizados.
+ * Normaliza payload Meta WhatsApp Cloud API em N NormalizedEvent.
  *
- * Logica conforme spec v7:
- *   Para cada entry em payload.entry:
- *     Para cada change em entry.changes:
- *       Se change.field == "messages":
- *         Para cada message em change.value.messages (se existir):
- *           -> 1 evento com event_type = "messages.{message.type}"
- *         Para cada status em change.value.statuses (se existir):
- *           -> 1 evento com event_type = "statuses.{status.status}"
- *       Senao (account_update, flows, etc.):
- *         -> 1 evento com event_type = change.field
+ * sourceId = entry.id (WABA ID) com fallback para companyId quando ausente —
+ * preserva paridade com o deduplicator legado que usava wabaId (hoje obrigatorio
+ * no entry da Meta, mas o fallback evita explosao se a Meta mudar).
+ *
+ * dedupeIdentifier preserva chaves equivalentes ao computeDedupeKey legado:
+ *   - messages: wamid (message.id)
+ *   - statuses: `${status.id}:${status.status}` (distingue sent/delivered/read)
+ *   - calls: call.id
+ *   - errors / outros: null (pacote aplica hashPayloadDeterministic)
  */
-export function normalizeWebhookPayload(payload: MetaWebhookPayload): NormalizedEvent[] {
+export function normalizeWebhookPayload(
+  payload: MetaWebhookPayload,
+  companyId: string,
+): NormalizedEvent[] {
   const events: NormalizedEvent[] = [];
-
-  if (!payload.entry || !Array.isArray(payload.entry)) {
-    return events;
-  }
-
-  for (const entry of payload.entry) {
-    const wabaId = entry.id;
-
-    if (!entry.changes || !Array.isArray(entry.changes)) {
-      continue;
-    }
-
-    for (const change of entry.changes) {
-      if (change.field === "messages") {
-        // Processar mensagens individuais
-        const messages = change.value.messages as MetaMessage[] | undefined;
-        const metadata = change.value.metadata;
-
-        if (messages && Array.isArray(messages)) {
-          for (const message of messages) {
-            const eventType = `messages.${message.type}`;
-            events.push({
-              eventType,
-              wabaId,
-              payload: {
-                messaging_product: change.value.messaging_product,
-                metadata,
-                message,
-              },
-            });
-          }
-        }
-
-        // Processar statuses individuais
-        const statuses = change.value.statuses as MetaStatus[] | undefined;
-
-        if (statuses && Array.isArray(statuses)) {
-          for (const status of statuses) {
-            const eventType = `statuses.${status.status}`;
-            events.push({
-              eventType,
-              wabaId,
-              payload: {
-                messaging_product: change.value.messaging_product,
-                metadata,
-                status,
-              },
-            });
-          }
-        }
-      } else {
-        // Outros fields: account_update, flows, etc.
+  for (const entry of payload?.entry ?? []) {
+    const sourceId = entry.id ?? companyId;
+    for (const change of entry.changes ?? []) {
+      const value = change.value ?? {};
+      // messages
+      for (const msg of value.messages ?? []) {
         events.push({
-          eventType: change.field,
-          wabaId,
+          eventType: `messages.${msg.type ?? "unknown"}`,
+          sourceId,
           payload: {
-            value: change.value,
+            message: msg,
+            contacts: value.contacts,
+            metadata: value.metadata,
+            messaging_product: value.messaging_product,
           },
+          dedupeIdentifier: msg.id ?? null,
+        });
+      }
+      // statuses
+      for (const st of value.statuses ?? []) {
+        events.push({
+          eventType: `statuses.${st.status ?? "unknown"}`,
+          sourceId,
+          payload: {
+            status: st,
+            metadata: value.metadata,
+            messaging_product: value.messaging_product,
+          },
+          dedupeIdentifier: st.id && st.status ? `${st.id}:${st.status}` : null,
+        });
+      }
+      // calls
+      for (const call of value.calls ?? []) {
+        events.push({
+          eventType: `calls.${call.event ?? "unknown"}`,
+          sourceId,
+          payload: { call, metadata: value.metadata },
+          dedupeIdentifier: call.id ?? null,
+        });
+      }
+      // errors
+      for (const err of value.errors ?? []) {
+        events.push({
+          eventType: `errors.${err.code ?? "unknown"}`,
+          sourceId,
+          payload: { error: err, metadata: value.metadata },
+          dedupeIdentifier: null,
         });
       }
     }
   }
-
   return events;
 }
