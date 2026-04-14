@@ -17,7 +17,7 @@ describe("validateUrl", () => {
   // Protocolo
   it("rejeita URL HTTP (sem TLS)", () => {
     expect(() => validateUrl("http://api.example.com/webhook")).toThrow(SsrfError);
-    expect(() => validateUrl("http://api.example.com/webhook")).toThrow(/HTTPS/);
+    expect(() => validateUrl("http://api.example.com/webhook")).toThrow(/non_https_protocol/);
   });
 
   it("rejeita URL FTP", () => {
@@ -82,5 +82,28 @@ describe("validateUrl", () => {
     // Node URL parser treats "https:///path" as hostname="path", so we test
     // a truly empty hostname scenario via an invalid URL pattern
     expect(() => validateUrl("https://")).toThrow(SsrfError);
+  });
+});
+
+describe("ssrf — novos bloqueios via @nexusai360/webhook-routing", () => {
+  it("bloqueia CGNAT 100.64.0.0/10", () => {
+    expect(() => validateUrl("https://100.64.0.1/hook")).toThrow(SsrfError);
+    expect(() => validateUrl("https://100.127.255.255/hook")).toThrow(SsrfError);
+  });
+  it("permite 100.0.0.1 e 100.128.0.1 (fora do CGNAT)", () => {
+    expect(() => validateUrl("https://100.0.0.1/hook")).not.toThrow();
+    expect(() => validateUrl("https://100.128.0.1/hook")).not.toThrow();
+  });
+  it("bloqueia IPv4-mapped IPv6 forma decimal apontando para privado", () => {
+    expect(() => validateUrl("https://[::ffff:10.0.0.1]/hook")).toThrow(SsrfError);
+    expect(() => validateUrl("https://[::ffff:127.0.0.1]/hook")).toThrow(SsrfError);
+  });
+  it("bloqueia IPv4-mapped IPv6 forma hex", () => {
+    expect(() => validateUrl("https://[::ffff:0a00:0001]/hook")).toThrow(SsrfError); // 10.0.0.1
+  });
+  it("bloqueia hostnames extras (ip6-localhost, localhost.localdomain)", () => {
+    expect(() => validateUrl("https://ip6-localhost/hook")).toThrow(SsrfError);
+    expect(() => validateUrl("https://localhost.localdomain/hook")).toThrow(SsrfError);
+    expect(() => validateUrl("https://broadcasthost/hook")).toThrow(SsrfError);
   });
 });
