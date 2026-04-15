@@ -108,6 +108,10 @@ model CompanyCredential {
   metaSubscribedFields      String[]               @default([]) @map("meta_subscribed_fields")
   metaSubscribedCallbackUrl String?                @map("meta_subscribed_callback_url")
 
+  accessTokenExpiresAt       DateTime? @map("access_token_expires_at")
+  connectedViaEmbeddedSignup Boolean   @default(false) @map("connected_via_embedded_signup")
+  connectedAt                DateTime? @map("connected_at")
+
   company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   @@map("company_credentials")
