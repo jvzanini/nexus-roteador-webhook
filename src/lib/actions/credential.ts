@@ -126,6 +126,9 @@ export async function revealCredentialField(
     }
 
     const encryptedValue = credential[field];
+    if (!encryptedValue) {
+      return { success: false, error: "Campo vazio" };
+    }
     const decryptedValue = decrypt(encryptedValue);
 
     return { success: true, data: decryptedValue };
@@ -214,8 +217,8 @@ export async function upsertCredential(
       create: {
         companyId,
         ...data,
-      },
-      update: data,
+      } as any,
+      update: data as any,
     });
 
     // Audit log (fire-and-forget)

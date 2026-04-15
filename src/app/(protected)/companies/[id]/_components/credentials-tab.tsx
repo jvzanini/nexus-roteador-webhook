@@ -6,6 +6,10 @@ import { ShieldCheck, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCredential } from "@/lib/actions/credential";
 import { CredentialForm } from "./credential-form";
+import {
+  MetaSubscriptionPanel,
+  type MetaSubscriptionSnapshot,
+} from "./meta-subscription-panel";
 
 interface MaskedCredential {
   metaAppId: string;
@@ -14,6 +18,7 @@ interface MaskedCredential {
   accessToken: string;
   phoneNumberId: string | null;
   wabaId: string | null;
+  metaSystemUserToken: string | null;
 }
 
 interface CredentialsTabProps {
@@ -25,6 +30,13 @@ interface CredentialsTabProps {
 export function CredentialsTab({ companyId, webhookKey, canEdit = true }: CredentialsTabProps) {
   const router = useRouter();
   const [credential, setCredential] = useState<MaskedCredential | null>(null);
+  const [metaSnapshot, setMetaSnapshot] = useState<MetaSubscriptionSnapshot>({
+    status: "not_configured",
+    subscribedAt: null,
+    error: null,
+    callbackUrl: null,
+    fields: [],
+  });
   const [loaded, setLoaded] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -40,11 +52,28 @@ export function CredentialsTab({ companyId, webhookKey, canEdit = true }: Creden
           accessToken: data.accessToken,
           phoneNumberId: data.phoneNumberId,
           wabaId: data.wabaId,
+          metaSystemUserToken: data.metaSystemUserToken ?? null,
         });
+        if (data.meta) {
+          setMetaSnapshot({
+            status: data.meta.status ?? "not_configured",
+            subscribedAt: data.meta.subscribedAt ?? null,
+            error: data.meta.error ?? null,
+            callbackUrl: data.meta.callbackUrl ?? null,
+            fields: data.meta.fields ?? [],
+          });
+        }
       }
       setLoaded(true);
     });
   }, [companyId]);
+
+  // Prereqs p/ subscribe: metaAppId, wabaId, verifyToken (sempre presente se form preenchido), metaSystemUserToken
+  const prereqsMissing: string[] = [];
+  if (!credential?.metaAppId) prereqsMissing.push("metaAppId");
+  if (!credential?.wabaId) prereqsMissing.push("wabaId");
+  if (!credential?.verifyToken) prereqsMissing.push("verifyToken");
+  if (!credential?.metaSystemUserToken) prereqsMissing.push("metaSystemUserToken");
 
   if (!loaded) {
     return (
@@ -78,6 +107,14 @@ export function CredentialsTab({ companyId, webhookKey, canEdit = true }: Creden
         canEdit={canEdit}
         existingCredential={credential}
         onSuccess={() => router.refresh()}
+      />
+
+      {/* Painel de inscrição Meta */}
+      <MetaSubscriptionPanel
+        companyId={companyId}
+        initial={metaSnapshot}
+        canManage={canEdit}
+        prereqsMissing={prereqsMissing}
       />
     </div>
   );
