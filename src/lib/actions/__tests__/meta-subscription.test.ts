@@ -12,10 +12,11 @@ jest.mock("@/lib/meta/graph-api", () => {
     __esModule: true,
     ...actual,
     getPhoneNumber: jest.fn(),
-    subscribeWhatsAppBusinessAccount: jest.fn(),
-    unsubscribeWhatsAppBusinessAccount: jest.fn(),
-    getSubscribedApps: jest.fn(),
-    overrideCallbackUrl: jest.fn(),
+    subscribeFields: jest.fn(),
+    subscribeApp: jest.fn(),
+    unsubscribeApp: jest.fn(),
+    listSubscribedApps: jest.fn(),
+    listSubscriptions: jest.fn(),
   };
 });
 jest.mock("@/lib/encryption", () => ({
@@ -35,7 +36,10 @@ jest.mock("@/lib/rate-limit/meta", () => ({
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import * as graphApi from "@/lib/meta/graph-api";
-import { testMetaConnection } from "../meta-subscription";
+import * as rateLimit from "@/lib/rate-limit/meta";
+import { createNotification } from "@/lib/notifications";
+import { publishRealtimeEvent } from "@/lib/realtime";
+import { testMetaConnection, subscribeWebhook } from "../meta-subscription";
 
 // Compartilhado entre describes (Tasks 6-9 reusam)
 export const anyCred = {
@@ -105,5 +109,113 @@ describe("testMetaConnection", () => {
     expect(r.success).toBe(false);
     expect(r.error).toContain("expired");
     expect(prisma.companyCredential.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("subscribeWebhook", () => {
+  const VALID_UUID = "11111111-1111-4111-8111-111111111111";
+
+  beforeEach(() => {
+    process.env.NEXTAUTH_URL = "https://roteador.example.com";
+    (process.env as Record<string, string>).NODE_ENV = "production";
+    (getCurrentUser as jest.Mock).mockResolvedValue({
+      id: "u1",
+      isSuperAdmin: true,
+      email: "s@x.com",
+    });
+    (prisma.company.findUnique as jest.Mock).mockResolvedValue({
+      id: VALID_UUID,
+      webhookKey: "wk-abc",
+    });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(anyCred);
+    (prisma.companyCredential.update as jest.Mock).mockResolvedValue(anyCred);
+  });
+
+  it("falha quando acquireMetaLock retorna false", async () => {
+    (rateLimit.acquireMetaLock as jest.Mock).mockResolvedValueOnce(false);
+    const r = await subscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(false);
+    expect(r.error).toContain("Outra operação");
+    expect(rateLimit.releaseMetaLock).not.toHaveBeenCalled();
+  });
+
+  it("falha quando rate limit excedido", async () => {
+    (rateLimit.enforceMetaRateLimit as jest.Mock).mockResolvedValueOnce({ allowed: false, remaining: 0 });
+    const r = await subscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/Rate limit/i);
+    expect(rateLimit.releaseMetaLock).toHaveBeenCalledWith(VALID_UUID);
+  });
+
+  it("falha quando NEXTAUTH_URL é localhost em produção", async () => {
+    process.env.NEXTAUTH_URL = "http://localhost:3000";
+    const r = await subscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/callback_url/);
+    expect(rateLimit.releaseMetaLock).toHaveBeenCalledWith(VALID_UUID);
+  });
+
+  it("sinaliza missing fields se metaSystemUserToken ausente", async () => {
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue({
+      ...anyCred,
+      metaSystemUserToken: null,
+    });
+    const r = await subscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(false);
+    expect(r.error).toContain("metaSystemUserToken");
+    expect(rateLimit.releaseMetaLock).toHaveBeenCalledWith(VALID_UUID);
+  });
+
+  it("happy path: pending -> active, notify info, realtime 2x, lock liberado", async () => {
+    (graphApi.subscribeFields as jest.Mock).mockResolvedValue(undefined);
+    (graphApi.subscribeApp as jest.Mock).mockResolvedValue(undefined);
+
+    const r = await subscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(true);
+
+    expect(graphApi.subscribeFields).toHaveBeenCalledWith(
+      "APP",
+      expect.objectContaining({
+        object: "whatsapp_business_account",
+        callbackUrl: "https://roteador.example.com/api/webhook/wk-abc",
+        verifyToken: "VT",
+        fields: expect.any(Array),
+      }),
+      "SUT"
+    );
+    expect(graphApi.subscribeApp).toHaveBeenCalledWith("WABA", "SUT");
+
+    const updates = (prisma.companyCredential.update as jest.Mock).mock.calls;
+    expect(updates.length).toBe(2);
+    expect(updates[0][0].data).toMatchObject({ metaSubscriptionStatus: "pending" });
+    expect(updates[1][0].data).toMatchObject({
+      metaSubscriptionStatus: "active",
+      metaSubscribedCallbackUrl: "https://roteador.example.com/api/webhook/wk-abc",
+    });
+
+    expect(createNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "info" })
+    );
+    expect(publishRealtimeEvent).toHaveBeenCalledTimes(2);
+    expect(rateLimit.releaseMetaLock).toHaveBeenCalledWith(VALID_UUID);
+  });
+
+  it("erro Meta: persiste status error e notifica error", async () => {
+    const err = new graphApi.MetaApiError({ status: 400, message: "invalid callback" });
+    (graphApi.subscribeFields as jest.Mock).mockRejectedValue(err);
+
+    const r = await subscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(false);
+
+    const updates = (prisma.companyCredential.update as jest.Mock).mock.calls;
+    expect(updates[0][0].data).toMatchObject({ metaSubscriptionStatus: "pending" });
+    const errUpdate = updates.find((c) => c[0].data.metaSubscriptionStatus === "error");
+    expect(errUpdate).toBeDefined();
+    expect(errUpdate![0].data.metaSubscriptionError).toEqual(expect.any(String));
+
+    expect(createNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "error" })
+    );
+    expect(rateLimit.releaseMetaLock).toHaveBeenCalledWith(VALID_UUID);
   });
 });
