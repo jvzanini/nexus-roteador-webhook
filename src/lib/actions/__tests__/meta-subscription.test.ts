@@ -39,7 +39,7 @@ import * as graphApi from "@/lib/meta/graph-api";
 import * as rateLimit from "@/lib/rate-limit/meta";
 import { createNotification } from "@/lib/notifications";
 import { publishRealtimeEvent } from "@/lib/realtime";
-import { testMetaConnection, subscribeWebhook } from "../meta-subscription";
+import { testMetaConnection, subscribeWebhook, unsubscribeWebhook } from "../meta-subscription";
 
 // Compartilhado entre describes (Tasks 6-9 reusam)
 export const anyCred = {
@@ -217,5 +217,43 @@ describe("subscribeWebhook", () => {
       expect.objectContaining({ type: "error" })
     );
     expect(rateLimit.releaseMetaLock).toHaveBeenCalledWith(VALID_UUID);
+  });
+});
+
+describe("unsubscribeWebhook", () => {
+  const VALID_UUID = "11111111-1111-4111-8111-111111111111";
+
+  it("happy path: DELETE + reset status", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(anyCred);
+    (graphApi.unsubscribeApp as jest.Mock).mockResolvedValue(undefined);
+    const r = await unsubscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(true);
+    expect(graphApi.unsubscribeApp).toHaveBeenCalledWith("WABA", "SUT");
+    const data = (prisma.companyCredential.update as jest.Mock).mock.calls.pop()![0].data;
+    expect(data.metaSubscriptionStatus).toBe("not_configured");
+    expect(data.metaSubscribedAt).toBeNull();
+    expect(data.metaSubscribedCallbackUrl).toBeNull();
+    expect(data.metaSubscribedFields).toEqual([]);
+  });
+
+  it("best-effort: atualiza local mesmo com erro Meta", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(anyCred);
+    (graphApi.unsubscribeApp as jest.Mock).mockRejectedValue(
+      new graphApi.MetaApiError({ status: 400, message: "already" })
+    );
+    const r = await unsubscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(true);
+    expect(prisma.companyCredential.update).toHaveBeenCalled();
+    const data = (prisma.companyCredential.update as jest.Mock).mock.calls.pop()![0].data;
+    expect(data.metaSubscriptionStatus).toBe("not_configured");
+  });
+
+  it("falha se lock não adquirido", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (rateLimit.acquireMetaLock as jest.Mock).mockResolvedValueOnce(false);
+    const r = await unsubscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(false);
   });
 });

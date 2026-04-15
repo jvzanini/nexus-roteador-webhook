@@ -224,3 +224,63 @@ export async function subscribeWebhook(companyId: string): Promise<ActionResult>
     await releaseMetaLock(companyId);
   }
 }
+
+export async function unsubscribeWebhook(companyId: string): Promise<ActionResult> {
+  const parsed = companyIdSchema.safeParse({ companyId });
+  if (!parsed.success) return { success: false, error: "Input inválido" };
+  const auth = await authorize(companyId);
+  if (!auth.ok) return { success: false, error: auth.error };
+
+  const locked = await acquireMetaLock(companyId);
+  if (!locked) return { success: false, error: "Outra operação em andamento" };
+
+  try {
+    const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
+    if (!cred) return { success: false, error: "Credenciais não cadastradas" };
+
+    const errors: string[] = [];
+    if (cred.metaSystemUserToken && cred.wabaId) {
+      const token = decrypt(cred.metaSystemUserToken);
+      try {
+        await graphApi.unsubscribeApp(cred.wabaId, token);
+      } catch (e) {
+        errors.push(graphApi.serializeErrorSafe(e));
+      }
+    }
+
+    await prisma.companyCredential.update({
+      where: { companyId },
+      data: {
+        metaSubscriptionStatus: "not_configured",
+        metaSubscribedAt: null,
+        metaSubscribedFields: [],
+        metaSubscribedCallbackUrl: null,
+        metaSubscriptionError: errors.length ? errors.join(" | ").slice(0, 500) : null,
+      },
+    });
+
+    void logAudit({
+      actorType: "user",
+      actorId: auth.user.id,
+      actorLabel: auth.user.email ?? auth.user.id,
+      companyId,
+      action: "meta_webhook.unsubscribe",
+      resourceType: "CompanyCredential",
+      resourceId: cred.id,
+      details: { errors },
+    });
+    void createNotification({
+      companyId,
+      type: errors.length ? "warning" : "info",
+      title: "Webhook desinscrito",
+      message: errors.length
+        ? "Desinscrito localmente com avisos da Meta."
+        : "Desinscrito com sucesso.",
+      link: `/companies/${companyId}`,
+    });
+    void publishRealtimeEvent({ type: "credential:updated", companyId });
+    return { success: true };
+  } finally {
+    await releaseMetaLock(companyId);
+  }
+}
