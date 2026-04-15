@@ -21,6 +21,7 @@ const ENCRYPTED_FIELDS = [
   "metaAppSecret",
   "verifyToken",
   "accessToken",
+  "metaSystemUserToken",
 ] as const;
 
 type EncryptedField = (typeof ENCRYPTED_FIELDS)[number];
@@ -64,13 +65,24 @@ export async function getCredential(
       metaAppSecret: mask(decrypt(credential.metaAppSecret)),
       verifyToken: mask(decrypt(credential.verifyToken)),
       accessToken: mask(decrypt(credential.accessToken)),
+      metaSystemUserToken: credential.metaSystemUserToken
+        ? mask(decrypt(credential.metaSystemUserToken))
+        : null,
       phoneNumberId: credential.phoneNumberId,
       wabaId: credential.wabaId,
       createdAt: credential.createdAt,
       updatedAt: credential.updatedAt,
     };
 
-    return { success: true, data: masked };
+    const meta = {
+      status: credential.metaSubscriptionStatus,
+      subscribedAt: credential.metaSubscribedAt?.toISOString() ?? null,
+      error: credential.metaSubscriptionError,
+      callbackUrl: credential.metaSubscribedCallbackUrl,
+      fields: credential.metaSubscribedFields,
+    };
+
+    return { success: true, data: { ...masked, meta } };
   } catch (error) {
     console.error("[getCredential]", error);
     return { success: false, error: "Erro ao buscar credenciais" };
@@ -170,10 +182,11 @@ export async function upsertCredential(
       accessToken,
       phoneNumberId,
       wabaId,
+      metaSystemUserToken,
     } = parsed.data;
 
     // Criptografar campos sensiveis
-    const data = {
+    const data: Record<string, unknown> = {
       metaAppId,
       metaAppSecret: encrypt(metaAppSecret),
       verifyToken: encrypt(verifyToken),
@@ -181,6 +194,14 @@ export async function upsertCredential(
       phoneNumberId: phoneNumberId || null,
       wabaId: wabaId || null,
     };
+
+    // metaSystemUserToken: undefined => preserva; null/"" => limpa; string => encrypt
+    if (metaSystemUserToken !== undefined) {
+      data.metaSystemUserToken =
+        metaSystemUserToken && metaSystemUserToken.length > 0
+          ? encrypt(metaSystemUserToken)
+          : null;
+    }
 
     // Verificar se ja existe para determinar action do audit
     const existing = await prisma.companyCredential.findUnique({
@@ -221,6 +242,10 @@ export async function upsertCredential(
         metaAppSecret: mask(metaAppSecret),
         verifyToken: mask(verifyToken),
         accessToken: mask(accessToken),
+        metaSystemUserToken:
+          metaSystemUserToken && metaSystemUserToken.length > 0
+            ? mask(metaSystemUserToken)
+            : null,
         phoneNumberId: credential.phoneNumberId,
         wabaId: credential.wabaId,
       },
