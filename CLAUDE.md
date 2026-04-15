@@ -64,6 +64,7 @@ Sempre responder em português brasileiro.
 ## Skills Obrigatórias
 - **dotcontext MCP:** Gerenciamento de contexto e memória do projeto
 - **superpowers:** Brainstorm, planejamento, desenvolvimento, testes, debugging
+- **superpowers:subagent-driven-development:** OBRIGATÓRIO para TODA implementação — nenhuma fase de código é escrita fora desse fluxo
 - **ui-ux-pro-max:** OBRIGATÓRIO para TODO layout/UI — design system em `design-system/nexus-roteador-webhook/MASTER.md`
 
 ## Regras
