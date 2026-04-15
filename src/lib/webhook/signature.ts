@@ -1,7 +1,10 @@
-import { createHmac, timingSafeEqual } from "crypto";
+import { verifyHmacSignature } from "@nexusai360/webhook-routing";
 
 /**
  * Verifica a assinatura X-Hub-Signature-256 enviada pela Meta.
+ *
+ * Wrapper sobre `verifyHmacSignature` do @nexusai360/webhook-routing, preservando
+ * a assinatura legada do Roteador (rawBody, signatureHeader, appSecret).
  *
  * IMPORTANTE: `rawBody` deve ser o corpo bruto original (string/buffer),
  * NAO o payload reserializado via JSON.stringify(). A Meta calcula o HMAC
@@ -15,33 +18,20 @@ import { createHmac, timingSafeEqual } from "crypto";
 export function verifySignature(
   rawBody: string,
   signatureHeader: string,
-  appSecret: string
+  appSecret: string,
 ): boolean {
   if (!signatureHeader || !rawBody || !appSecret) {
     return false;
   }
-
+  // Mantem comportamento legado: header DEVE comecar com "sha256=".
+  // O pacote aceita hex puro, mas o Roteador exige o prefixo.
   if (!signatureHeader.startsWith("sha256=")) {
     return false;
   }
-
-  const receivedHex = signatureHeader.slice("sha256=".length);
-
-  const hmac = createHmac("sha256", appSecret);
-  hmac.update(rawBody, "utf8");
-  const expectedHex = hmac.digest("hex");
-
-  // Garantir que ambos tem o mesmo comprimento antes de comparar
-  if (receivedHex.length !== expectedHex.length) {
-    return false;
-  }
-
-  try {
-    const receivedBuf = Buffer.from(receivedHex, "hex");
-    const expectedBuf = Buffer.from(expectedHex, "hex");
-
-    return timingSafeEqual(receivedBuf, expectedBuf);
-  } catch {
-    return false;
-  }
+  return verifyHmacSignature({
+    rawBody,
+    signatureHeader,
+    secret: appSecret,
+    algo: "sha256",
+  });
 }

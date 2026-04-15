@@ -1,6 +1,12 @@
 import { Worker, Queue } from "bullmq";
+import { configureWebhookRouting } from "@nexusai360/webhook-routing";
 import { redis } from "../lib/redis";
+import { webhookAdapter } from "../lib/webhook/adapter";
 import { createDeliveryWorker } from "./delivery";
+
+// Configurar adapter do @nexusai360/webhook-routing no singleton do pacote
+// (chamadas a listRoutes/markDelivery vindas de dentro do pacote usam este adapter).
+configureWebhookRouting(webhookAdapter);
 import {
   startOrphanRecoveryScheduler,
   stopOrphanRecoveryScheduler,

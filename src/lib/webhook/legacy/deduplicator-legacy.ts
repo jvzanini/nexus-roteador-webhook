@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { NormalizedEvent } from "./normalizer";
+import { NormalizedEvent } from "./normalizer-legacy";
 
 /**
  * Algoritmo de deduplicacao v1 para webhooks da Meta.

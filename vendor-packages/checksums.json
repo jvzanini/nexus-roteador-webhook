@@ -1,0 +1,6 @@
+{
+  "nexusai360-core-0.2.1.tgz": "sha256:91f9ae31a909cbc273397a7d1ad353c824bb9830e8193580dcddc77ffadfd481",
+  "nexusai360-multi-tenant-0.2.1.tgz": "sha256:b0016d5e0f87c00a09f84f7a2b91ee02fba8099f4056a30e0440b6e23d9401de",
+  "nexusai360-types-0.2.0.tgz": "sha256:e9cd23cfb1913a1ea48f084a54e9829bb3708a8e531a67913bd8d67e45091735",
+  "nexusai360-webhook-routing-0.2.1.tgz": "sha256:009a0990375fcada65dfd1a8f4a5f4279b7f58434745fa21d0f493b486de371a"
+}

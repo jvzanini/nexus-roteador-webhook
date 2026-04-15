@@ -1,5 +1,5 @@
-import { computeDedupeKey, extractDedupeParams } from "../deduplicator";
-import { NormalizedEvent } from "../normalizer";
+import { computeDedupeKey, extractDedupeParams } from "../deduplicator-legacy";
+import { NormalizedEvent } from "../normalizer-legacy";
 
 describe("computeDedupeKey", () => {
   it("gera dedupe_key para mensagem com message.id", () => {

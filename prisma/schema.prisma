@@ -140,6 +140,7 @@ model InboundWebhook {
   company          Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
   deliveries       RouteDelivery[]
 
+  @@unique([companyId, dedupeKey], name: "ux_inbound_company_dedupe")
   @@index([companyId, createdAt(sort: Desc)], name: "idx_inbound_company_created")
   @@index([dedupeKey, createdAt(sort: Desc)], name: "idx_inbound_dedupe")
   @@index([eventType, createdAt(sort: Desc)], name: "idx_inbound_event_type")
