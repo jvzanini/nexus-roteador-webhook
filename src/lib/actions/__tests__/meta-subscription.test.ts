@@ -42,7 +42,9 @@ import { publishRealtimeEvent } from "@/lib/realtime";
 import {
   testMetaConnection,
   subscribeWebhook,
+  subscribeWebhookUnlocked,
   unsubscribeWebhook,
+  unsubscribeWebhookUnlocked,
   verifyMetaSubscription,
   verifyMetaSubscriptionCore,
   generateVerifyToken,
@@ -262,6 +264,40 @@ describe("unsubscribeWebhook", () => {
     (rateLimit.acquireMetaLock as jest.Mock).mockResolvedValueOnce(false);
     const r = await unsubscribeWebhook(VALID_UUID);
     expect(r.success).toBe(false);
+  });
+});
+
+describe("subscribeWebhookUnlocked (actor system)", () => {
+  const VALID_UUID = "11111111-1111-4111-8111-111111111111";
+
+  beforeEach(() => {
+    process.env.NEXTAUTH_URL = "https://roteador.example.com";
+    (process.env as Record<string, string>).NODE_ENV = "production";
+  });
+
+  it("executa sem autorização e registra audit actorType=system", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue(null);
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(anyCred);
+    (prisma.company.findUnique as jest.Mock).mockResolvedValue({ id: "c1", webhookKey: "abc" });
+    (graphApi.subscribeFields as jest.Mock).mockResolvedValue(undefined);
+    (graphApi.subscribeApp as jest.Mock).mockResolvedValue(undefined);
+    const r = await subscribeWebhookUnlocked(VALID_UUID, { actor: "system" });
+    expect(r.success).toBe(true);
+    const logAuditMock = jest.requireMock("@/lib/audit").logAudit as jest.Mock;
+    const auditCall = logAuditMock.mock.calls[0][0];
+    expect(auditCall.actorType).toBe("system");
+    expect(auditCall.actorLabel).toBe("system");
+  });
+});
+
+describe("unsubscribeWebhookUnlocked (actor system)", () => {
+  const VALID_UUID = "11111111-1111-4111-8111-111111111111";
+
+  it("executa sem autorização", async () => {
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(anyCred);
+    (graphApi.unsubscribeApp as jest.Mock).mockResolvedValue(undefined);
+    const r = await unsubscribeWebhookUnlocked(VALID_UUID, { actor: "system" });
+    expect(r.success).toBe(true);
   });
 });
 

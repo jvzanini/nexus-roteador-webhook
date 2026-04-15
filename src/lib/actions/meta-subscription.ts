@@ -107,6 +107,121 @@ export async function testMetaConnection(companyId: string): Promise<ActionResul
   }
 }
 
+interface CoreOpts {
+  actor: "user" | "system";
+  userId?: string;
+  userLabel?: string;
+}
+
+export async function subscribeWebhookUnlocked(
+  companyId: string,
+  actor: CoreOpts
+): Promise<ActionResult> {
+  const rl = await enforceMetaRateLimit(companyId);
+  if (!rl.allowed) {
+    return { success: false, error: "Rate limit excedido. Tente em alguns minutos." };
+  }
+
+  const callbackErr = validateCallbackBase();
+  if (callbackErr) return { success: false, error: callbackErr };
+
+  const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
+  if (!cred) return { success: false, error: "Credenciais não cadastradas" };
+  const missing: string[] = [];
+  if (!cred.metaAppId) missing.push("metaAppId");
+  if (!cred.wabaId) missing.push("wabaId");
+  if (!cred.verifyToken) missing.push("verifyToken");
+  if (!cred.metaSystemUserToken) missing.push("metaSystemUserToken");
+  if (missing.length) {
+    return { success: false, error: `Campos faltando: ${missing.join(", ")}` };
+  }
+
+  const company = await prisma.company.findUnique({ where: { id: companyId } });
+  if (!company) return { success: false, error: "Empresa não encontrada" };
+
+  const callbackUrl = `${process.env.NEXTAUTH_URL}/api/webhook/${company.webhookKey}`;
+  const verifyToken = decrypt(cred.verifyToken!);
+  const token = decrypt(cred.metaSystemUserToken!);
+
+  await prisma.companyCredential.update({
+    where: { companyId },
+    data: { metaSubscriptionStatus: "pending", metaSubscriptionError: null },
+  });
+  void publishRealtimeEvent({ type: "credential:updated", companyId });
+
+  const started = Date.now();
+  try {
+    await graphApi.subscribeFields(
+      cred.metaAppId!,
+      {
+        object: "whatsapp_business_account",
+        callbackUrl,
+        verifyToken,
+        fields: DEFAULT_FIELDS,
+      },
+      token
+    );
+    await graphApi.subscribeApp(cred.wabaId!, token);
+
+    await prisma.companyCredential.update({
+      where: { companyId },
+      data: {
+        metaSubscriptionStatus: "active",
+        metaSubscribedAt: new Date(),
+        metaSubscribedFields: DEFAULT_FIELDS,
+        metaSubscribedCallbackUrl: callbackUrl,
+        metaSubscriptionError: null,
+      },
+    });
+
+    void logAudit({
+      actorType: actor.actor,
+      actorId: actor.userId,
+      actorLabel: actor.userLabel ?? "system",
+      companyId,
+      action: "meta_webhook.subscribe",
+      resourceType: "CompanyCredential",
+      resourceId: cred.id,
+      details: { success: true, durationMs: Date.now() - started, fields: DEFAULT_FIELDS },
+    });
+    void createNotification({
+      companyId,
+      type: "info",
+      title: "Webhook inscrito na Meta",
+      message: `Callback ${callbackUrl} registrado.`,
+      link: `/companies/${companyId}`,
+    });
+    void publishRealtimeEvent({ type: "credential:updated", companyId });
+
+    return { success: true };
+  } catch (e) {
+    const errorStr = graphApi.serializeErrorSafe(e);
+    await prisma.companyCredential.update({
+      where: { companyId },
+      data: { metaSubscriptionStatus: "error", metaSubscriptionError: errorStr },
+    });
+    void logAudit({
+      actorType: actor.actor,
+      actorId: actor.userId,
+      actorLabel: actor.userLabel ?? "system",
+      companyId,
+      action: "meta_webhook.subscribe",
+      resourceType: "CompanyCredential",
+      resourceId: cred.id,
+      details: { success: false, error: errorStr, durationMs: Date.now() - started },
+    });
+    void createNotification({
+      companyId,
+      type: "error",
+      title: "Falha ao inscrever webhook na Meta",
+      message: errorStr.slice(0, 200),
+      link: `/companies/${companyId}`,
+    });
+    void publishRealtimeEvent({ type: "credential:updated", companyId });
+    return { success: false, error: e instanceof Error ? e.message : "Erro desconhecido" };
+  }
+}
+
 export async function subscribeWebhook(companyId: string): Promise<ActionResult> {
   const parsed = companyIdSchema.safeParse({ companyId });
   if (!parsed.success) return { success: false, error: "Input inválido" };
@@ -118,118 +233,14 @@ export async function subscribeWebhook(companyId: string): Promise<ActionResult>
   if (!locked) return { success: false, error: "Outra operação em andamento" };
 
   try {
-    const rl = await enforceMetaRateLimit(companyId);
-    if (!rl.allowed) {
-      return { success: false, error: "Rate limit excedido. Tente em alguns minutos." };
-    }
-
-    const callbackErr = validateCallbackBase();
-    if (callbackErr) return { success: false, error: callbackErr };
-
-    const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
-    if (!cred) return { success: false, error: "Credenciais não cadastradas" };
-    const missing: string[] = [];
-    if (!cred.metaAppId) missing.push("metaAppId");
-    if (!cred.wabaId) missing.push("wabaId");
-    if (!cred.verifyToken) missing.push("verifyToken");
-    if (!cred.metaSystemUserToken) missing.push("metaSystemUserToken");
-    if (missing.length) {
-      return { success: false, error: `Campos faltando: ${missing.join(", ")}` };
-    }
-
-    const company = await prisma.company.findUnique({ where: { id: companyId } });
-    if (!company) return { success: false, error: "Empresa não encontrada" };
-
-    const callbackUrl = `${process.env.NEXTAUTH_URL}/api/webhook/${company.webhookKey}`;
-    const verifyToken = decrypt(cred.verifyToken!);
-    const token = decrypt(cred.metaSystemUserToken!);
-
-    await prisma.companyCredential.update({
-      where: { companyId },
-      data: { metaSubscriptionStatus: "pending", metaSubscriptionError: null },
+    return await subscribeWebhookUnlocked(companyId, {
+      actor: "user",
+      userId: auth.user.id,
+      userLabel: auth.user.email ?? auth.user.id,
     });
-    void publishRealtimeEvent({ type: "credential:updated", companyId });
-
-    const started = Date.now();
-    try {
-      await graphApi.subscribeFields(
-        cred.metaAppId!,
-        {
-          object: "whatsapp_business_account",
-          callbackUrl,
-          verifyToken,
-          fields: DEFAULT_FIELDS,
-        },
-        token
-      );
-      await graphApi.subscribeApp(cred.wabaId!, token);
-
-      await prisma.companyCredential.update({
-        where: { companyId },
-        data: {
-          metaSubscriptionStatus: "active",
-          metaSubscribedAt: new Date(),
-          metaSubscribedFields: DEFAULT_FIELDS,
-          metaSubscribedCallbackUrl: callbackUrl,
-          metaSubscriptionError: null,
-        },
-      });
-
-      void logAudit({
-        actorType: "user",
-        actorId: auth.user.id,
-        actorLabel: auth.user.email ?? auth.user.id,
-        companyId,
-        action: "meta_webhook.subscribe",
-        resourceType: "CompanyCredential",
-        resourceId: cred.id,
-        details: { success: true, durationMs: Date.now() - started, fields: DEFAULT_FIELDS },
-      });
-      void createNotification({
-        companyId,
-        type: "info",
-        title: "Webhook inscrito na Meta",
-        message: `Callback ${callbackUrl} registrado.`,
-        link: `/companies/${companyId}`,
-      });
-      void publishRealtimeEvent({ type: "credential:updated", companyId });
-
-      return { success: true };
-    } catch (e) {
-      const errorStr = graphApi.serializeErrorSafe(e);
-      await prisma.companyCredential.update({
-        where: { companyId },
-        data: { metaSubscriptionStatus: "error", metaSubscriptionError: errorStr },
-      });
-      void logAudit({
-        actorType: "user",
-        actorId: auth.user.id,
-        actorLabel: auth.user.email ?? auth.user.id,
-        companyId,
-        action: "meta_webhook.subscribe",
-        resourceType: "CompanyCredential",
-        resourceId: cred.id,
-        details: { success: false, error: errorStr, durationMs: Date.now() - started },
-      });
-      void createNotification({
-        companyId,
-        type: "error",
-        title: "Falha ao inscrever webhook na Meta",
-        message: errorStr.slice(0, 200),
-        link: `/companies/${companyId}`,
-      });
-      void publishRealtimeEvent({ type: "credential:updated", companyId });
-      return { success: false, error: e instanceof Error ? e.message : "Erro desconhecido" };
-    }
   } finally {
     await releaseMetaLock(companyId);
   }
-}
-
-interface CoreOpts {
-  actor: "user" | "system";
-  userId?: string;
-  userLabel?: string;
 }
 
 export async function verifyMetaSubscriptionCore(
@@ -312,6 +323,57 @@ export async function generateVerifyToken(): Promise<ActionResult<{ token: strin
   return { success: true, data: { token: randomBytes(24).toString("hex") } };
 }
 
+export async function unsubscribeWebhookUnlocked(
+  companyId: string,
+  actor: CoreOpts
+): Promise<ActionResult> {
+  const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
+  if (!cred) return { success: false, error: "Credenciais não cadastradas" };
+
+  const errors: string[] = [];
+  if (cred.metaSystemUserToken && cred.wabaId) {
+    const token = decrypt(cred.metaSystemUserToken);
+    try {
+      await graphApi.unsubscribeApp(cred.wabaId, token);
+    } catch (e) {
+      errors.push(graphApi.serializeErrorSafe(e));
+    }
+  }
+
+  await prisma.companyCredential.update({
+    where: { companyId },
+    data: {
+      metaSubscriptionStatus: "not_configured",
+      metaSubscribedAt: null,
+      metaSubscribedFields: [],
+      metaSubscribedCallbackUrl: null,
+      metaSubscriptionError: errors.length ? errors.join(" | ").slice(0, 500) : null,
+    },
+  });
+
+  void logAudit({
+    actorType: actor.actor,
+    actorId: actor.userId,
+    actorLabel: actor.userLabel ?? "system",
+    companyId,
+    action: "meta_webhook.unsubscribe",
+    resourceType: "CompanyCredential",
+    resourceId: cred.id,
+    details: { errors },
+  });
+  void createNotification({
+    companyId,
+    type: errors.length ? "warning" : "info",
+    title: "Webhook desinscrito",
+    message: errors.length
+      ? "Desinscrito localmente com avisos da Meta."
+      : "Desinscrito com sucesso.",
+    link: `/companies/${companyId}`,
+  });
+  void publishRealtimeEvent({ type: "credential:updated", companyId });
+  return { success: true };
+}
+
 export async function unsubscribeWebhook(companyId: string): Promise<ActionResult> {
   const parsed = companyIdSchema.safeParse({ companyId });
   if (!parsed.success) return { success: false, error: "Input inválido" };
@@ -322,51 +384,11 @@ export async function unsubscribeWebhook(companyId: string): Promise<ActionResul
   if (!locked) return { success: false, error: "Outra operação em andamento" };
 
   try {
-    const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
-    if (!cred) return { success: false, error: "Credenciais não cadastradas" };
-
-    const errors: string[] = [];
-    if (cred.metaSystemUserToken && cred.wabaId) {
-      const token = decrypt(cred.metaSystemUserToken);
-      try {
-        await graphApi.unsubscribeApp(cred.wabaId, token);
-      } catch (e) {
-        errors.push(graphApi.serializeErrorSafe(e));
-      }
-    }
-
-    await prisma.companyCredential.update({
-      where: { companyId },
-      data: {
-        metaSubscriptionStatus: "not_configured",
-        metaSubscribedAt: null,
-        metaSubscribedFields: [],
-        metaSubscribedCallbackUrl: null,
-        metaSubscriptionError: errors.length ? errors.join(" | ").slice(0, 500) : null,
-      },
+    return await unsubscribeWebhookUnlocked(companyId, {
+      actor: "user",
+      userId: auth.user.id,
+      userLabel: auth.user.email ?? auth.user.id,
     });
-
-    void logAudit({
-      actorType: "user",
-      actorId: auth.user.id,
-      actorLabel: auth.user.email ?? auth.user.id,
-      companyId,
-      action: "meta_webhook.unsubscribe",
-      resourceType: "CompanyCredential",
-      resourceId: cred.id,
-      details: { errors },
-    });
-    void createNotification({
-      companyId,
-      type: errors.length ? "warning" : "info",
-      title: "Webhook desinscrito",
-      message: errors.length
-        ? "Desinscrito localmente com avisos da Meta."
-        : "Desinscrito com sucesso.",
-      link: `/companies/${companyId}`,
-    });
-    void publishRealtimeEvent({ type: "credential:updated", companyId });
-    return { success: true };
   } finally {
     await releaseMetaLock(companyId);
   }
