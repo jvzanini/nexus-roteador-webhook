@@ -225,6 +225,86 @@ export async function subscribeWebhook(companyId: string): Promise<ActionResult>
   }
 }
 
+interface CoreOpts {
+  actor: "user" | "system";
+  userId?: string;
+  userLabel?: string;
+}
+
+export async function verifyMetaSubscriptionCore(
+  companyId: string,
+  opts: CoreOpts
+): Promise<ActionResult<{ status: "active" | "stale" }>> {
+  const parsed = companyIdSchema.safeParse({ companyId });
+  if (!parsed.success) return { success: false, error: "Input inválido" };
+
+  const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
+  if (!cred) return { success: false, error: "Credenciais não cadastradas" };
+  if (!cred.metaSystemUserToken || !cred.wabaId || !cred.metaAppId) {
+    return { success: false, error: "Campos faltando para verificar" };
+  }
+
+  const token = decrypt(cred.metaSystemUserToken);
+  try {
+    const [apps, subs] = await Promise.all([
+      graphApi.listSubscribedApps(cred.wabaId, token),
+      graphApi.listSubscriptions(cred.metaAppId, token),
+    ]);
+    const appOk = apps.some((a) => a.appId === cred.metaAppId);
+    const expected = cred.metaSubscribedCallbackUrl;
+    const subOk =
+      !!expected &&
+      subs.some(
+        (s) => s.object === "whatsapp_business_account" && s.callbackUrl === expected
+      );
+    const newStatus: "active" | "stale" = appOk && subOk ? "active" : "stale";
+    await prisma.companyCredential.update({
+      where: { companyId },
+      data: { metaSubscriptionStatus: newStatus, metaSubscriptionError: null },
+    });
+    void logAudit({
+      actorType: opts.actor,
+      actorId: opts.userId,
+      actorLabel: opts.userLabel ?? "system:drift-check",
+      companyId,
+      action: "meta_webhook.verify",
+      resourceType: "CompanyCredential",
+      resourceId: cred.id,
+      details: { appOk, subOk, status: newStatus },
+    });
+    void publishRealtimeEvent({ type: "credential:updated", companyId });
+    return { success: true, data: { status: newStatus } };
+  } catch (e) {
+    const errorStr = graphApi.serializeErrorSafe(e);
+    await prisma.companyCredential.update({
+      where: { companyId },
+      data: { metaSubscriptionStatus: "error", metaSubscriptionError: errorStr },
+    });
+    void logAudit({
+      actorType: opts.actor,
+      actorId: opts.userId,
+      actorLabel: opts.userLabel ?? "system:drift-check",
+      companyId,
+      action: "meta_webhook.verify",
+      resourceType: "CompanyCredential",
+      resourceId: cred.id,
+      details: { success: false, error: errorStr },
+    });
+    void publishRealtimeEvent({ type: "credential:updated", companyId });
+    return { success: false, error: e instanceof Error ? e.message : "Erro" };
+  }
+}
+
+export async function verifyMetaSubscription(companyId: string): Promise<ActionResult> {
+  const auth = await authorize(companyId);
+  if (!auth.ok) return { success: false, error: auth.error };
+  return verifyMetaSubscriptionCore(companyId, {
+    actor: "user",
+    userId: auth.user.id,
+    userLabel: auth.user.email ?? auth.user.id,
+  });
+}
+
 export async function unsubscribeWebhook(companyId: string): Promise<ActionResult> {
   const parsed = companyIdSchema.safeParse({ companyId });
   if (!parsed.success) return { success: false, error: "Input inválido" };

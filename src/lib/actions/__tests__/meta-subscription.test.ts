@@ -39,7 +39,13 @@ import * as graphApi from "@/lib/meta/graph-api";
 import * as rateLimit from "@/lib/rate-limit/meta";
 import { createNotification } from "@/lib/notifications";
 import { publishRealtimeEvent } from "@/lib/realtime";
-import { testMetaConnection, subscribeWebhook, unsubscribeWebhook } from "../meta-subscription";
+import {
+  testMetaConnection,
+  subscribeWebhook,
+  unsubscribeWebhook,
+  verifyMetaSubscription,
+  verifyMetaSubscriptionCore,
+} from "../meta-subscription";
 
 // Compartilhado entre describes (Tasks 6-9 reusam)
 export const anyCred = {
@@ -255,5 +261,80 @@ describe("unsubscribeWebhook", () => {
     (rateLimit.acquireMetaLock as jest.Mock).mockResolvedValueOnce(false);
     const r = await unsubscribeWebhook(VALID_UUID);
     expect(r.success).toBe(false);
+  });
+});
+
+describe("verifyMetaSubscription", () => {
+  const VALID_UUID = "11111111-1111-4111-8111-111111111111";
+  const baseCred = { ...anyCred, metaSubscribedCallbackUrl: "https://roteador.example.com/api/webhook/abc" };
+
+  beforeEach(() => {
+    process.env.NEXTAUTH_URL = "https://roteador.example.com";
+  });
+
+  it("active quando app e callback batem", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(baseCred);
+    (graphApi.listSubscribedApps as jest.Mock).mockResolvedValue([{ appId: "APP" }]);
+    (graphApi.listSubscriptions as jest.Mock).mockResolvedValue([{
+      object: "whatsapp_business_account",
+      callbackUrl: "https://roteador.example.com/api/webhook/abc",
+      fields: ["messages"],
+    }]);
+    const r = await verifyMetaSubscription(VALID_UUID);
+    expect(r.success).toBe(true);
+    const data = (prisma.companyCredential.update as jest.Mock).mock.calls.pop()![0].data;
+    expect(data.metaSubscriptionStatus).toBe("active");
+  });
+
+  it("stale quando callback diverge", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(baseCred);
+    (graphApi.listSubscribedApps as jest.Mock).mockResolvedValue([{ appId: "APP" }]);
+    (graphApi.listSubscriptions as jest.Mock).mockResolvedValue([{
+      object: "whatsapp_business_account",
+      callbackUrl: "https://OLD.example.com/webhook/old",
+      fields: ["messages"],
+    }]);
+    const r = await verifyMetaSubscription(VALID_UUID);
+    expect(r.success).toBe(true);
+    const data = (prisma.companyCredential.update as jest.Mock).mock.calls.pop()![0].data;
+    expect(data.metaSubscriptionStatus).toBe("stale");
+  });
+
+  it("stale quando app ausente", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(baseCred);
+    (graphApi.listSubscribedApps as jest.Mock).mockResolvedValue([]);
+    (graphApi.listSubscriptions as jest.Mock).mockResolvedValue([]);
+    const r = await verifyMetaSubscription(VALID_UUID);
+    expect(r.success).toBe(true);
+    const data = (prisma.companyCredential.update as jest.Mock).mock.calls.pop()![0].data;
+    expect(data.metaSubscriptionStatus).toBe("stale");
+  });
+
+  it("erro Meta → status=error", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(baseCred);
+    (graphApi.listSubscribedApps as jest.Mock).mockRejectedValue(
+      new graphApi.MetaApiError({ status: 401, message: "expired" })
+    );
+    const r = await verifyMetaSubscription(VALID_UUID);
+    expect(r.success).toBe(false);
+    const data = (prisma.companyCredential.update as jest.Mock).mock.calls.pop()![0].data;
+    expect(data.metaSubscriptionStatus).toBe("error");
+  });
+
+  it("verifyMetaSubscriptionCore aceita actor=system sem getCurrentUser", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue(null);
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(baseCred);
+    (graphApi.listSubscribedApps as jest.Mock).mockResolvedValue([{ appId: "APP" }]);
+    (graphApi.listSubscriptions as jest.Mock).mockResolvedValue([{
+      object: "whatsapp_business_account",
+      callbackUrl: "https://roteador.example.com/api/webhook/abc",
+      fields: ["messages"],
+    }]);
+    const r = await verifyMetaSubscriptionCore(VALID_UUID, { actor: "system" });
+    expect(r.success).toBe(true);
   });
 });
