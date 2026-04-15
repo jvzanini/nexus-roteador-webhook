@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCredential } from "@/lib/actions/credential";
 import { CredentialForm } from "./credential-form";
+import { EmbeddedSignupButton } from "./embedded-signup-button";
 import {
   MetaSubscriptionPanel,
   type MetaSubscriptionSnapshot,
@@ -25,9 +26,10 @@ interface CredentialsTabProps {
   companyId: string;
   webhookKey: string;
   canEdit?: boolean;
+  hasEmbeddedSignup?: boolean;
 }
 
-export function CredentialsTab({ companyId, webhookKey, canEdit = true }: CredentialsTabProps) {
+export function CredentialsTab({ companyId, webhookKey, canEdit = true, hasEmbeddedSignup = false }: CredentialsTabProps) {
   const router = useRouter();
   const [credential, setCredential] = useState<MaskedCredential | null>(null);
   const [metaSnapshot, setMetaSnapshot] = useState<MetaSubscriptionSnapshot>({
@@ -85,6 +87,26 @@ export function CredentialsTab({ companyId, webhookKey, canEdit = true }: Creden
 
   return (
     <div className="space-y-6">
+      {/* Embedded Signup — fluxo automático */}
+      {hasEmbeddedSignup && canEdit && (
+        <Card className="bg-violet-500/5 border border-violet-500/20 rounded-xl">
+          <CardContent className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <Sparkles className="h-5 w-5 text-violet-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-violet-300">
+                  Conecte o WhatsApp automaticamente
+                </p>
+                <p className="text-xs text-violet-400/70 mt-0.5">
+                  Autentique com o Facebook e preencheremos as credenciais por você.
+                </p>
+              </div>
+            </div>
+            <EmbeddedSignupButton companyId={companyId} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Aviso de seguranca */}
       <Card className="bg-amber-500/5 border border-amber-500/20 rounded-xl">
         <CardContent className="flex items-start gap-3 pt-4">
@@ -99,6 +121,12 @@ export function CredentialsTab({ companyId, webhookKey, canEdit = true }: Creden
           </div>
         </CardContent>
       </Card>
+
+      {hasEmbeddedSignup && canEdit && (
+        <p className="text-xs text-muted-foreground px-1">
+          Prefira o fluxo automático acima — os campos abaixo serão preenchidos automaticamente após a conexão.
+        </p>
+      )}
 
       {/* Formulario unificado */}
       <CredentialForm

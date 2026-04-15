@@ -28,11 +28,12 @@ interface CompanyTabsProps {
   currentUserId?: string;
   currentUserIsSuperAdmin?: boolean;
   defaultTab?: string;
+  hasEmbeddedSignup?: boolean;
 }
 
 const VALID_TABS = ["overview", "credentials", "routes", "logs", "members"];
 
-export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, canDelete = false, currentUserId, currentUserIsSuperAdmin = false, defaultTab = "overview" }: CompanyTabsProps) {
+export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, canDelete = false, currentUserId, currentUserIsSuperAdmin = false, defaultTab = "overview", hasEmbeddedSignup = false }: CompanyTabsProps) {
   const pathname = usePathname();
   const tab = VALID_TABS.includes(defaultTab) ? defaultTab : "overview";
 
@@ -83,7 +84,7 @@ export function CompanyTabs({ company, canEdit = true, canManageRoutes = true, c
       </TabsContent>
 
       <TabsContent value="credentials">
-        <CredentialsTab companyId={company.id} webhookKey={company.webhookKey} canEdit={canEdit} />
+        <CredentialsTab companyId={company.id} webhookKey={company.webhookKey} canEdit={canEdit} hasEmbeddedSignup={hasEmbeddedSignup} />
       </TabsContent>
 
       <TabsContent value="routes">

@@ -41,10 +41,12 @@ export default async function CompanyPage({ params, searchParams }: CompanyPageP
   const canManageRoutes = canEdit || userRole === "manager";
   const canDelete = userRole === "super_admin";
 
+  const hasEmbeddedSignup = !!process.env.META_APP_ID && !!process.env.META_EMBEDDED_SIGNUP_CONFIG_ID;
+
   return (
     <div className="space-y-6">
       <CompanyHeader company={company} canEdit={canEdit} canDelete={canDelete} />
-      <CompanyTabs company={company} canEdit={canEdit} canManageRoutes={canManageRoutes} canDelete={canDelete} currentUserId={userId} currentUserIsSuperAdmin={isSuperAdmin} defaultTab={tab} />
+      <CompanyTabs company={company} canEdit={canEdit} canManageRoutes={canManageRoutes} canDelete={canDelete} currentUserId={userId} currentUserIsSuperAdmin={isSuperAdmin} defaultTab={tab} hasEmbeddedSignup={hasEmbeddedSignup} />
     </div>
   );
 }

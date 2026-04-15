@@ -10,6 +10,9 @@ const envSchema = z.object({
   META_API_VERSION: z.string().optional(),
   META_SUBSCRIPTION_FIELDS: z.string().optional(),
   META_DRIFT_CHECK_CRON: z.string().optional(),
+  META_APP_ID: z.string().optional(),
+  META_APP_SECRET: z.string().optional(),
+  META_EMBEDDED_SIGNUP_CONFIG_ID: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
