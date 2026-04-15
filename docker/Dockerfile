@@ -1,11 +1,15 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
+COPY vendor-packages/ ./vendor-packages/
+COPY scripts/verify-vendor.mjs ./scripts/verify-vendor.mjs
 RUN npm ci --omit=dev
 
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
+COPY vendor-packages/ ./vendor-packages/
+COPY scripts/verify-vendor.mjs ./scripts/verify-vendor.mjs
 RUN npm ci
 COPY . .
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
