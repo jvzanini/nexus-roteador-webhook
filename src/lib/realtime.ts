@@ -7,7 +7,8 @@ export type RealtimeEvent =
   | { type: "delivery:completed"; companyId: string }
   | { type: "delivery:failed"; companyId: string }
   | { type: "notification:new"; userId: string }
-  | { type: "webhook:received"; companyId: string };
+  | { type: "webhook:received"; companyId: string }
+  | { type: "credential:updated"; companyId: string };
 
 export async function publishRealtimeEvent(event: RealtimeEvent): Promise<void> {
   try {

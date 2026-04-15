@@ -8,24 +8,24 @@ datasource db {
 }
 
 model User {
-  id            String       @id @default(uuid()) @db.Uuid
-  name          String
-  email         String       @unique
-  password      String
-  platformRole  PlatformRole @default(viewer) @map("platform_role")
-  isSuperAdmin  Boolean      @default(false) @map("is_super_admin")
-  avatarUrl     String?      @map("avatar_url")
-  theme         Theme        @default(dark)
-  isActive      Boolean      @default(true) @map("is_active")
-  invitedById   String?      @map("invited_by") @db.Uuid
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
+  id           String       @id @default(uuid()) @db.Uuid
+  name         String
+  email        String       @unique
+  password     String
+  platformRole PlatformRole @default(viewer) @map("platform_role")
+  isSuperAdmin Boolean      @default(false) @map("is_super_admin")
+  avatarUrl    String?      @map("avatar_url")
+  theme        Theme        @default(dark)
+  isActive     Boolean      @default(true) @map("is_active")
+  invitedById  String?      @map("invited_by") @db.Uuid
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
 
-  invitedBy     User?    @relation("UserInvites", fields: [invitedById], references: [id])
-  invitees      User[]   @relation("UserInvites")
-  memberships   UserCompanyMembership[]
-  notifications Notification[]
-  auditLogs     AuditLog[]     @relation("AuditActor")
+  invitedBy           User?                   @relation("UserInvites", fields: [invitedById], references: [id])
+  invitees            User[]                  @relation("UserInvites")
+  memberships         UserCompanyMembership[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]              @relation("AuditActor")
   passwordResetTokens PasswordResetToken[]
   emailChangeTokens   EmailChangeToken[]
 
@@ -39,16 +39,16 @@ enum Theme {
 }
 
 model UserCompanyMembership {
-  id        String          @id @default(uuid()) @db.Uuid
-  userId    String          @map("user_id") @db.Uuid
-  companyId String          @map("company_id") @db.Uuid
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String      @map("user_id") @db.Uuid
+  companyId String      @map("company_id") @db.Uuid
   role      CompanyRole
-  isActive  Boolean         @default(true) @map("is_active")
-  createdAt DateTime        @default(now()) @map("created_at")
-  updatedAt DateTime        @updatedAt @map("updated_at")
+  isActive  Boolean     @default(true) @map("is_active")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
 
-  user      User            @relation(fields: [userId], references: [id], onDelete: Restrict)
-  company   Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   @@unique([userId, companyId])
   @@map("user_company_memberships")
@@ -78,9 +78,9 @@ model Company {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  credential    CompanyCredential?
-  memberships   UserCompanyMembership[]
-  routes        WebhookRoute[]
+  credential      CompanyCredential?
+  memberships     UserCompanyMembership[]
+  routes          WebhookRoute[]
   inboundWebhooks InboundWebhook[]
   routeDeliveries RouteDelivery[]
   notifications   Notification[]
@@ -90,37 +90,44 @@ model Company {
 }
 
 model CompanyCredential {
-  id              String   @id @default(uuid()) @db.Uuid
-  companyId       String   @unique @map("company_id") @db.Uuid
-  metaAppId       String   @map("meta_app_id")
-  metaAppSecret   String   @map("meta_app_secret")
-  verifyToken     String   @map("verify_token")
-  phoneNumberId   String?  @map("phone_number_id")
-  wabaId          String?  @map("waba_id")
-  accessToken     String   @map("access_token")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid()) @db.Uuid
+  companyId     String   @unique @map("company_id") @db.Uuid
+  metaAppId     String   @map("meta_app_id")
+  metaAppSecret String   @map("meta_app_secret")
+  verifyToken   String   @map("verify_token")
+  phoneNumberId String?  @map("phone_number_id")
+  wabaId        String?  @map("waba_id")
+  accessToken   String   @map("access_token")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
-  company         Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  metaSystemUserToken       String?                @map("meta_system_user_token")
+  metaSubscriptionStatus    MetaSubscriptionStatus @default(not_configured) @map("meta_subscription_status")
+  metaSubscribedAt          DateTime?              @map("meta_subscribed_at")
+  metaSubscriptionError     String?                @map("meta_subscription_error")
+  metaSubscribedFields      String[]               @default([]) @map("meta_subscribed_fields")
+  metaSubscribedCallbackUrl String?                @map("meta_subscribed_callback_url")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   @@map("company_credentials")
 }
 
 model WebhookRoute {
-  id         String   @id @default(uuid()) @db.Uuid
-  companyId  String   @map("company_id") @db.Uuid
-  name       String
-  icon       String
-  url        String
-  secretKey  String?  @map("secret_key")
-  events     Json     @db.JsonB
-  isActive   Boolean  @default(true) @map("is_active")
-  headers    Json?    @db.JsonB
-  timeoutMs  Int      @default(30000) @map("timeout_ms")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  name      String
+  icon      String
+  url       String
+  secretKey String?  @map("secret_key")
+  events    Json     @db.JsonB
+  isActive  Boolean  @default(true) @map("is_active")
+  headers   Json?    @db.JsonB
+  timeoutMs Int      @default(30000) @map("timeout_ms")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  company    Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  company    Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
   deliveries RouteDelivery[]
 
   @@map("webhook_routes")
@@ -137,8 +144,8 @@ model InboundWebhook {
   processingStatus ProcessingStatus @default(received) @map("processing_status")
   createdAt        DateTime         @default(now()) @map("created_at")
 
-  company          Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  deliveries       RouteDelivery[]
+  company    Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  deliveries RouteDelivery[]
 
   @@unique([companyId, dedupeKey], name: "ux_inbound_company_dedupe")
   @@index([companyId, createdAt(sort: Desc)], name: "idx_inbound_company_created")
@@ -154,28 +161,36 @@ enum ProcessingStatus {
   no_routes
 }
 
+enum MetaSubscriptionStatus {
+  not_configured
+  pending
+  active
+  stale
+  error
+}
+
 model RouteDelivery {
-  id                String         @id @default(uuid()) @db.Uuid
-  inboundWebhookId  String         @map("inbound_webhook_id") @db.Uuid
-  routeId           String         @map("route_id") @db.Uuid
-  companyId         String         @map("company_id") @db.Uuid
-  status            DeliveryStatus @default(pending)
-  firstAttemptAt    DateTime?      @map("first_attempt_at")
-  lastAttemptAt     DateTime?      @map("last_attempt_at")
-  deliveredAt       DateTime?      @map("delivered_at")
-  finalHttpStatus   Int?           @map("final_http_status")
-  totalAttempts     Int            @default(0) @map("total_attempts")
-  nextRetryAt       DateTime?      @map("next_retry_at")
-  createdAt         DateTime       @default(now()) @map("created_at")
-  originDeliveryId  String?        @map("origin_delivery_id") @db.Uuid
+  id               String         @id @default(uuid()) @db.Uuid
+  inboundWebhookId String         @map("inbound_webhook_id") @db.Uuid
+  routeId          String         @map("route_id") @db.Uuid
+  companyId        String         @map("company_id") @db.Uuid
+  status           DeliveryStatus @default(pending)
+  firstAttemptAt   DateTime?      @map("first_attempt_at")
+  lastAttemptAt    DateTime?      @map("last_attempt_at")
+  deliveredAt      DateTime?      @map("delivered_at")
+  finalHttpStatus  Int?           @map("final_http_status")
+  totalAttempts    Int            @default(0) @map("total_attempts")
+  nextRetryAt      DateTime?      @map("next_retry_at")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  originDeliveryId String?        @map("origin_delivery_id") @db.Uuid
 
-  originDelivery    RouteDelivery?  @relation("DeliveryResend", fields: [originDeliveryId], references: [id])
-  resends           RouteDelivery[] @relation("DeliveryResend")
+  originDelivery RouteDelivery?  @relation("DeliveryResend", fields: [originDeliveryId], references: [id])
+  resends        RouteDelivery[] @relation("DeliveryResend")
 
-  inboundWebhook    InboundWebhook @relation(fields: [inboundWebhookId], references: [id], onDelete: Restrict)
-  route             WebhookRoute   @relation(fields: [routeId], references: [id], onDelete: Restrict)
-  company           Company        @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  attempts          DeliveryAttempt[]
+  inboundWebhook InboundWebhook    @relation(fields: [inboundWebhookId], references: [id], onDelete: Restrict)
+  route          WebhookRoute      @relation(fields: [routeId], references: [id], onDelete: Restrict)
+  company        Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  attempts       DeliveryAttempt[]
 
   @@index([companyId, createdAt(sort: Desc)], name: "idx_delivery_company_created")
   @@index([routeId, createdAt(sort: Desc)], name: "idx_delivery_route_created")
@@ -192,18 +207,18 @@ enum DeliveryStatus {
 }
 
 model DeliveryAttempt {
-  id              String        @id @default(uuid()) @db.Uuid
-  routeDeliveryId String        @map("route_delivery_id") @db.Uuid
-  attemptNumber   Int           @map("attempt_number")
-  startedAt       DateTime      @map("started_at")
-  finishedAt      DateTime      @map("finished_at")
-  durationMs      Int           @map("duration_ms")
-  httpStatus      Int?          @map("http_status")
-  responseBody    String?       @map("response_body")
-  errorMessage    String?       @map("error_message")
-  createdAt       DateTime      @default(now()) @map("created_at")
+  id              String   @id @default(uuid()) @db.Uuid
+  routeDeliveryId String   @map("route_delivery_id") @db.Uuid
+  attemptNumber   Int      @map("attempt_number")
+  startedAt       DateTime @map("started_at")
+  finishedAt      DateTime @map("finished_at")
+  durationMs      Int      @map("duration_ms")
+  httpStatus      Int?     @map("http_status")
+  responseBody    String?  @map("response_body")
+  errorMessage    String?  @map("error_message")
+  createdAt       DateTime @default(now()) @map("created_at")
 
-  routeDelivery   RouteDelivery @relation(fields: [routeDeliveryId], references: [id], onDelete: Restrict)
+  routeDelivery RouteDelivery @relation(fields: [routeDeliveryId], references: [id], onDelete: Restrict)
 
   @@index([routeDeliveryId, attemptNumber], name: "idx_attempt_delivery")
   @@map("delivery_attempts")
@@ -231,8 +246,8 @@ model Notification {
   isRead       Boolean          @default(false) @map("is_read")
   createdAt    DateTime         @default(now()) @map("created_at")
 
-  user         User?            @relation(fields: [userId], references: [id], onDelete: Restrict)
-  company      Company?         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   @@index([userId, isRead, createdAt(sort: Desc)], name: "idx_notification_user_read")
   @@map("notifications")
@@ -258,8 +273,8 @@ model AuditLog {
   userAgent    String?   @map("user_agent")
   createdAt    DateTime  @default(now()) @map("created_at")
 
-  actor        User?     @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
-  company      Company?  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  actor   User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   @@index([companyId, createdAt(sort: Desc)], name: "idx_audit_company")
   @@map("audit_logs")
@@ -271,14 +286,14 @@ enum ActorType {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  token     String   @unique
-  expiresAt DateTime @map("expires_at")
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime  @default(now()) @map("created_at")
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token], name: "idx_reset_token")
   @@index([userId, createdAt(sort: Desc)], name: "idx_reset_user")
@@ -286,15 +301,15 @@ model PasswordResetToken {
 }
 
 model EmailChangeToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  newEmail  String   @map("new_email")
-  token     String   @unique
-  expiresAt DateTime @map("expires_at")
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  newEmail  String    @map("new_email")
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime  @default(now()) @map("created_at")
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token], name: "idx_email_change_token")
   @@index([userId, createdAt(sort: Desc)], name: "idx_email_change_user")

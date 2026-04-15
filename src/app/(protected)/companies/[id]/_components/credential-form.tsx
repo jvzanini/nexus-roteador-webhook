@@ -1,13 +1,25 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { Save, Loader2, Eye, EyeOff, Globe, Copy, Check } from "lucide-react";
+import {
+  Save,
+  Loader2,
+  Eye,
+  EyeOff,
+  Globe,
+  Copy,
+  Check,
+  Sparkles,
+  ChevronDown,
+  ExternalLink,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { upsertCredential, revealCredentialField } from "@/lib/actions/credential";
 import { updateCompany } from "@/lib/actions/company";
+import { generateVerifyToken } from "@/lib/actions/meta-subscription";
 import { toast } from "sonner";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://roteadorwebhook.nexusai360.com";
@@ -115,6 +127,7 @@ interface CredentialFormProps {
     accessToken: string;
     phoneNumberId: string | null;
     wabaId: string | null;
+    metaSystemUserToken?: string | null;
   } | null;
   onSuccess?: () => void;
 }
@@ -124,6 +137,25 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [generatingToken, setGeneratingToken] = useState(false);
+
+  async function handleGenerateVerifyToken() {
+    setGeneratingToken(true);
+    try {
+      const result = await generateVerifyToken();
+      if (result.success && result.data) {
+        const input = inputRefs.current["verifyToken"];
+        if (input) input.value = result.data.token;
+        setVisible((prev) => ({ ...prev, verifyToken: true }));
+        setRevealedValues((prev) => ({ ...prev, verifyToken: result.data!.token }));
+        toast.success("Verify token gerado");
+      } else {
+        toast.error(result.error ?? "Erro ao gerar token");
+      }
+    } finally {
+      setGeneratingToken(false);
+    }
+  }
 
   // Toggle visibility per field — revela valor descriptografado do servidor
   const [visible, setVisible] = useState<Record<string, boolean>>({});
@@ -171,12 +203,12 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
     }
 
     // Revelar — buscar valor do servidor (apenas campos criptografados)
-    const encryptedFields = ["metaAppSecret", "verifyToken", "accessToken"];
+    const encryptedFields = ["metaAppSecret", "verifyToken", "accessToken", "metaSystemUserToken"];
     if (existingCredential && encryptedFields.includes(field)) {
       setRevealing((prev) => ({ ...prev, [field]: true }));
       const result = await revealCredentialField(
         companyId,
-        field as "metaAppSecret" | "verifyToken" | "accessToken"
+        field as "metaAppSecret" | "verifyToken" | "accessToken" | "metaSystemUserToken"
       );
       setRevealing((prev) => ({ ...prev, [field]: false }));
 
@@ -217,6 +249,15 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
     setSuccess(false);
 
     startTransition(async () => {
+      const systemUserTokenRaw = (formData.get("metaSystemUserToken") as string) ?? "";
+      // Se mascarado e nao modificado, omite para preservar valor atual
+      const systemUserTokenOut =
+        systemUserTokenRaw && systemUserTokenRaw.includes("••")
+          ? undefined
+          : systemUserTokenRaw.length > 0
+            ? systemUserTokenRaw
+            : null;
+
       const result = await upsertCredential(companyId, {
         metaAppId: getPlaintextValue(formData, "metaAppId"),
         metaAppSecret: formData.get("metaAppSecret") as string,
@@ -224,6 +265,7 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
         accessToken: formData.get("accessToken") as string,
         phoneNumberId: getPlaintextValue(formData, "phoneNumberId"),
         wabaId: getPlaintextValue(formData, "wabaId"),
+        metaSystemUserToken: systemUserTokenOut,
       });
 
       if (result.success) {
@@ -305,7 +347,7 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
           </div>
 
           {/* Token de Verificação — dentro do card de webhook */}
-          <div className="pt-3 border-t border-border">
+          <div className="pt-3 border-t border-border space-y-2">
             <SensitiveInput
               id="verifyToken"
               name="verifyToken"
@@ -321,6 +363,23 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
               disabled={!canEdit}
               hideToggle={!canEdit}
             />
+            {canEdit && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={generatingToken}
+                onClick={handleGenerateVerifyToken}
+                className="gap-2 cursor-pointer"
+              >
+                {generatingToken ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                Gerar
+              </Button>
+            )}
           </div>
 
           {canEdit && (
@@ -426,6 +485,50 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
           />
         </div>
       </div>
+
+      {/* Meta System User Token + docs */}
+      <Card className="bg-card border border-border rounded-xl">
+        <CardContent className="py-4 px-5 space-y-3">
+          <SensitiveInput
+            id="metaSystemUserToken"
+            name="metaSystemUserToken"
+            label="Meta System User Token"
+            description="Token de System User com escopos whatsapp_business_management e whatsapp_business_messaging. Necessário para inscrever webhook automaticamente na Meta."
+            placeholder="EAAxxxxxxxx"
+            defaultValue={existingCredential?.metaSystemUserToken ?? ""}
+            required={false}
+            visible={!!visible["metaSystemUserToken"]}
+            revealing={!!revealing["metaSystemUserToken"]}
+            onToggle={() => toggleField("metaSystemUserToken")}
+            inputRef={(el) => { inputRefs.current["metaSystemUserToken"] = el; }}
+            className={inputClasses}
+            disabled={!canEdit}
+            hideToggle={!canEdit}
+          />
+          <details className="group rounded-lg border border-border/60 bg-muted/30">
+            <summary className="flex items-center justify-between gap-2 cursor-pointer list-none px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground">
+              <span>Como obter System User Token</span>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="px-3 pb-3 pt-1 space-y-2 text-xs text-muted-foreground">
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Acesse developers.facebook.com → apps → selecione seu app.</li>
+                <li>Business Settings → System Users → Add.</li>
+                <li>Gere token com permissões <code className="font-mono">whatsapp_business_management</code> e <code className="font-mono">whatsapp_business_messaging</code>.</li>
+                <li>Copie e cole no campo acima.</li>
+              </ol>
+              <a
+                href="https://developers.facebook.com/docs/whatsapp/business-management-api/get-started"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-violet-500 hover:text-violet-600 dark:text-violet-400 dark:hover:text-violet-300"
+              >
+                Documentação oficial <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          </details>
+        </CardContent>
+      </Card>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
       {success && <p className="text-sm text-emerald-400">Credenciais salvas com sucesso!</p>}

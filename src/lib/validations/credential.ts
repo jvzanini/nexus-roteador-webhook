@@ -31,6 +31,12 @@ export const upsertCredentialSchema = z.object({
     .min(1, "WABA ID e obrigatorio")
     .max(50, "WABA ID deve ter no maximo 50 caracteres")
     .trim(),
+  metaSystemUserToken: z
+    .string()
+    .min(1, "System User Token invalido")
+    .max(500, "System User Token invalido")
+    .optional()
+    .nullable(),
 });
 
 export type UpsertCredentialInput = z.infer<typeof upsertCredentialSchema>;
