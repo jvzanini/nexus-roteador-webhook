@@ -17,6 +17,7 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 3C:** CONCLUÍDA — controle de acesso completo (backend+frontend), segurança webhook-routes e logs, fix updateUser, excluir empresa, slug editável, viewer read-only, selects inline usuários
 - **Fase 3D:** CONCLUÍDA — sistema de permissões em duas camadas (platformRole + CompanyRole independentes), JWT refresh em tempo real, login usuário inativo, sidebar com role real
 - **Fase 3E:** CONCLUÍDA — toast estilo Portainer (pilha bottom-up, timers independentes via pointer-events), data minúscula dashboard, selects largura ajustada, ring inputs corrigido, coluna nível membros, limpeza arquivos obsoletos
+- **Fase 4:** CONCLUÍDA — integração Meta Graph API: auto-subscribe webhook, test connection, drift check diário (BullMQ), unsubscribe, lock Redis + rate limit, UI com badge de 5 estados e 4 botões
 - **Busca Global:** CONCLUÍDA — command palette ⌘K, busca em 4 entidades (empresas/rotas/logs/usuários), deep-link tabs, tenant scoping, contexto React, AbortController + debounce 300ms
 - **Ajustes pós-Busca:** CONCLUÍDOS — slug salva webhookKey (bug fix), overview simplificado (remove Webhook Key), header/overview dinâmicos, deep-link via window.history.replaceState, copiar URL rota, ícone empresa nas tags, card Rotas flex-1 alinhado
 - **Tema cookie SSR:** CONCLUÍDO — next-themes removido, ThemeProvider custom via cookie SSR-aware, html class renderizada no primeiro byte (zero flicker), preferência sincronizada via login action, persistência DB via /api/user/theme
@@ -89,6 +90,7 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 - `users.ts` — CRUD usuários + memberships (com controle hierárquico de acesso)
 - `password-reset.ts` — solicitar e redefinir senha (token + Resend email)
 - `profile.ts` — perfil do usuário (avatar, nome, email com verificação, senha, tema)
+- `meta-subscription.ts` — integração Meta Graph API (testMetaConnection, subscribeWebhook, unsubscribeWebhook, verifyMetaSubscription, generateVerifyToken)
 
 ## Regras de Acesso (Hierarquia)
 - Super Admin > Admin (company_admin) > Gerente (manager) > Visualizador (viewer)
@@ -98,9 +100,12 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 - Aba Membros: apenas super admin e admin
 
 ## Próximo Passo
-1. **Integração Meta API** — configurar webhook automaticamente no app Meta
+1. **Embedded Signup da Meta** — fluxo OAuth para onboarding sem colar tokens manualmente
+2. **Rotação automática de tokens** — refresh de System User Tokens próximos da expiração
 
 ## Documentação
+- **Spec Fase 4:** `docs/superpowers/specs/2026-04-15-integracao-meta-api-design.md`
+- **Plano Fase 4:** `docs/superpowers/plans/2026-04-15-integracao-meta-api.md`
 - **Spec Relatórios CSV:** `docs/superpowers/specs/2026-04-10-relatorios-csv-design.md`
 - **Plano Relatórios CSV:** `docs/superpowers/plans/2026-04-10-relatorios-csv.md`
 - **Spec geral:** `docs/superpowers/specs/2026-04-03-nexus-roteador-webhook-design.md` (v7)
