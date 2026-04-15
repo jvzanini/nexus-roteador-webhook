@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -303,6 +304,12 @@ export async function verifyMetaSubscription(companyId: string): Promise<ActionR
     userId: auth.user.id,
     userLabel: auth.user.email ?? auth.user.id,
   });
+}
+
+export async function generateVerifyToken(): Promise<ActionResult<{ token: string }>> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: "Não autenticado" };
+  return { success: true, data: { token: randomBytes(24).toString("hex") } };
 }
 
 export async function unsubscribeWebhook(companyId: string): Promise<ActionResult> {

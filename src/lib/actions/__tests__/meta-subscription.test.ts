@@ -45,6 +45,7 @@ import {
   unsubscribeWebhook,
   verifyMetaSubscription,
   verifyMetaSubscriptionCore,
+  generateVerifyToken,
 } from "../meta-subscription";
 
 // Compartilhado entre describes (Tasks 6-9 reusam)
@@ -336,5 +337,19 @@ describe("verifyMetaSubscription", () => {
     }]);
     const r = await verifyMetaSubscriptionCore(VALID_UUID, { actor: "system" });
     expect(r.success).toBe(true);
+  });
+});
+
+describe("generateVerifyToken", () => {
+  it("gera token 48 chars hex quando autenticado", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u" });
+    const r = await generateVerifyToken();
+    expect(r.success).toBe(true);
+    expect(r.data!.token).toMatch(/^[a-f0-9]{48}$/);
+  });
+  it("rejeita se não autenticado", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue(null);
+    const r = await generateVerifyToken();
+    expect(r.success).toBe(false);
   });
 });
