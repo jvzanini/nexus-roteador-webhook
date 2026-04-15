@@ -17,6 +17,7 @@ import {
 } from "./dlq-cleanup";
 import { runLogCleanup } from "./log-cleanup";
 import { runNotificationCleanup } from "./notification-cleanup";
+import { runMetaDriftCheck } from "./jobs/meta-drift-check";
 
 console.log("[worker] Starting Nexus webhook worker...");
 console.log(`[worker] Node.js ${process.version}`);
@@ -77,7 +78,20 @@ async function scheduleCleanupJobs() {
     }
   );
 
-  console.log("[worker] Cleanup jobs agendados (diario a meia-noite)");
+  const metaDriftPattern = process.env.META_DRIFT_CHECK_CRON ?? "0 3 * * *";
+  await cleanupQueue.add(
+    "meta-drift-check",
+    {},
+    {
+      repeat: {
+        pattern: metaDriftPattern,
+      },
+    }
+  );
+
+  console.log(
+    `[worker] Cleanup jobs agendados (cleanup diario 00:00, meta-drift '${metaDriftPattern}')`
+  );
 }
 
 const cleanupWorker = new Worker(
@@ -89,6 +103,9 @@ const cleanupWorker = new Worker(
         break;
       case "notification-cleanup":
         await runNotificationCleanup();
+        break;
+      case "meta-drift-check":
+        await runMetaDriftCheck();
         break;
       default:
         console.warn(`[worker] Unknown cleanup job: ${job.name}`);
