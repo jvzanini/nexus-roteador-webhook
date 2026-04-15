@@ -9,11 +9,17 @@ node_modules/
 !.yarn/versions
 vendor/
 
-# Environment
+# Environment — NUNCA versionar segredos. Apenas .env.example (placeholders).
 .env
-.env.local
-.env.production
-.env*.local
+.env.*
+!.env.example
+*.env
+secrets.json
+secrets.yaml
+secrets.yml
+credentials.json
+credentials.yaml
+credentials.yml
 
 # Build
 dist/
@@ -42,16 +48,41 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Docker
+# Docker — variantes locais/produção ficam de fora
 docker-compose.override.yml
 docker-compose.production.yml
+docker-compose.local.yml
+stack.production.yml
+stack.local.yml
+.portainer-stack.*
 
 # Temp
 tmp/
 temp/
 
-# Misc
+# Chaves / certificados / segredos
 *.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.jks
+*.asc
+*.gpg
+id_rsa
+id_ed25519
+id_ecdsa
+id_dsa
+*.rsa
+*_rsa
+*.token
+
+# Dumps e backups
+*.sql.gz
+*.dump
+*.bak
+*-backup.*
 
 # Vercel
 .vercel
