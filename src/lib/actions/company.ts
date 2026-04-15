@@ -11,6 +11,9 @@ import {
   type UpdateCompanyInput,
 } from "@/lib/validations/company";
 import { slugify } from "@/lib/utils/slugify";
+import { logAudit } from "@/lib/audit";
+import { publishRealtimeEvent } from "@/lib/realtime";
+import { unsubscribeWebhook } from "./meta-subscription";
 
 type ActionResult<T = unknown> = {
   success: boolean;
@@ -270,6 +273,7 @@ export async function updateCompany(
       data.isActive = parsed.data.isActive;
     }
 
+    let webhookKeyChanged = false;
     if (parsed.data.webhookKey !== undefined) {
       const existingKey = await prisma.company.findUnique({
         where: { webhookKey: parsed.data.webhookKey },
@@ -278,6 +282,59 @@ export async function updateCompany(
         return { success: false, error: "Webhook key ja esta em uso por outra empresa" };
       }
       data.webhookKey = parsed.data.webhookKey;
+      webhookKeyChanged = parsed.data.webhookKey !== existing.webhookKey;
+    }
+
+    // Se webhookKey mudou, precisa invalidar a subscription Meta
+    if (webhookKeyChanged) {
+      const cred = await prisma.companyCredential.findUnique({
+        where: { companyId },
+      });
+      if (cred && cred.metaSubscriptionStatus === "pending") {
+        return {
+          success: false,
+          error:
+            "Não é possível alterar webhookKey enquanto inscrição está em andamento",
+        };
+      }
+
+      const company = await prisma.$transaction(async (tx) => {
+        const updated = await tx.company.update({
+          where: { id: companyId },
+          data,
+        });
+        if (cred) {
+          await tx.companyCredential.updateMany({
+            where: { companyId },
+            data: {
+              metaSubscriptionStatus: "not_configured",
+              metaSubscribedAt: null,
+              metaSubscribedCallbackUrl: null,
+              metaSubscribedFields: [],
+              metaSubscriptionError: null,
+            },
+          });
+        }
+        return updated;
+      });
+
+      if (cred) {
+        void logAudit({
+          actorType: "user",
+          actorId: user.id,
+          actorLabel: user.email ?? user.id,
+          companyId,
+          action: "meta_webhook.invalidated",
+          resourceType: "CompanyCredential",
+          resourceId: cred.id,
+          details: { reason: "webhookKey_changed" },
+        });
+        void publishRealtimeEvent({ type: "credential:updated", companyId });
+      }
+
+      revalidatePath("/companies");
+      revalidatePath(`/companies/${companyId}`);
+      return { success: true, data: company };
     }
 
     const company = await prisma.company.update({
@@ -308,6 +365,13 @@ export async function deleteCompany(
 
     if (!user.isSuperAdmin) {
       return { success: false, error: "Apenas Super Admin pode excluir empresas" };
+    }
+
+    // Best-effort: tenta desinscrever webhook na Meta antes do delete final
+    try {
+      await unsubscribeWebhook(companyId);
+    } catch (err) {
+      console.warn("[deleteCompany] unsubscribeWebhook falhou (best-effort)", err);
     }
 
     await prisma.$transaction(async (tx) => {
