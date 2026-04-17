@@ -89,117 +89,120 @@ export function EditCompanyDialog({ company, canDelete = false }: EditCompanyDia
   const inputClasses = "bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all duration-200";
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={<Button variant="outline" className="gap-2 border-border text-foreground/80 hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200" />}
-      >
-        <Settings className="h-4 w-4" />
-        Editar
-      </DialogTrigger>
-      <DialogContent className="bg-card border border-border rounded-2xl overflow-visible">
-        <DialogHeader>
-          <DialogTitle className="text-foreground">Editar Empresa</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
-            Altere as informações da empresa.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger
+          render={<Button variant="outline" className="gap-2 border-border text-foreground/80 hover:bg-accent hover:text-foreground cursor-pointer transition-all duration-200" />}
+        >
+          <Settings className="h-4 w-4" />
+          Editar
+        </DialogTrigger>
+        <DialogContent className="bg-card border border-border rounded-2xl overflow-visible">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Editar Empresa</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Altere as informações da empresa.
+            </DialogDescription>
+          </DialogHeader>
 
-        <form action={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit-name" className="text-foreground/80">
-              Nome da Empresa
-            </Label>
-            <Input
-              id="edit-name"
-              name="name"
-              defaultValue={company.name}
-              required
-              minLength={2}
-              maxLength={100}
-              className={inputClasses}
-            />
-          </div>
+          <form action={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name" className="text-foreground/80">
+                Nome da Empresa
+              </Label>
+              <Input
+                id="edit-name"
+                name="name"
+                defaultValue={company.name}
+                required
+                minLength={2}
+                maxLength={100}
+                className={inputClasses}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-logoUrl" className="text-foreground/80">
-              URL do Logo (opcional)
-            </Label>
-            <Input
-              id="edit-logoUrl"
-              name="logoUrl"
-              type="url"
-              defaultValue={company.logoUrl ?? ""}
-              placeholder="https://example.com/logo.png"
-              className={inputClasses}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-logoUrl" className="text-foreground/80">
+                URL do Logo (opcional)
+              </Label>
+              <Input
+                id="edit-logoUrl"
+                name="logoUrl"
+                type="url"
+                defaultValue={company.logoUrl ?? ""}
+                placeholder="https://example.com/logo.png"
+                className={inputClasses}
+              />
+            </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+            {error && <p className="text-sm text-red-400">{error}</p>}
 
-          <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setOpen(false)}
+                className="text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar"
+                )}
+              </Button>
+            </div>
+          </form>
+
+          <div className="border-t border-border my-2" />
+
+          <div className="flex items-center gap-3">
             <Button
               type="button"
               variant="ghost"
-              onClick={() => setOpen(false)}
-              className="text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
+              onClick={handleToggleActive}
               disabled={isPending}
-              className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
+              className={company.isActive
+                ? "text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 cursor-pointer transition-all duration-200"
+                : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer transition-all duration-200"
+              }
             >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                "Salvar"
-              )}
+              {company.isActive ? "Desativar Empresa" : "Reativar Empresa"}
             </Button>
+            {canDelete && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setOpen(false);
+                  setDeleteOpen(true);
+                }}
+                disabled={isPending}
+                className="text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir Empresa
+              </Button>
+            )}
           </div>
-        </form>
-
-        {/* Separator */}
-        <div className="border-t border-border my-2" />
-
-        {/* Empresa management actions — separate section */}
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleToggleActive}
-            disabled={isPending}
-            className={company.isActive
-              ? "text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 cursor-pointer transition-all duration-200"
-              : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer transition-all duration-200"
-            }
-          >
-            {company.isActive ? "Desativar Empresa" : "Reativar Empresa"}
-          </Button>
-          {canDelete && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setDeleteOpen(true)}
-              disabled={isPending}
-              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer transition-all duration-200"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Excluir Empresa
-            </Button>
-          )}
-        </div>
-      </DialogContent>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent className="bg-card border border-border rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Excluir empresa permanentemente?</AlertDialogTitle>
+            <AlertDialogTitle className="text-foreground">Excluir empresa?</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Esta ação não pode ser desfeita. Todos os dados serão removidos: credenciais, rotas, logs, membros e configurações.
+              A empresa será removida do sistema, mas os dados permanecem no banco para auditoria. Esta ação não pode ser desfeita pela interface.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -212,11 +215,11 @@ export function EditCompanyDialog({ company, canDelete = false }: EditCompanyDia
               className="bg-red-600 hover:bg-red-700 text-white cursor-pointer transition-all duration-200"
             >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Excluir permanentemente
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Dialog>
+    </>
   );
 }
