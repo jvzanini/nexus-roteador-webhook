@@ -202,4 +202,37 @@ describe("credential actions — metaSystemUserToken", () => {
     expect(data.metaSystemUserToken).toBeNull();
     expect((data.meta as Record<string, unknown>).subscribedAt).toBeNull();
   });
+
+  it("upsertCredential preserva verifyToken/accessToken existentes quando input mascarado", async () => {
+    prismaMock.company.findUnique.mockResolvedValue({ id: companyId });
+    prismaMock.companyCredential.findUnique.mockResolvedValue({
+      id: "cred-1",
+      companyId,
+      metaAppId: "app",
+      metaAppSecret: "enc:oldsecret",
+      verifyToken: "enc:oldverify",
+      accessToken: "enc:oldaccess",
+      phoneNumberId: "pn",
+      wabaId: "waba",
+      metaSystemUserToken: null,
+    });
+    prismaMock.companyCredential.upsert.mockImplementation(
+      async (args: { update: Record<string, unknown> }) =>
+        ({ id: "cred-1", companyId, ...args.update }) as never,
+    );
+
+    const result = await upsertCredential(companyId, {
+      metaAppId: "app",
+      metaAppSecret: "secret",
+      verifyToken: "••••••••5def",
+      accessToken: "••••••••9abc",
+      phoneNumberId: "pn",
+      wabaId: "waba",
+    });
+
+    expect(result.success).toBe(true);
+    const upsertCall = prismaMock.companyCredential.upsert.mock.calls[0][0];
+    expect(upsertCall.update.verifyToken).toBe("enc:oldverify");
+    expect(upsertCall.update.accessToken).toBe("enc:oldaccess");
+  });
 });

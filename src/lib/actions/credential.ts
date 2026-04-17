@@ -188,12 +188,34 @@ export async function upsertCredential(
       metaSystemUserToken,
     } = parsed.data;
 
+    // Valores mascarados no front indicam "nao alterar" — reutiliza o valor atual
+    const existingRecord = await prisma.companyCredential.findUnique({
+      where: { companyId },
+    });
+    const isMasked = (v: string | undefined) =>
+      typeof v === "string" && v.includes("••");
+
+    const finalSecret =
+      isMasked(metaAppSecret) && existingRecord?.metaAppSecret
+        ? existingRecord.metaAppSecret
+        : encrypt(metaAppSecret);
+
+    const finalVerify =
+      isMasked(verifyToken) && existingRecord?.verifyToken
+        ? existingRecord.verifyToken
+        : encrypt(verifyToken);
+
+    const finalAccess =
+      isMasked(accessToken) && existingRecord?.accessToken
+        ? existingRecord.accessToken
+        : encrypt(accessToken);
+
     // Criptografar campos sensiveis
     const data: Record<string, unknown> = {
       metaAppId,
-      metaAppSecret: encrypt(metaAppSecret),
-      verifyToken: encrypt(verifyToken),
-      accessToken: encrypt(accessToken),
+      metaAppSecret: finalSecret,
+      verifyToken: finalVerify,
+      accessToken: finalAccess,
       phoneNumberId: phoneNumberId || null,
       wabaId: wabaId || null,
     };
@@ -206,11 +228,8 @@ export async function upsertCredential(
           : null;
     }
 
-    // Verificar se ja existe para determinar action do audit
-    const existing = await prisma.companyCredential.findUnique({
-      where: { companyId },
-      select: { id: true },
-    });
+    // Reutiliza o registro ja buscado acima para determinar action do audit
+    const existing = existingRecord;
 
     const credential = await prisma.companyCredential.upsert({
       where: { companyId },
