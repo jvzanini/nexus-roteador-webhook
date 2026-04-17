@@ -30,7 +30,12 @@ jest.mock("../meta-subscription", () => ({
   unsubscribeWebhook: (companyId: string) => unsubscribeWebhookMock(companyId),
 }));
 
-import { updateCompany, deleteCompany } from "../company";
+import {
+  updateCompany,
+  deleteCompany,
+  getCompanies,
+  getCompanyById,
+} from "../company";
 
 const superAdmin = {
   id: "user-1",
@@ -145,38 +150,89 @@ describe("company actions — webhookKey invalidation + delete unsubscribe", () 
 
   describe("deleteCompany", () => {
     beforeEach(() => {
-      prismaMock.$transaction.mockImplementation(async (cb: unknown) => {
-        if (typeof cb === "function") {
-          return (cb as (tx: typeof prismaMock) => Promise<unknown>)(prismaMock);
-        }
-        return cb;
+      prismaMock.company.findUnique.mockResolvedValue({
+        id: companyId,
+        name: "Test",
+        deletedAt: null,
+        webhookKey: "k",
       });
-      prismaMock.webhookRoute.findMany.mockResolvedValue([]);
-      prismaMock.webhookRoute.deleteMany.mockResolvedValue({ count: 0 });
-      prismaMock.inboundWebhook.deleteMany.mockResolvedValue({ count: 0 });
-      prismaMock.companyCredential.deleteMany.mockResolvedValue({ count: 0 });
-      prismaMock.notification.deleteMany.mockResolvedValue({ count: 0 });
-      prismaMock.auditLog.deleteMany.mockResolvedValue({ count: 0 });
-      prismaMock.userCompanyMembership.deleteMany.mockResolvedValue({ count: 0 });
-      prismaMock.company.delete.mockResolvedValue({ id: companyId });
+      prismaMock.company.update.mockResolvedValue({
+        id: companyId,
+        deletedAt: new Date(),
+      });
     });
 
-    it("chama unsubscribeWebhook antes do delete final", async () => {
+    it("chama unsubscribeWebhook antes do soft-delete", async () => {
       const result = await deleteCompany(companyId);
 
       expect(result.success).toBe(true);
       expect(unsubscribeWebhookMock).toHaveBeenCalledWith(companyId);
-      expect(prismaMock.company.delete).toHaveBeenCalled();
+      expect(prismaMock.company.update).toHaveBeenCalledWith({
+        where: { id: companyId },
+        data: { deletedAt: expect.any(Date), isActive: false },
+      });
     });
 
-    it("prossegue com o delete mesmo quando unsubscribeWebhook falha", async () => {
+    it("prossegue com o soft-delete mesmo quando unsubscribeWebhook falha", async () => {
       unsubscribeWebhookMock.mockRejectedValueOnce(new Error("meta offline"));
 
       const result = await deleteCompany(companyId);
 
       expect(result.success).toBe(true);
       expect(unsubscribeWebhookMock).toHaveBeenCalledWith(companyId);
-      expect(prismaMock.company.delete).toHaveBeenCalled();
+      expect(prismaMock.company.update).toHaveBeenCalled();
     });
+  });
+});
+
+describe("deleteCompany (soft-delete)", () => {
+  const softDeleteCompanyId = "11111111-1111-4111-8111-111111111111";
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetCurrentUser.mockResolvedValue({ ...superAdmin, isSuperAdmin: true });
+    unsubscribeWebhookMock.mockImplementation(async () => ({ success: true }));
+  });
+
+  it("marca deletedAt e NÃO apaga relações", async () => {
+    prismaMock.company.findUnique.mockResolvedValue({
+      id: softDeleteCompanyId,
+      deletedAt: null,
+      webhookKey: "k",
+      name: "Test",
+    });
+    prismaMock.company.update.mockResolvedValue({
+      id: softDeleteCompanyId,
+      deletedAt: new Date(),
+    } as never);
+
+    const r = await deleteCompany(softDeleteCompanyId);
+    expect(r.success).toBe(true);
+
+    expect(prismaMock.company.update).toHaveBeenCalledWith({
+      where: { id: softDeleteCompanyId },
+      data: { deletedAt: expect.any(Date), isActive: false },
+    });
+    expect(prismaMock.webhookRoute.deleteMany).not.toHaveBeenCalled();
+    expect(prismaMock.companyCredential.deleteMany).not.toHaveBeenCalled();
+    expect(prismaMock.company.delete).not.toHaveBeenCalled();
+  });
+
+  it("getCompanies filtra deletedAt null", async () => {
+    prismaMock.company.findMany.mockResolvedValue([]);
+    await getCompanies();
+    const call = prismaMock.company.findMany.mock.calls[0][0];
+    expect(call.where).toMatchObject({ deletedAt: null });
+  });
+
+  it("getCompanyById retorna erro se empresa deletada", async () => {
+    prismaMock.company.findUnique.mockResolvedValue({
+      id: softDeleteCompanyId,
+      deletedAt: new Date(),
+    } as never);
+
+    const r = await getCompanyById(softDeleteCompanyId);
+    expect(r.success).toBe(false);
+    expect(r.error).toContain("não encontrada");
   });
 });
