@@ -48,6 +48,7 @@ import {
   verifyMetaSubscription,
   verifyMetaSubscriptionCore,
   generateVerifyToken,
+  updateVerifyToken,
 } from "../meta-subscription";
 
 // Compartilhado entre describes (Tasks 6-9 reusam)
@@ -450,5 +451,87 @@ describe("generateVerifyToken", () => {
     (getCurrentUser as jest.Mock).mockResolvedValue(null);
     const r = await generateVerifyToken();
     expect(r.success).toBe(false);
+  });
+});
+
+describe("updateVerifyToken", () => {
+  const VALID_UUID = "11111111-1111-4111-8111-111111111111";
+
+  it("rejeita quando não autenticado", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue(null);
+    const r = await updateVerifyToken(VALID_UUID, "new-token");
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/autenticado/i);
+  });
+
+  it("rejeita companyId inválido antes de checar auth", async () => {
+    const r = await updateVerifyToken("não-uuid", "new-token");
+    expect(r.success).toBe(false);
+    expect(r.error).toContain("Input inválido");
+  });
+
+  it("rejeita token vazio", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    const r = await updateVerifyToken(VALID_UUID, "");
+    expect(r.success).toBe(false);
+    expect(r.error).toContain("Verify token inválido");
+  });
+
+  it("rejeita token excedendo 500 chars", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    const r = await updateVerifyToken(VALID_UUID, "x".repeat(501));
+    expect(r.success).toBe(false);
+    expect(r.error).toContain("Verify token inválido");
+  });
+
+  it("nega manager (role diferente de company_admin)", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: false, email: "m@x.com" });
+    (prisma.userCompanyMembership.findUnique as jest.Mock).mockResolvedValue({
+      isActive: true,
+      role: "manager",
+    });
+    const r = await updateVerifyToken(VALID_UUID, "new-token");
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/negado/i);
+  });
+
+  it("retorna erro se credencial não existe", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(null);
+    const r = await updateVerifyToken(VALID_UUID, "new-token");
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/não cadastradas/i);
+  });
+
+  it("happy path: persiste apenas verifyToken encriptado e emite audit + realtime", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u1", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue(anyCred);
+    (prisma.companyCredential.update as jest.Mock).mockResolvedValue(anyCred);
+
+    const r = await updateVerifyToken(VALID_UUID, "my-new-verify-token");
+    expect(r.success).toBe(true);
+
+    // Confirma que prisma.update recebeu APENAS verifyToken (não tocou em outros campos)
+    const updateArgs = (prisma.companyCredential.update as jest.Mock).mock.calls[0][0];
+    expect(updateArgs.where).toEqual({ companyId: VALID_UUID });
+    expect(updateArgs.data).toEqual({ verifyToken: "enc:my-new-verify-token" });
+    expect(updateArgs.data.metaAppSecret).toBeUndefined();
+    expect(updateArgs.data.accessToken).toBeUndefined();
+    expect(updateArgs.data.metaSystemUserToken).toBeUndefined();
+
+    // Audit
+    const logAuditMock = jest.requireMock("@/lib/audit").logAudit as jest.Mock;
+    expect(logAuditMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorType: "user",
+        action: "credential.update_verify_token",
+        resourceType: "CompanyCredential",
+      }),
+    );
+
+    // Realtime
+    expect(publishRealtimeEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "credential:updated", companyId: VALID_UUID }),
+    );
   });
 });
