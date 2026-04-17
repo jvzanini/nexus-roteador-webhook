@@ -19,6 +19,7 @@ Deploy via Docker Swarm Stack no Portainer (VPS).
 - **Fase 3E:** CONCLUÍDA — toast estilo Portainer (pilha bottom-up, timers independentes via pointer-events), data minúscula dashboard, selects largura ajustada, ring inputs corrigido, coluna nível membros, limpeza arquivos obsoletos
 - **Fase 4:** CONCLUÍDA — integração Meta Graph API: auto-subscribe webhook, test connection, drift check diário (BullMQ), unsubscribe, lock Redis + rate limit, UI com badge de 5 estados e 4 botões
 - **Fase 5:** CONCLUÍDA — Embedded Signup Meta: onboarding OAuth via popup FB SDK, exchange + validate business access, auto-subscribe via Fase 4, token 60d persistido (sem rotação automática — plano futuro)
+- **Consolidação WhatsApp Cloud:** CONCLUÍDA — card Webhook unificado (config + status + ações Meta), remoção do System User Token separado (backend faz fallback accessToken), descrição atualizada e docs revistas. Corrige bug silencioso do Embedded Signup em que subscribe falhava por token faltando. Bonus: soft-delete real de empresas (deletedAt) e fix do AlertDialog de excluir.
 - **Busca Global:** CONCLUÍDA — command palette ⌘K, busca em 4 entidades (empresas/rotas/logs/usuários), deep-link tabs, tenant scoping, contexto React, AbortController + debounce 300ms
 - **Ajustes pós-Busca:** CONCLUÍDOS — slug salva webhookKey (bug fix), overview simplificado (remove Webhook Key), header/overview dinâmicos, deep-link via window.history.replaceState, copiar URL rota, ícone empresa nas tags, card Rotas flex-1 alinhado
 - **Tema cookie SSR:** CONCLUÍDO — next-themes removido, ThemeProvider custom via cookie SSR-aware, html class renderizada no primeiro byte (zero flicker), preferência sincronizada via login action, persistência DB via /api/user/theme
@@ -103,6 +104,7 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 
 ## Próximo Passo
 1. **Rotação automática de tokens 60d** — refresh pré-expiração + job BullMQ
+2. **Remoção da coluna `metaSystemUserToken`** — migration após uma janela de monitoramento (ex: 30 dias sem uso pelo fallback)
 
 ## Documentação
 - **Spec Fase 5:** `docs/superpowers/specs/2026-04-15-embedded-signup-meta-design.md`
