@@ -1,28 +1,15 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import {
-  Save,
-  Loader2,
-  Eye,
-  EyeOff,
-  Globe,
-  Copy,
-  Check,
-  Sparkles,
-  ChevronDown,
-  ExternalLink,
-} from "lucide-react";
+import { Save, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { upsertCredential, revealCredentialField } from "@/lib/actions/credential";
-import { updateCompany } from "@/lib/actions/company";
-import { generateVerifyToken } from "@/lib/actions/meta-subscription";
+import {
+  upsertCredential,
+  revealCredentialField,
+} from "@/lib/actions/credential";
 import { toast } from "sonner";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://roteadorwebhook.nexusai360.com";
 
 interface SensitiveInputProps {
   id: string;
@@ -39,20 +26,40 @@ interface SensitiveInputProps {
   className: string;
   disabled?: boolean;
   hideToggle?: boolean;
-  /** Para campos armazenados em texto puro — mascara no frontend */
   plaintextMasking?: boolean;
 }
 
-function SensitiveInput({ id, name, label, description, placeholder, defaultValue, required = true, visible, revealing, onToggle, inputRef, className, disabled = false, hideToggle = false, plaintextMasking = false }: SensitiveInputProps) {
-  // Para campos de texto puro, mascara no frontend: mostra apenas ultimos 5 chars
-  const displayValue = plaintextMasking && !visible && defaultValue
-    ? (defaultValue.length > 5 ? "••••••••" + defaultValue.slice(-5) : defaultValue)
-    : defaultValue;
+function SensitiveInput({
+  id,
+  name,
+  label,
+  description,
+  placeholder,
+  defaultValue,
+  required = true,
+  visible,
+  revealing,
+  onToggle,
+  inputRef,
+  className,
+  disabled = false,
+  hideToggle = false,
+  plaintextMasking = false,
+}: SensitiveInputProps) {
+  const displayValue =
+    plaintextMasking && !visible && defaultValue
+      ? defaultValue.length > 5
+        ? "••••••••" + defaultValue.slice(-5)
+        : defaultValue
+      : defaultValue;
 
   return (
     <div className="space-y-2">
       <div>
-        <Label htmlFor={id} className="text-sm font-medium text-foreground/80">
+        <Label
+          htmlFor={id}
+          className="text-sm font-medium text-foreground/80"
+        >
           {label} {required && <span className="text-red-400">*</span>}
         </Label>
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
@@ -61,10 +68,10 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
         {visible && displayValue && displayValue.length > 40 ? (
           <textarea
             ref={(el: HTMLTextAreaElement | null) => {
-              inputRef(el as any);
+              inputRef(el as unknown as HTMLInputElement);
               if (el) {
-                el.style.height = 'auto';
-                el.style.height = el.scrollHeight + 'px';
+                el.style.height = "auto";
+                el.style.height = el.scrollHeight + "px";
               }
             }}
             id={id}
@@ -73,11 +80,11 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
             required={required}
             disabled={disabled}
             rows={1}
-            style={{ height: 'auto', minHeight: '44px' }}
+            style={{ height: "auto", minHeight: "44px" }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = target.scrollHeight + 'px';
+              target.style.height = "auto";
+              target.style.height = target.scrollHeight + "px";
             }}
             className={`${className} ${hideToggle ? "" : "pr-10"} resize-none w-full overflow-hidden`}
           />
@@ -92,7 +99,7 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
             required={required}
             disabled={disabled}
             readOnly={!visible && !!defaultValue}
-            className={`${className} ${hideToggle ? "" : "pr-10"} ${(!visible && defaultValue) ? "font-mono tracking-wider" : ""}`}
+            className={`${className} ${hideToggle ? "" : "pr-10"} ${!visible && defaultValue ? "font-mono tracking-wider" : ""}`}
           />
         )}
         {!hideToggle && (
@@ -118,7 +125,6 @@ function SensitiveInput({ id, name, label, description, placeholder, defaultValu
 
 interface CredentialFormProps {
   companyId: string;
-  webhookKey: string;
   canEdit?: boolean;
   existingCredential?: {
     metaAppId: string;
@@ -127,55 +133,44 @@ interface CredentialFormProps {
     accessToken: string;
     phoneNumberId: string | null;
     wabaId: string | null;
-    metaSystemUserToken?: string | null;
   } | null;
   onSuccess?: () => void;
 }
 
-export function CredentialForm({ companyId, webhookKey, canEdit = true, existingCredential, onSuccess }: CredentialFormProps) {
+const inputClasses =
+  "h-11 bg-muted/50 border-border/50 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200 rounded-lg";
+
+export function CredentialForm({
+  companyId,
+  canEdit = true,
+  existingCredential,
+  onSuccess,
+}: CredentialFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [generatingToken, setGeneratingToken] = useState(false);
-
-  async function handleGenerateVerifyToken() {
-    setGeneratingToken(true);
-    try {
-      const result = await generateVerifyToken();
-      if (result.success && result.data) {
-        const input = inputRefs.current["verifyToken"];
-        if (input) input.value = result.data.token;
-        setVisible((prev) => ({ ...prev, verifyToken: true }));
-        setRevealedValues((prev) => ({ ...prev, verifyToken: result.data!.token }));
-        toast.success("Verify token gerado");
-      } else {
-        toast.error(result.error ?? "Erro ao gerar token");
-      }
-    } finally {
-      setGeneratingToken(false);
-    }
-  }
-
-  // Toggle visibility per field — revela valor descriptografado do servidor
   const [visible, setVisible] = useState<Record<string, boolean>>({});
-  const [revealedValues, setRevealedValues] = useState<Record<string, string>>({});
+  const [revealedValues, setRevealedValues] = useState<Record<string, string>>(
+    {},
+  );
   const [revealing, setRevealing] = useState<Record<string, boolean>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // Campos armazenados em texto puro (nao criptografados)
   const plaintextFields = ["metaAppId", "phoneNumberId", "wabaId"];
 
   async function toggleField(field: string) {
     if (visible[field]) {
-      // Esconder — restaurar valor mascarado original
       setVisible((prev) => ({ ...prev, [field]: false }));
       const input = inputRefs.current[field];
       if (input && existingCredential) {
-        const rawValue = existingCredential[field as keyof typeof existingCredential] as string;
+        const rawValue = existingCredential[
+          field as keyof typeof existingCredential
+        ] as string;
         if (plaintextFields.includes(field) && rawValue) {
-          // Para campos plaintext, restaura a mascara frontend
-          input.value = rawValue.length > 5 ? "••••••••" + rawValue.slice(-5) : rawValue;
+          input.value =
+            rawValue.length > 5
+              ? "••••••••" + rawValue.slice(-5)
+              : rawValue;
         } else if (rawValue && revealedValues[field]) {
           input.value = rawValue;
         }
@@ -183,9 +178,10 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
       return;
     }
 
-    // Campos de texto puro — ja temos o valor original, basta revelar
     if (plaintextFields.includes(field) && existingCredential) {
-      const rawValue = existingCredential[field as keyof typeof existingCredential] as string;
+      const rawValue = existingCredential[
+        field as keyof typeof existingCredential
+      ] as string;
       if (rawValue) {
         setVisible((prev) => ({ ...prev, [field]: true }));
         const input = inputRefs.current[field];
@@ -194,7 +190,6 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
       }
     }
 
-    // Se ja revelou antes, reutiliza
     if (revealedValues[field]) {
       setVisible((prev) => ({ ...prev, [field]: true }));
       const input = inputRefs.current[field];
@@ -202,13 +197,12 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
       return;
     }
 
-    // Revelar — buscar valor do servidor (apenas campos criptografados)
-    const encryptedFields = ["metaAppSecret", "verifyToken", "accessToken", "metaSystemUserToken"];
+    const encryptedFields = ["metaAppSecret", "accessToken"];
     if (existingCredential && encryptedFields.includes(field)) {
       setRevealing((prev) => ({ ...prev, [field]: true }));
       const result = await revealCredentialField(
         companyId,
-        field as "metaAppSecret" | "verifyToken" | "accessToken" | "metaSystemUserToken"
+        field as "metaAppSecret" | "accessToken",
       );
       setRevealing((prev) => ({ ...prev, [field]: false }));
 
@@ -221,24 +215,15 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
       }
     }
 
-    // Fallback — apenas toggle tipo do input (campo novo sem dados salvos)
     setVisible((prev) => ({ ...prev, [field]: true }));
   }
 
-  const webhookUrl = `${APP_URL}/api/webhook/${webhookKey}`;
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(webhookUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast.success("URL copiada");
-  }
-
-  /** Retorna o valor real de um campo plaintext — se esta mascarado, usa o original */
   function getPlaintextValue(formData: FormData, fieldName: string): string {
     const formValue = formData.get(fieldName) as string;
     if (formValue && formValue.startsWith("••••••••") && existingCredential) {
-      const original = existingCredential[fieldName as keyof typeof existingCredential] as string;
+      const original = existingCredential[
+        fieldName as keyof typeof existingCredential
+      ] as string;
       if (original) return original;
     }
     return formValue;
@@ -249,289 +234,128 @@ export function CredentialForm({ companyId, webhookKey, canEdit = true, existing
     setSuccess(false);
 
     startTransition(async () => {
-      const systemUserTokenRaw = (formData.get("metaSystemUserToken") as string) ?? "";
-      // Se mascarado e nao modificado, omite para preservar valor atual
-      const systemUserTokenOut =
-        systemUserTokenRaw && systemUserTokenRaw.includes("••")
-          ? undefined
-          : systemUserTokenRaw.length > 0
-            ? systemUserTokenRaw
-            : null;
-
       const result = await upsertCredential(companyId, {
         metaAppId: getPlaintextValue(formData, "metaAppId"),
         metaAppSecret: formData.get("metaAppSecret") as string,
-        verifyToken: formData.get("verifyToken") as string,
+        verifyToken: (existingCredential?.verifyToken ?? ""),
         accessToken: formData.get("accessToken") as string,
         phoneNumberId: getPlaintextValue(formData, "phoneNumberId"),
         wabaId: getPlaintextValue(formData, "wabaId"),
-        metaSystemUserToken: systemUserTokenOut,
       });
 
       if (result.success) {
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
+        toast.success("Credenciais salvas");
         onSuccess?.();
       } else {
         setError(result.error ?? "Erro desconhecido");
+        toast.error(result.error ?? "Erro desconhecido");
       }
     });
   }
-
-  // Slug state
-  const [slug, setSlug] = useState(webhookKey);
-
-  async function handleSaveWebhookConfig() {
-    startTransition(async () => {
-      if (slug.trim() && slug.trim() !== webhookKey) {
-        const slugResult = await updateCompany(companyId, { webhookKey: slug.trim() });
-        if (!slugResult.success) {
-          toast.error(slugResult.error || "Erro ao atualizar slug");
-          return;
-        }
-      }
-      toast.success("Configurações do webhook salvas");
-      onSuccess?.();
-    });
-  }
-
-  const inputClasses = "h-11 bg-muted/50 border-border/50 text-foreground placeholder:text-muted-foreground/60 focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all duration-200 rounded-lg";
 
   return (
-    <form action={handleSubmit} className="space-y-6">
-      {/* Configurações do Webhook */}
-      <Card className="bg-card border border-border rounded-xl">
-        <CardContent className="py-4 px-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-violet-400" />
-            <h3 className="text-sm font-medium text-foreground">Configurações do Webhook</h3>
-          </div>
+    <form action={handleSubmit} className="space-y-4">
+      <SensitiveInput
+        id="metaAppId"
+        name="metaAppId"
+        label="Meta App ID"
+        description="Identificador do aplicativo no painel Meta for Developers"
+        placeholder="123456789"
+        defaultValue={existingCredential?.metaAppId}
+        visible={!!visible["metaAppId"]}
+        revealing={!!revealing["metaAppId"]}
+        onToggle={() => toggleField("metaAppId")}
+        inputRef={(el) => {
+          inputRefs.current["metaAppId"] = el;
+        }}
+        className={inputClasses}
+        disabled={!canEdit}
+        hideToggle={!canEdit}
+        plaintextMasking={!!existingCredential?.metaAppId}
+      />
 
-          {/* URL display com botao de copiar */}
-          <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-2.5">
-            <code className="text-sm text-muted-foreground flex-1 truncate">
-              {webhookUrl}
-            </code>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="text-muted-foreground hover:text-foreground transition-colors shrink-0 cursor-pointer"
-            >
-              {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-            </button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Configure esta URL no painel do Meta App como Webhook Callback URL.
-          </p>
+      <SensitiveInput
+        id="metaAppSecret"
+        name="metaAppSecret"
+        label="Meta App Secret"
+        description="Chave secreta do aplicativo — não compartilhe"
+        placeholder="Seu app secret"
+        defaultValue={existingCredential?.metaAppSecret}
+        visible={!!visible["metaAppSecret"]}
+        revealing={!!revealing["metaAppSecret"]}
+        onToggle={() => toggleField("metaAppSecret")}
+        inputRef={(el) => {
+          inputRefs.current["metaAppSecret"] = el;
+        }}
+        className={inputClasses}
+        disabled={!canEdit}
+        hideToggle={!canEdit}
+      />
 
-          {/* Slug da empresa */}
-          <div className="pt-3 border-t border-border space-y-2">
-            <div>
-              <h4 className="text-sm font-medium text-foreground">
-                Slug da Empresa <span className="text-red-400">*</span>
-              </h4>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Identificador único usado na URL do webhook. Ex: /api/webhook/minha-empresa
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground font-mono">/</span>
-              <Input
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                placeholder="minha-empresa"
-                disabled={!canEdit}
-                className={inputClasses}
-              />
-            </div>
-          </div>
+      <SensitiveInput
+        id="accessToken"
+        name="accessToken"
+        label="Token de Acesso"
+        description="Token do portfólio empresarial da Meta com escopos whatsapp_business_management e whatsapp_business_messaging. O Embedded Signup cuida disso automaticamente."
+        placeholder="EAAxxxxxxxx"
+        defaultValue={existingCredential?.accessToken}
+        visible={!!visible["accessToken"]}
+        revealing={!!revealing["accessToken"]}
+        onToggle={() => toggleField("accessToken")}
+        inputRef={(el) => {
+          inputRefs.current["accessToken"] = el;
+        }}
+        className={inputClasses}
+        disabled={!canEdit}
+        hideToggle={!canEdit}
+      />
 
-          {/* Token de Verificação — dentro do card de webhook */}
-          <div className="pt-3 border-t border-border space-y-2">
-            <SensitiveInput
-              id="verifyToken"
-              name="verifyToken"
-              label="Token de Verificação"
-              description="Token usado pela Meta para validar o endpoint do webhook"
-              placeholder="Token de verificação para webhook"
-              defaultValue={existingCredential?.verifyToken}
-              visible={!!visible["verifyToken"]}
-              revealing={!!revealing["verifyToken"]}
-              onToggle={() => toggleField("verifyToken")}
-              inputRef={(el) => { inputRefs.current["verifyToken"] = el; }}
-              className={inputClasses}
-              disabled={!canEdit}
-              hideToggle={!canEdit}
-            />
-            {canEdit && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={generatingToken}
-                onClick={handleGenerateVerifyToken}
-                className="gap-2 cursor-pointer"
-              >
-                {generatingToken ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
-                )}
-                Gerar
-              </Button>
-            )}
-          </div>
-
-          {canEdit && (
-            <div className="pt-3 border-t border-border">
-              <Button
-                type="button"
-                onClick={handleSaveWebhookConfig}
-                disabled={isPending}
-                className="bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transition-all duration-200"
-              >
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Salvar Configurações
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Credenciais */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <SensitiveInput
-          id="metaAppId"
-          name="metaAppId"
-          label="Meta App ID"
-          description="Identificador do aplicativo no painel Meta for Developers"
-          placeholder="123456789"
-          defaultValue={existingCredential?.metaAppId}
-          visible={!!visible["metaAppId"]}
-          revealing={!!revealing["metaAppId"]}
-          onToggle={() => toggleField("metaAppId")}
-          inputRef={(el) => { inputRefs.current["metaAppId"] = el; }}
+          id="phoneNumberId"
+          name="phoneNumberId"
+          label="Phone Number ID"
+          description="ID do número de telefone na API do WhatsApp Cloud"
+          placeholder="109876543"
+          defaultValue={existingCredential?.phoneNumberId ?? ""}
+          visible={!!visible["phoneNumberId"]}
+          revealing={!!revealing["phoneNumberId"]}
+          onToggle={() => toggleField("phoneNumberId")}
+          inputRef={(el) => {
+            inputRefs.current["phoneNumberId"] = el;
+          }}
           className={inputClasses}
           disabled={!canEdit}
           hideToggle={!canEdit}
-          plaintextMasking={!!existingCredential?.metaAppId}
+          plaintextMasking={!!existingCredential?.phoneNumberId}
         />
 
         <SensitiveInput
-          id="metaAppSecret"
-          name="metaAppSecret"
-          label="Meta App Secret"
-          description="Chave secreta do aplicativo — não compartilhe"
-          placeholder="Seu app secret"
-          defaultValue={existingCredential?.metaAppSecret}
-          visible={!!visible["metaAppSecret"]}
-          revealing={!!revealing["metaAppSecret"]}
-          onToggle={() => toggleField("metaAppSecret")}
-          inputRef={(el) => { inputRefs.current["metaAppSecret"] = el; }}
+          id="wabaId"
+          name="wabaId"
+          label="WABA ID"
+          description="ID da conta comercial do WhatsApp (WhatsApp Business Account)"
+          placeholder="112233445566"
+          defaultValue={existingCredential?.wabaId ?? ""}
+          visible={!!visible["wabaId"]}
+          revealing={!!revealing["wabaId"]}
+          onToggle={() => toggleField("wabaId")}
+          inputRef={(el) => {
+            inputRefs.current["wabaId"] = el;
+          }}
           className={inputClasses}
           disabled={!canEdit}
           hideToggle={!canEdit}
+          plaintextMasking={!!existingCredential?.wabaId}
         />
-
-        <SensitiveInput
-          id="accessToken"
-          name="accessToken"
-          label="Token de Acesso"
-          description="Token do portfólio empresarial da Meta. Permite o envio de mensagens pelo WhatsApp Cloud e acesso às configurações da conta Business."
-          placeholder="EAAxxxxxxxx"
-          defaultValue={existingCredential?.accessToken}
-          visible={!!visible["accessToken"]}
-          revealing={!!revealing["accessToken"]}
-          onToggle={() => toggleField("accessToken")}
-          inputRef={(el) => { inputRefs.current["accessToken"] = el; }}
-          className={inputClasses}
-          disabled={!canEdit}
-          hideToggle={!canEdit}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SensitiveInput
-            id="phoneNumberId"
-            name="phoneNumberId"
-            label="Phone Number ID"
-            description="ID do número de telefone na API do WhatsApp Cloud"
-            placeholder="109876543"
-            defaultValue={existingCredential?.phoneNumberId ?? ""}
-            visible={!!visible["phoneNumberId"]}
-            revealing={!!revealing["phoneNumberId"]}
-            onToggle={() => toggleField("phoneNumberId")}
-            inputRef={(el) => { inputRefs.current["phoneNumberId"] = el; }}
-            className={inputClasses}
-            disabled={!canEdit}
-            hideToggle={!canEdit}
-            plaintextMasking={!!existingCredential?.phoneNumberId}
-          />
-
-          <SensitiveInput
-            id="wabaId"
-            name="wabaId"
-            label="WABA ID"
-            description="ID da conta comercial do WhatsApp (WhatsApp Business Account)"
-            placeholder="112233445566"
-            defaultValue={existingCredential?.wabaId ?? ""}
-            visible={!!visible["wabaId"]}
-            revealing={!!revealing["wabaId"]}
-            onToggle={() => toggleField("wabaId")}
-            inputRef={(el) => { inputRefs.current["wabaId"] = el; }}
-            className={inputClasses}
-            disabled={!canEdit}
-            hideToggle={!canEdit}
-            plaintextMasking={!!existingCredential?.wabaId}
-          />
-        </div>
       </div>
 
-      {/* Meta System User Token + docs */}
-      <Card className="bg-card border border-border rounded-xl">
-        <CardContent className="py-4 px-5 space-y-3">
-          <SensitiveInput
-            id="metaSystemUserToken"
-            name="metaSystemUserToken"
-            label="Meta System User Token"
-            description="Token de System User com escopos whatsapp_business_management e whatsapp_business_messaging. Necessário para inscrever webhook automaticamente na Meta."
-            placeholder="EAAxxxxxxxx"
-            defaultValue={existingCredential?.metaSystemUserToken ?? ""}
-            required={false}
-            visible={!!visible["metaSystemUserToken"]}
-            revealing={!!revealing["metaSystemUserToken"]}
-            onToggle={() => toggleField("metaSystemUserToken")}
-            inputRef={(el) => { inputRefs.current["metaSystemUserToken"] = el; }}
-            className={inputClasses}
-            disabled={!canEdit}
-            hideToggle={!canEdit}
-          />
-          <details className="group rounded-lg border border-border/60 bg-muted/30">
-            <summary className="flex items-center justify-between gap-2 cursor-pointer list-none px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground">
-              <span>Como obter System User Token</span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="px-3 pb-3 pt-1 space-y-2 text-xs text-muted-foreground">
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Acesse developers.facebook.com → apps → selecione seu app.</li>
-                <li>Business Settings → System Users → Add.</li>
-                <li>Gere token com permissões <code className="font-mono">whatsapp_business_management</code> e <code className="font-mono">whatsapp_business_messaging</code>.</li>
-                <li>Copie e cole no campo acima.</li>
-              </ol>
-              <a
-                href="https://developers.facebook.com/docs/whatsapp/business-management-api/get-started"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-violet-500 hover:text-violet-600 dark:text-violet-400 dark:hover:text-violet-300"
-              >
-                Documentação oficial <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-          </details>
-        </CardContent>
-      </Card>
-
       {error && <p className="text-sm text-red-400">{error}</p>}
-      {success && <p className="text-sm text-emerald-400">Credenciais salvas com sucesso!</p>}
+      {success && (
+        <p className="text-sm text-emerald-400">Credenciais salvas com sucesso!</p>
+      )}
 
       {canEdit && (
         <Button
