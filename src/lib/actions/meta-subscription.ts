@@ -21,6 +21,14 @@ const DEFAULT_FIELDS = (
   .map((s) => s.trim())
   .filter(Boolean);
 
+function resolveMetaToken(cred: {
+  metaSystemUserToken: string | null;
+  accessToken: string;
+}): string | null {
+  const source = cred.metaSystemUserToken ?? (cred.accessToken || null);
+  return source ? decrypt(source) : null;
+}
+
 function validateCallbackBase(): string | null {
   const url = process.env.NEXTAUTH_URL;
   if (!url) return "NEXTAUTH_URL ausente";
@@ -131,7 +139,7 @@ export async function subscribeWebhookUnlocked(
   if (!cred.metaAppId) missing.push("metaAppId");
   if (!cred.wabaId) missing.push("wabaId");
   if (!cred.verifyToken) missing.push("verifyToken");
-  if (!cred.metaSystemUserToken) missing.push("metaSystemUserToken");
+  if (!cred.accessToken && !cred.metaSystemUserToken) missing.push("accessToken");
   if (missing.length) {
     return { success: false, error: `Campos faltando: ${missing.join(", ")}` };
   }
@@ -141,7 +149,8 @@ export async function subscribeWebhookUnlocked(
 
   const callbackUrl = `${process.env.NEXTAUTH_URL}/api/webhook/${company.webhookKey}`;
   const verifyToken = decrypt(cred.verifyToken!);
-  const token = decrypt(cred.metaSystemUserToken!);
+  const token = resolveMetaToken(cred);
+  if (!token) return { success: false, error: "Token indisponível" };
 
   await prisma.companyCredential.update({
     where: { companyId },

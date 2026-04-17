@@ -164,15 +164,49 @@ describe("subscribeWebhook", () => {
     expect(rateLimit.releaseMetaLock).toHaveBeenCalledWith(VALID_UUID);
   });
 
-  it("sinaliza missing fields se metaSystemUserToken ausente", async () => {
+  it("sinaliza missing fields se accessToken e metaSystemUserToken ambos ausentes", async () => {
     (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue({
       ...anyCred,
+      accessToken: "",
       metaSystemUserToken: null,
     });
     const r = await subscribeWebhook(VALID_UUID);
     expect(r.success).toBe(false);
-    expect(r.error).toContain("metaSystemUserToken");
+    expect(r.error).toContain("accessToken");
     expect(rateLimit.releaseMetaLock).toHaveBeenCalledWith(VALID_UUID);
+  });
+
+  it("aceita accessToken se metaSystemUserToken ausente", async () => {
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue({
+      ...anyCred,
+      metaSystemUserToken: null,
+    });
+    (graphApi.subscribeFields as jest.Mock).mockResolvedValue(undefined);
+    (graphApi.subscribeApp as jest.Mock).mockResolvedValue(undefined);
+
+    const r = await subscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(true);
+
+    expect(graphApi.subscribeFields).toHaveBeenCalledWith(
+      "APP",
+      expect.any(Object),
+      "AT",
+    );
+    expect(graphApi.subscribeApp).toHaveBeenCalledWith("WABA", "AT");
+  });
+
+  it("prioriza metaSystemUserToken quando ambos presentes", async () => {
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue({
+      ...anyCred,
+      metaSystemUserToken: "enc:SUT",
+      accessToken: "enc:AT",
+    });
+    (graphApi.subscribeFields as jest.Mock).mockResolvedValue(undefined);
+    (graphApi.subscribeApp as jest.Mock).mockResolvedValue(undefined);
+
+    await subscribeWebhook(VALID_UUID);
+
+    expect(graphApi.subscribeApp).toHaveBeenCalledWith("WABA", "SUT");
   });
 
   it("happy path: pending -> active, notify info, realtime 2x, lock liberado", async () => {
