@@ -103,8 +103,10 @@ Todas as Server Actions ficam em `src/lib/actions/`:
 - Aba Membros: apenas super admin e admin
 
 ## Próximo Passo
-1. **Rotação automática de tokens 60d** — refresh pré-expiração + job BullMQ
-2. **Remoção da coluna `metaSystemUserToken`** — migration após uma janela de monitoramento (ex: 30 dias sem uso pelo fallback)
+1. **Remoção da coluna `metaSystemUserToken`** — migration após uma janela de monitoramento (ex: 30 dias sem uso pelo fallback)
+
+## Arquivado (reavaliar depois)
+- **Rotação automática de tokens 60d** — refresh pré-expiração + job BullMQ. Pausado até reavaliação.
 
 ## Documentação
 - **Spec Fase 5:** `docs/superpowers/specs/2026-04-15-embedded-signup-meta-design.md`
