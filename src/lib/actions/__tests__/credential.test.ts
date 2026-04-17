@@ -165,8 +165,6 @@ describe("credential actions — metaSystemUserToken", () => {
     expect(result.success).toBe(true);
 
     const data = result.data as Record<string, unknown>;
-    expect(data.metaSystemUserToken).not.toBe("supersecrettoken123");
-    expect(data.metaSystemUserToken).toMatch(/••••••••/);
 
     expect(data.meta).toEqual({
       status: "active",
@@ -199,7 +197,6 @@ describe("credential actions — metaSystemUserToken", () => {
 
     const result = await getCredential(companyId);
     const data = result.data as Record<string, unknown>;
-    expect(data.metaSystemUserToken).toBeNull();
     expect((data.meta as Record<string, unknown>).subscribedAt).toBeNull();
   });
 

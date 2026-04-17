@@ -8,9 +8,9 @@ import { getCredential } from "@/lib/actions/credential";
 import { CredentialForm } from "./credential-form";
 import { EmbeddedSignupButton } from "./embedded-signup-button";
 import {
-  MetaSubscriptionPanel,
+  WebhookCard,
   type MetaSubscriptionSnapshot,
-} from "./meta-subscription-panel";
+} from "./webhook-card";
 
 interface MaskedCredential {
   metaAppId: string;
@@ -19,7 +19,7 @@ interface MaskedCredential {
   accessToken: string;
   phoneNumberId: string | null;
   wabaId: string | null;
-  metaSystemUserToken: string | null;
+  connectedViaEmbeddedSignup: boolean;
 }
 
 interface CredentialsTabProps {
@@ -29,7 +29,12 @@ interface CredentialsTabProps {
   hasEmbeddedSignup?: boolean;
 }
 
-export function CredentialsTab({ companyId, webhookKey, canEdit = true, hasEmbeddedSignup = false }: CredentialsTabProps) {
+export function CredentialsTab({
+  companyId,
+  webhookKey,
+  canEdit = true,
+  hasEmbeddedSignup = false,
+}: CredentialsTabProps) {
   const router = useRouter();
   const [credential, setCredential] = useState<MaskedCredential | null>(null);
   const [metaSnapshot, setMetaSnapshot] = useState<MetaSubscriptionSnapshot>({
@@ -40,42 +45,45 @@ export function CredentialsTab({ companyId, webhookKey, canEdit = true, hasEmbed
     fields: [],
   });
   const [loaded, setLoaded] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     startTransition(async () => {
       const result = await getCredential(companyId);
       if (result.success && result.data) {
-        const data = result.data as any;
+        const data = result.data as Record<string, unknown>;
         setCredential({
-          metaAppId: data.metaAppId,
-          metaAppSecret: data.metaAppSecret,
-          verifyToken: data.verifyToken,
-          accessToken: data.accessToken,
-          phoneNumberId: data.phoneNumberId,
-          wabaId: data.wabaId,
-          metaSystemUserToken: data.metaSystemUserToken ?? null,
+          metaAppId: (data.metaAppId as string) ?? "",
+          metaAppSecret: (data.metaAppSecret as string) ?? "",
+          verifyToken: (data.verifyToken as string) ?? "",
+          accessToken: (data.accessToken as string) ?? "",
+          phoneNumberId: (data.phoneNumberId as string | null) ?? null,
+          wabaId: (data.wabaId as string | null) ?? null,
+          connectedViaEmbeddedSignup:
+            (data.connectedViaEmbeddedSignup as boolean) ?? false,
         });
-        if (data.meta) {
+        const meta = data.meta as
+          | {
+              status: MetaSubscriptionSnapshot["status"];
+              subscribedAt: string | null;
+              error: string | null;
+              callbackUrl: string | null;
+              fields: string[];
+            }
+          | undefined;
+        if (meta) {
           setMetaSnapshot({
-            status: data.meta.status ?? "not_configured",
-            subscribedAt: data.meta.subscribedAt ?? null,
-            error: data.meta.error ?? null,
-            callbackUrl: data.meta.callbackUrl ?? null,
-            fields: data.meta.fields ?? [],
+            status: meta.status ?? "not_configured",
+            subscribedAt: meta.subscribedAt ?? null,
+            error: meta.error ?? null,
+            callbackUrl: meta.callbackUrl ?? null,
+            fields: meta.fields ?? [],
           });
         }
       }
       setLoaded(true);
     });
   }, [companyId]);
-
-  // Prereqs p/ subscribe: metaAppId, wabaId, verifyToken (sempre presente se form preenchido), metaSystemUserToken
-  const prereqsMissing: string[] = [];
-  if (!credential?.metaAppId) prereqsMissing.push("metaAppId");
-  if (!credential?.wabaId) prereqsMissing.push("wabaId");
-  if (!credential?.verifyToken) prereqsMissing.push("verifyToken");
-  if (!credential?.metaSystemUserToken) prereqsMissing.push("metaSystemUserToken");
 
   if (!loaded) {
     return (
@@ -87,7 +95,6 @@ export function CredentialsTab({ companyId, webhookKey, canEdit = true, hasEmbed
 
   return (
     <div className="space-y-6">
-      {/* Embedded Signup — fluxo automático */}
       {hasEmbeddedSignup && canEdit && (
         <Card className="bg-violet-500/5 border border-violet-500/20 rounded-xl">
           <CardContent className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
@@ -107,7 +114,6 @@ export function CredentialsTab({ companyId, webhookKey, canEdit = true, hasEmbed
         </Card>
       )}
 
-      {/* Aviso de seguranca */}
       <Card className="bg-amber-500/5 border border-amber-500/20 rounded-xl">
         <CardContent className="flex items-start gap-3 pt-4">
           <ShieldCheck className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
@@ -122,27 +128,24 @@ export function CredentialsTab({ companyId, webhookKey, canEdit = true, hasEmbed
         </CardContent>
       </Card>
 
-      {hasEmbeddedSignup && canEdit && (
-        <p className="text-xs text-muted-foreground px-1">
-          Prefira o fluxo automático acima — os campos abaixo serão preenchidos automaticamente após a conexão.
-        </p>
-      )}
-
-      {/* Formulario unificado */}
-      <CredentialForm
+      <WebhookCard
         companyId={companyId}
         webhookKey={webhookKey}
+        verifyTokenMasked={credential?.verifyToken ?? ""}
+        metaAppId={credential?.metaAppId ?? ""}
+        wabaId={credential?.wabaId ?? null}
+        canManage={canEdit}
+        connectedViaEmbeddedSignup={
+          credential?.connectedViaEmbeddedSignup ?? false
+        }
+        initial={metaSnapshot}
+      />
+
+      <CredentialForm
+        companyId={companyId}
         canEdit={canEdit}
         existingCredential={credential}
         onSuccess={() => router.refresh()}
-      />
-
-      {/* Painel de inscrição Meta */}
-      <MetaSubscriptionPanel
-        companyId={companyId}
-        initial={metaSnapshot}
-        canManage={canEdit}
-        prereqsMissing={prereqsMissing}
       />
     </div>
   );

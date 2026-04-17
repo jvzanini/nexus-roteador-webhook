@@ -65,11 +65,9 @@ export async function getCredential(
       metaAppSecret: mask(decrypt(credential.metaAppSecret)),
       verifyToken: mask(decrypt(credential.verifyToken)),
       accessToken: mask(decrypt(credential.accessToken)),
-      metaSystemUserToken: credential.metaSystemUserToken
-        ? mask(decrypt(credential.metaSystemUserToken))
-        : null,
       phoneNumberId: credential.phoneNumberId,
       wabaId: credential.wabaId,
+      connectedViaEmbeddedSignup: credential.connectedViaEmbeddedSignup,
       createdAt: credential.createdAt,
       updatedAt: credential.updatedAt,
     };
