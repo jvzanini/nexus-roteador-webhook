@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { decrypt } from "@/lib/encryption";
+import { decrypt, encrypt } from "@/lib/encryption";
 import * as graphApi from "@/lib/meta/graph-api";
 import { logAudit } from "@/lib/audit";
 import { createNotification } from "@/lib/notifications";
@@ -402,4 +402,40 @@ export async function unsubscribeWebhook(companyId: string): Promise<ActionResul
   } finally {
     await releaseMetaLock(companyId);
   }
+}
+
+export async function updateVerifyToken(
+  companyId: string,
+  token: string,
+): Promise<ActionResult> {
+  const parsed = companyIdSchema.safeParse({ companyId });
+  if (!parsed.success) return { success: false, error: "Input inválido" };
+  if (!token || token.length < 1 || token.length > 500) {
+    return { success: false, error: "Verify token inválido" };
+  }
+
+  const auth = await authorize(companyId);
+  if (!auth.ok) return { success: false, error: auth.error };
+
+  const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
+  if (!cred) return { success: false, error: "Credenciais não cadastradas" };
+
+  await prisma.companyCredential.update({
+    where: { companyId },
+    data: { verifyToken: encrypt(token) },
+  });
+
+  void logAudit({
+    actorType: "user",
+    actorId: auth.user.id,
+    actorLabel: auth.user.email ?? auth.user.id,
+    companyId,
+    action: "credential.update_verify_token",
+    resourceType: "CompanyCredential",
+    resourceId: cred.id,
+    details: {},
+  });
+  void publishRealtimeEvent({ type: "credential:updated", companyId });
+
+  return { success: true };
 }

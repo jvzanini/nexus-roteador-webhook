@@ -29,16 +29,14 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRealtime } from "@/hooks/use-realtime";
 import { updateCompany } from "@/lib/actions/company";
-import {
-  upsertCredential,
-  revealCredentialField,
-} from "@/lib/actions/credential";
+import { revealCredentialField } from "@/lib/actions/credential";
 import {
   testMetaConnection,
   subscribeWebhook,
   unsubscribeWebhook,
   verifyMetaSubscription,
   generateVerifyToken,
+  updateVerifyToken,
 } from "@/lib/actions/meta-subscription";
 
 const APP_URL =
@@ -63,7 +61,6 @@ interface Props {
   companyId: string;
   webhookKey: string;
   verifyTokenMasked: string;
-  accessTokenMasked: string;
   metaAppId: string;
   wabaId: string | null;
   canManage: boolean;
@@ -144,7 +141,6 @@ export function WebhookCard({
   companyId,
   webhookKey,
   verifyTokenMasked,
-  accessTokenMasked,
   metaAppId,
   wabaId,
   canManage,
@@ -232,14 +228,7 @@ export function WebhookCard({
         }
       }
       if (verifyValue && !verifyValue.includes("••")) {
-        const r = await upsertCredential(companyId, {
-          metaAppId,
-          metaAppSecret: "PRESERVE",
-          verifyToken: verifyValue,
-          accessToken: "PRESERVE",
-          phoneNumberId: "PRESERVE",
-          wabaId: wabaId ?? "PRESERVE",
-        } as never);
+        const r = await updateVerifyToken(companyId, verifyValue);
         if (!r.success) {
           toast.error(r.error ?? "Erro ao salvar verify token");
           return;
