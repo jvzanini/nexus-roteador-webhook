@@ -261,11 +261,12 @@ export async function verifyMetaSubscriptionCore(
 
   const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
   if (!cred) return { success: false, error: "Credenciais não cadastradas" };
-  if (!cred.metaSystemUserToken || !cred.wabaId || !cred.metaAppId) {
+  if (!cred.wabaId || !cred.metaAppId || (!cred.accessToken && !cred.metaSystemUserToken)) {
     return { success: false, error: "Campos faltando para verificar" };
   }
 
-  const token = decrypt(cred.metaSystemUserToken);
+  const token = resolveMetaToken(cred);
+  if (!token) return { success: false, error: "Token indisponível" };
   try {
     const [apps, subs] = await Promise.all([
       graphApi.listSubscribedApps(cred.wabaId, token),
@@ -340,8 +341,8 @@ export async function unsubscribeWebhookUnlocked(
   if (!cred) return { success: false, error: "Credenciais não cadastradas" };
 
   const errors: string[] = [];
-  if (cred.metaSystemUserToken && cred.wabaId) {
-    const token = decrypt(cred.metaSystemUserToken);
+  const token = resolveMetaToken(cred);
+  if (token && cred.wabaId) {
     try {
       await graphApi.unsubscribeApp(cred.wabaId, token);
     } catch (e) {

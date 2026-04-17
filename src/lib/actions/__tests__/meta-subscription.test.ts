@@ -299,6 +299,18 @@ describe("unsubscribeWebhook", () => {
     const r = await unsubscribeWebhook(VALID_UUID);
     expect(r.success).toBe(false);
   });
+
+  it("usa accessToken se metaSystemUserToken ausente", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue({
+      ...anyCred,
+      metaSystemUserToken: null,
+    });
+    (graphApi.unsubscribeApp as jest.Mock).mockResolvedValue(undefined);
+    const r = await unsubscribeWebhook(VALID_UUID);
+    expect(r.success).toBe(true);
+    expect(graphApi.unsubscribeApp).toHaveBeenCalledWith("WABA", "AT");
+  });
 });
 
 describe("subscribeWebhookUnlocked (actor system)", () => {
@@ -407,6 +419,23 @@ describe("verifyMetaSubscription", () => {
     }]);
     const r = await verifyMetaSubscriptionCore(VALID_UUID, { actor: "system" });
     expect(r.success).toBe(true);
+  });
+
+  it("usa accessToken quando metaSystemUserToken ausente", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({ id: "u", isSuperAdmin: true, email: "s@x.com" });
+    (prisma.companyCredential.findUnique as jest.Mock).mockResolvedValue({
+      ...baseCred,
+      metaSystemUserToken: null,
+    });
+    (graphApi.listSubscribedApps as jest.Mock).mockResolvedValue([{ appId: "APP" }]);
+    (graphApi.listSubscriptions as jest.Mock).mockResolvedValue([{
+      object: "whatsapp_business_account",
+      callbackUrl: "https://roteador.example.com/api/webhook/abc",
+      fields: ["messages"],
+    }]);
+    const r = await verifyMetaSubscription(VALID_UUID);
+    expect(r.success).toBe(true);
+    expect(graphApi.listSubscribedApps).toHaveBeenCalledWith("WABA", "AT");
   });
 });
 
