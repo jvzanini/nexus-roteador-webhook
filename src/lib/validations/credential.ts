@@ -9,12 +9,12 @@ export const upsertCredentialSchema = z.object({
   metaAppSecret: z
     .string()
     .min(1, "Meta App Secret e obrigatorio")
-    .max(200, "Meta App Secret deve ter no maximo 200 caracteres")
+    .max(500, "Meta App Secret deve ter no maximo 500 caracteres")
     .trim(),
   verifyToken: z
     .string()
     .min(1, "Verify Token e obrigatorio")
-    .max(200, "Verify Token deve ter no maximo 200 caracteres")
+    .max(500, "Verify Token deve ter no maximo 500 caracteres")
     .trim(),
   accessToken: z
     .string()

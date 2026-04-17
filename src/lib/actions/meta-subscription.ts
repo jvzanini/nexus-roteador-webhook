@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { decrypt } from "@/lib/encryption";
+import { decrypt, encrypt } from "@/lib/encryption";
 import * as graphApi from "@/lib/meta/graph-api";
 import { logAudit } from "@/lib/audit";
 import { createNotification } from "@/lib/notifications";
@@ -20,6 +20,14 @@ const DEFAULT_FIELDS = (
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+
+function resolveMetaToken(cred: {
+  metaSystemUserToken: string | null;
+  accessToken: string;
+}): string | null {
+  const source = cred.metaSystemUserToken ?? (cred.accessToken || null);
+  return source ? decrypt(source) : null;
+}
 
 function validateCallbackBase(): string | null {
   const url = process.env.NEXTAUTH_URL;
@@ -131,7 +139,7 @@ export async function subscribeWebhookUnlocked(
   if (!cred.metaAppId) missing.push("metaAppId");
   if (!cred.wabaId) missing.push("wabaId");
   if (!cred.verifyToken) missing.push("verifyToken");
-  if (!cred.metaSystemUserToken) missing.push("metaSystemUserToken");
+  if (!cred.accessToken && !cred.metaSystemUserToken) missing.push("accessToken");
   if (missing.length) {
     return { success: false, error: `Campos faltando: ${missing.join(", ")}` };
   }
@@ -141,7 +149,8 @@ export async function subscribeWebhookUnlocked(
 
   const callbackUrl = `${process.env.NEXTAUTH_URL}/api/webhook/${company.webhookKey}`;
   const verifyToken = decrypt(cred.verifyToken!);
-  const token = decrypt(cred.metaSystemUserToken!);
+  const token = resolveMetaToken(cred);
+  if (!token) return { success: false, error: "Token indisponível" };
 
   await prisma.companyCredential.update({
     where: { companyId },
@@ -252,11 +261,12 @@ export async function verifyMetaSubscriptionCore(
 
   const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
   if (!cred) return { success: false, error: "Credenciais não cadastradas" };
-  if (!cred.metaSystemUserToken || !cred.wabaId || !cred.metaAppId) {
+  if (!cred.wabaId || !cred.metaAppId || (!cred.accessToken && !cred.metaSystemUserToken)) {
     return { success: false, error: "Campos faltando para verificar" };
   }
 
-  const token = decrypt(cred.metaSystemUserToken);
+  const token = resolveMetaToken(cred);
+  if (!token) return { success: false, error: "Token indisponível" };
   try {
     const [apps, subs] = await Promise.all([
       graphApi.listSubscribedApps(cred.wabaId, token),
@@ -331,8 +341,8 @@ export async function unsubscribeWebhookUnlocked(
   if (!cred) return { success: false, error: "Credenciais não cadastradas" };
 
   const errors: string[] = [];
-  if (cred.metaSystemUserToken && cred.wabaId) {
-    const token = decrypt(cred.metaSystemUserToken);
+  const token = resolveMetaToken(cred);
+  if (token && cred.wabaId) {
     try {
       await graphApi.unsubscribeApp(cred.wabaId, token);
     } catch (e) {
@@ -392,4 +402,40 @@ export async function unsubscribeWebhook(companyId: string): Promise<ActionResul
   } finally {
     await releaseMetaLock(companyId);
   }
+}
+
+export async function updateVerifyToken(
+  companyId: string,
+  token: string,
+): Promise<ActionResult> {
+  const parsed = companyIdSchema.safeParse({ companyId });
+  if (!parsed.success) return { success: false, error: "Input inválido" };
+  if (!token || token.length < 1 || token.length > 500) {
+    return { success: false, error: "Verify token inválido" };
+  }
+
+  const auth = await authorize(companyId);
+  if (!auth.ok) return { success: false, error: auth.error };
+
+  const cred = await prisma.companyCredential.findUnique({ where: { companyId } });
+  if (!cred) return { success: false, error: "Credenciais não cadastradas" };
+
+  await prisma.companyCredential.update({
+    where: { companyId },
+    data: { verifyToken: encrypt(token) },
+  });
+
+  void logAudit({
+    actorType: "user",
+    actorId: auth.user.id,
+    actorLabel: auth.user.email ?? auth.user.id,
+    companyId,
+    action: "credential.update_verify_token",
+    resourceType: "CompanyCredential",
+    resourceId: cred.id,
+    details: {},
+  });
+  void publishRealtimeEvent({ type: "credential:updated", companyId });
+
+  return { success: true };
 }

@@ -32,7 +32,7 @@ export async function getCompanies(options?: {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: "Nao autenticado" };
 
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { deletedAt: null };
 
     // Tenant scoping — quando nao for super_admin, filtrar por membership ativa
     // Usuários vêem todas as empresas onde têm membership, incluindo inativas
@@ -94,8 +94,8 @@ export async function getCompanyById(
       },
     });
 
-    if (!company) {
-      return { success: false, error: "Empresa nao encontrada" };
+    if (!company || company.deletedAt) {
+      return { success: false, error: "Empresa não encontrada" };
     }
 
     // Verificar acesso — super_admin bypassa, demais precisam de membership
@@ -353,7 +353,8 @@ export async function updateCompany(
 }
 
 /**
- * Exclui uma empresa e todos os dados relacionados em cascata.
+ * Soft-deleta uma empresa: marca deletedAt e isActive=false.
+ * Dados relacionados permanecem no banco para auditoria.
  * Apenas super_admin pode excluir.
  */
 export async function deleteCompany(
@@ -367,46 +368,32 @@ export async function deleteCompany(
       return { success: false, error: "Apenas Super Admin pode excluir empresas" };
     }
 
-    // Best-effort: tenta desinscrever webhook na Meta antes do delete final
+    const existing = await prisma.company.findUnique({ where: { id: companyId } });
+    if (!existing || existing.deletedAt) {
+      return { success: false, error: "Empresa não encontrada" };
+    }
+
+    // Best-effort: tenta desinscrever webhook na Meta antes do soft-delete
     try {
       await unsubscribeWebhook(companyId);
     } catch (err) {
       console.warn("[deleteCompany] unsubscribeWebhook falhou (best-effort)", err);
     }
 
-    await prisma.$transaction(async (tx) => {
-      // Buscar rotas para cascade delete de deliveries
-      const routes = await tx.webhookRoute.findMany({
-        where: { companyId },
-        select: { id: true },
-      });
-      const routeIds = routes.map((r) => r.id);
+    await prisma.company.update({
+      where: { id: companyId },
+      data: { deletedAt: new Date(), isActive: false },
+    });
 
-      if (routeIds.length > 0) {
-        // Buscar deliveries para cascade de attempts
-        const deliveries = await tx.routeDelivery.findMany({
-          where: { routeId: { in: routeIds } },
-          select: { id: true },
-        });
-        const deliveryIds = deliveries.map((d) => d.id);
-
-        if (deliveryIds.length > 0) {
-          await tx.deliveryAttempt.deleteMany({
-            where: { routeDeliveryId: { in: deliveryIds } },
-          });
-        }
-        await tx.routeDelivery.deleteMany({
-          where: { routeId: { in: routeIds } },
-        });
-      }
-
-      await tx.webhookRoute.deleteMany({ where: { companyId } });
-      await tx.inboundWebhook.deleteMany({ where: { companyId } });
-      await tx.companyCredential.deleteMany({ where: { companyId } });
-      await tx.notification.deleteMany({ where: { companyId } });
-      await tx.auditLog.deleteMany({ where: { companyId } });
-      await tx.userCompanyMembership.deleteMany({ where: { companyId } });
-      await tx.company.delete({ where: { id: companyId } });
+    void logAudit({
+      actorType: "user",
+      actorId: user.id,
+      actorLabel: user.email ?? user.id,
+      companyId,
+      action: "company.soft_delete",
+      resourceType: "Company",
+      resourceId: companyId,
+      details: { name: existing.name },
     });
 
     revalidatePath("/companies");

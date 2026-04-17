@@ -67,6 +67,20 @@ Webhook.
    - Apos aprovacao, o botao "Conectar WhatsApp com Facebook" funciona para
      qualquer usuario externo.
 
+## Nota sobre Tokens
+
+O Embedded Signup cuida automaticamente da geracao do **Token de Acesso** com
+os escopos corretos (`whatsapp_business_management`, `whatsapp_business_messaging`,
+`business_management`) e persiste como `accessToken` na credencial da empresa.
+Nao e necessario criar manualmente um System User Token no Business Settings
+da Meta — o backend usa o proprio `accessToken` para todas as chamadas Graph
+API (inclusive `subscribed_apps` para inscricao do webhook).
+
+Para **configuracao manual** (empresas sem Embedded Signup), informe o mesmo
+Token de Acesso no campo `accessToken` — ele precisa possuir os escopos
+`whatsapp_business_management` + `whatsapp_business_messaging` para que a
+inscricao automatica do webhook e o teste de conexao funcionem.
+
 ## Validacao
 
 Apos configurar:
